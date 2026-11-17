@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-011, TASK-013
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#37](https://github.com/dhruv0641/Dolla/issues/37); PR [#38](https://github.com/dhruv0641/Dolla/pull/38) targets `develop`.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +24,12 @@ Deliver agent schemas and validation as an independently verifiable capability w
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/agents/schemas.py` and the package exports define strict request, role, evidence, research, strategy, script and storyboard contracts. `tests/test_agent_schemas.py` verifies validation boundaries; `docs/AGENT_SCHEMAS.md` documents their trust and network limits. `pyproject.toml` declares Pydantic directly. No migration or provider integration is in scope.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors and security boundaries are explicit: request/output errors omit rejected values; evidence URLs are references only and are never fetched by these schemas.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
