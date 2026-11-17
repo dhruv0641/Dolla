@@ -1,0 +1,139 @@
+# TASKS — Master Backlog
+
+Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, `DONE`. Estimates are engineering hours, not calendar commitments. Individual task files define acceptance.
+
+## EPIC-01: Project Foundation
+
+
+- **TASK-001 Repository baseline and developer workflow** — IN_PROGRESS · DevOps Engineer · 8h · deps: none · Issue: [#2](https://github.com/dhruv0641/Dolla/issues/2)
+- **TASK-002 Environment and secret handling** — BACKLOG · DevOps Engineer · 12h · deps: TASK-001
+- **TASK-003 API and frontend shells** — BACKLOG · Backend Engineer · 16h · deps: TASK-002
+- **TASK-004 Prompt and policy registry** — BACKLOG · AI Workflow Engineer · 4h · deps: TASK-003
+- **TASK-005 Health and readiness endpoints** — BACKLOG · Backend Engineer · 6h · deps: TASK-004
+
+## EPIC-02: Database and Persistence
+
+- **TASK-006 Review schema and create migrations** — BACKLOG · Backend Engineer · 12h · deps: TASK-001
+- **TASK-007 Data access and transaction boundaries** — BACKLOG · Backend Engineer · 16h · deps: TASK-006
+- **TASK-008 Workflow event and audit persistence** — BACKLOG · Backend Engineer · 4h · deps: TASK-007
+- **TASK-009 Transactional outbox and worker leasing** — BACKLOG · Backend Engineer · 6h · deps: TASK-008
+- **TASK-010 Backup, restore and retention** — BACKLOG · Backend Engineer · 8h · deps: TASK-009
+
+## EPIC-03: Backend and Orchestration
+
+- **TASK-011 Authentication and role model** — BACKLOG · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009
+- **TASK-012 Brand and content lifecycle APIs** — BACKLOG · Backend Engineer · 4h · deps: TASK-011
+- **TASK-013 Typed state machines and validation** — BACKLOG · Backend Engineer · 6h · deps: TASK-012
+- **TASK-014 Idempotent workflow processing** — BACKLOG · Backend Engineer · 8h · deps: TASK-013
+- **TASK-015 Scheduling, retries and dead letters** — BACKLOG · Backend Engineer · 12h · deps: TASK-014
+
+## EPIC-04: AI Agent System
+
+- **TASK-016 Agent schemas and validation** — BACKLOG · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013
+- **TASK-017 Research with source evidence** — BACKLOG · AI Workflow Engineer · 6h · deps: TASK-016
+- **TASK-018 Strategy and idea scoring** — BACKLOG · AI Workflow Engineer · 8h · deps: TASK-017
+- **TASK-019 Script and storyboard generation** — BACKLOG · AI Workflow Engineer · 12h · deps: TASK-018
+- **TASK-020 Prompt, review and analyst agents** — BACKLOG · AI Workflow Engineer · 16h · deps: TASK-019
+
+## EPIC-05: Google Flow MCP Integration
+
+- **TASK-021 Discover actual MCP manifest** — BACKLOG · Flow MCP Integration Engineer · 6h · deps: TASK-002
+- **TASK-022 Capability-gated adapter interface** — BACKLOG · Flow MCP Integration Engineer · 8h · deps: TASK-021
+- **TASK-023 Auth and account health** — BACKLOG · Flow MCP Integration Engineer · 12h · deps: TASK-022
+- **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
+- **TASK-025 Media retrieval and metadata** — BACKLOG · Flow MCP Integration Engineer · 4h · deps: TASK-024
+
+## EPIC-06: Credit and Account Management
+
+- **TASK-026 Authorized account registry** — BACKLOG · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021
+- **TASK-027 Credit quote, reservation and limits** — BACKLOG · Credit and Account Engineer · 12h · deps: TASK-026
+- **TASK-028 Observed credit ledger and reconciliation** — BACKLOG · Credit and Account Engineer · 16h · deps: TASK-027
+- **TASK-029 Concurrency, pause and reset tracking** — BACKLOG · Credit and Account Engineer · 4h · deps: TASK-028
+- **TASK-030 Unknown-spend alarms and fail-closed controls** — BACKLOG · Credit and Account Engineer · 6h · deps: TASK-029
+
+## EPIC-07: Scene and Media Management
+
+- **TASK-031 Versioned storyboard and scene timeline** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-006, TASK-019, TASK-025, TASK-030
+- **TASK-032 Asset storage, hashes and lineage** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-031
+- **TASK-033 Scene jobs and bounded retries** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-032
+- **TASK-034 Media probing and validation** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-033
+- **TASK-035 Asset search and retention** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-034
+
+## EPIC-08: Local Audio and Voiceover
+
+- **TASK-036 Evaluate local TTS** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-031
+- **TASK-037 Voice profiles and synthesis** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-036
+- **TASK-038 Timing, normalization and zero-second narration** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-037
+- **TASK-039 Captions and subtitle alignment** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-038
+- **TASK-040 Audio preview and management** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-039
+
+## EPIC-09: Automated Video Editing
+
+- **TASK-041 FFmpeg render worker and manifests** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-032, TASK-036
+- **TASK-042 Normalize codecs, fps and aspect ratios** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-041
+- **TASK-043 Compose scenes, audio and subtitles** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-042
+- **TASK-044 Platform export variants** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-043
+- **TASK-045 Render versions and artifacts** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-044
+
+## EPIC-10: Video Quality Assurance
+
+- **TASK-046 Deterministic integrity checks** — BACKLOG · QA and Security Engineer · 6h · deps: TASK-034, TASK-045
+- **TASK-047 Visual and audio evaluation** — BACKLOG · QA and Security Engineer · 8h · deps: TASK-046
+- **TASK-048 Policy, factuality and copyright signals** — BACKLOG · QA and Security Engineer · 12h · deps: TASK-047
+- **TASK-049 Scene retry limits and spend gate** — BACKLOG · QA and Security Engineer · 16h · deps: TASK-048
+- **TASK-050 Human review and approvals** — BACKLOG · QA and Security Engineer · 4h · deps: TASK-049
+
+## EPIC-11: Frontend Dashboard
+
+- **TASK-051 Responsive design system and shell** — BACKLOG · Frontend Engineer · 8h · deps: TASK-003, TASK-012
+- **TASK-052 Live executive command center** — BACKLOG · Frontend Engineer · 12h · deps: TASK-051
+- **TASK-053 Production board, scenes and assets** — BACKLOG · Frontend Engineer · 16h · deps: TASK-052
+- **TASK-054 Flow control, ledger and jobs** — BACKLOG · Frontend Engineer · 4h · deps: TASK-053
+- **TASK-055 QA, voice, calendar and publishing screens** — BACKLOG · Frontend Engineer · 6h · deps: TASK-054
+- **TASK-056 Agent, analytics, community and settings screens** — BACKLOG · Frontend Engineer · 8h · deps: TASK-055
+
+## EPIC-12: Social Publishing
+
+- **TASK-057 Official YouTube publisher and verification** — BACKLOG · Publishing Integration Engineer · 12h · deps: TASK-011, TASK-045, TASK-050, TASK-072
+- **TASK-058 Instagram Reels publisher and verification** — BACKLOG · Publishing Integration Engineer · 16h · deps: TASK-057
+- **TASK-059 Facebook Page Reels publisher and verification** — BACKLOG · Publishing Integration Engineer · 4h · deps: TASK-058
+- **TASK-060 Independent platform state and reconciliation** — BACKLOG · Publishing Integration Engineer · 6h · deps: TASK-059
+- **TASK-061 Approval, schedule and duplicate prevention** — BACKLOG · Publishing Integration Engineer · 8h · deps: TASK-060
+
+## EPIC-13: Analytics and Growth
+
+- **TASK-062 Platform metrics and definitions** — BACKLOG · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060
+- **TASK-063 Windowed snapshots and missing values** — BACKLOG · Analytics Engineer · 4h · deps: TASK-062
+- **TASK-064 Creative metadata and cohort analysis** — BACKLOG · Analytics Engineer · 6h · deps: TASK-063
+- **TASK-065 Evidence-backed recommendations and experiments** — BACKLOG · Analytics Engineer · 8h · deps: TASK-064
+- **TASK-066 Spend-aware approved feedback loop** — BACKLOG · Analytics Engineer · 12h · deps: TASK-065
+
+## EPIC-14: Community Management
+
+- **TASK-067 Authorized comment ingestion** — BACKLOG · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060
+- **TASK-068 Theme clustering and safety classification** — BACKLOG · Community Workflow Engineer · 6h · deps: TASK-067
+- **TASK-069 Draft replies and escalation** — BACKLOG · Community Workflow Engineer · 8h · deps: TASK-068
+- **TASK-070 Human approval and official responses** — BACKLOG · Community Workflow Engineer · 12h · deps: TASK-069
+- **TASK-071 Community insights to research** — BACKLOG · Community Workflow Engineer · 16h · deps: TASK-070
+
+## EPIC-15: Security Observability and Deployment
+
+- **TASK-072 Threat model, access and audit** — BACKLOG · DevOps Engineer · 6h · deps: none
+- **TASK-073 Logs, metrics, traces and alerts** — BACKLOG · DevOps Engineer · 8h · deps: TASK-072
+- **TASK-074 Docker Compose and environment profiles** — BACKLOG · DevOps Engineer · 12h · deps: TASK-073
+- **TASK-075 Encrypted backups and runbooks** — BACKLOG · DevOps Engineer · 16h · deps: TASK-074
+- **TASK-076 Security and release gates** — BACKLOG · DevOps Engineer · 4h · deps: TASK-075
+
+## Totals
+
+- Epics: 15
+- Tasks: 76
+- Estimated effort: 698 engineering hours
+- DONE: 0; feature implementation has not started.
+
+## GitHub delivery references
+
+- Repository: [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
+- Main branch ruleset: [ID 27482128](https://github.com/dhruv0641/Dolla/settings/rules/27482128) — active; PR required, one approval, deletion and force-push blocked.
+- Integration branch: `develop` (initializing).
+- Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
