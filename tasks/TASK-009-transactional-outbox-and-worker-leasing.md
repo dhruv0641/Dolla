@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-008
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -31,7 +31,7 @@ Deliver transactional outbox and worker leasing as an independently verifiable c
 - [x] Completion is conditional on current lease owner; lost leases are explicit.
 - [x] Tests cover insert idempotency, safe concurrent lease query construction, UTC time validation, and lease ownership.
 - [x] Operator docs describe lifecycle limits and forbid side effects before lease commit.
-- [ ] CI validates code and both SQL migrations.
+- [x] CI validates code and both SQL migrations.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -42,7 +42,7 @@ Deliver transactional outbox and worker leasing as an independently verifiable c
 - Issue: https://github.com/dhruv0641/Dolla/issues/18
 - Branch: `feature/TASK-009-transactional-outbox-and-leasing`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/19
-- CI run: pending
+- CI runs: passing on PR and push events at head `9684cbd8f6cada93214b58e801db6aeabbcf6685`
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
