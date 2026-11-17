@@ -44,7 +44,7 @@ P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 offi
 A user can inspect an approved scheduled idea, original playable Flow scenes, narration from zero, QC-approved MP4, verified per-platform publication links, reconciled per-account credit costs and analytics feeding the next schedule. Tasks require acceptance evidence, passing relevant tests, review and documentation; architecture or mocks alone never imply production readiness.
 
 ## Current implementation status
-**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-016 are merged to `develop`, with TASK-017 under review. MCP capabilities and external credentials are unverified/unconfigured.
+**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-017 are merged to `develop`. MCP capabilities and external credentials are unverified/unconfigured.
 
 ## Outstanding work and blockers
 No planning blocker. Flow proof requires actual authorized server/tool manifest, supported auth mode, generation/status/download/credit capabilities and authorized account. Publishing requires eligible channels, OAuth grants and current API validation. Never paste credentials into chat.
@@ -67,3 +67,4 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-016 PR #38 merged to `develop` as `cf902897986fe5e04d03ae44b7da0c968c863223`; both GitHub Actions checks passed, issue #37 closed, and independent review found no remaining blocker.
 - 2026-11-18: TASK-017 research with source evidence began on `feature/TASK-017-research-with-source-evidence`; issue #40 opened. The design will bind generated citations to exact retrieved source snapshots while leaving provider-specific fetch behavior injectable and unverified.
 - 2026-11-18: TASK-017 commit `e8afb2b` is in PR #41 to `develop`, linked to issue #40. Source/summarizer interfaces and citation evidence checks passed independent review; all 113 Python tests pass locally. Live retrieval/model provider remains unverified.
+- 2026-11-18: TASK-017 PR #41 merged to `develop` as `105280040caf0da10132e7bab1a4071fb130d11c`; both GitHub Actions checks passed, issue #40 closed, and independent review found no remaining blocker. No live source/model request was made.
