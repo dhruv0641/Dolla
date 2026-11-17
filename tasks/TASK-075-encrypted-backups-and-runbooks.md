@@ -5,8 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-074
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#75](https://github.com/dhruv0641/Dolla/issues/75); branch `feature/TASK-075-encrypted-backups-runbooks` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#75](https://github.com/dhruv0641/Dolla/issues/75) closed by PR [#76](https://github.com/dhruv0641/Dolla/pull/76), merged to `develop` as `b1b9e8d`; branch `feature/TASK-075-encrypted-backups-runbooks`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
