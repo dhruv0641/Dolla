@@ -129,8 +129,9 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 20 (TASK-001 through TASK-020).
-- BLOCKED: 1 (TASK-021; waiting for an authorized Google Flow MCP server/manifest).
+- DONE: 28 (TASK-001 through TASK-020, TASK-051 through TASK-053, and TASK-072 through TASK-076).
+- BLOCKED: 2 (TASK-021 and TASK-054; both await an authorized Google Flow MCP server/manifest).
+- BACKLOG: 46; no remaining backlog task currently has all dependencies DONE. Downstream work is gated by the blocked Flow MCP capability chain.
 
 ## GitHub delivery references
 
