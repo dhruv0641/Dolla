@@ -163,7 +163,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-012 closeout record PR [#28](https://github.com/dhruv0641/Dolla/pull/28) merged to `develop` as `ce0d2b8`; CI passed.
 - TASK-013 merged to `develop` as `527586ca034343e4ee72f5a36ea120745dc08218`; issue #29 closed, CI and independent review passed.
 - TASK-014 merged to `develop` as `d8baa38b904ef98a6d955d179ff176414823708c`; issue #31 closed, CI and independent review passed.
-- TASK-015 issue [#33](https://github.com/dhruv0641/Dolla/issues/33); branch `feature/TASK-015-scheduling-retries-and-dead-letters`; implementation in progress.
+- TASK-015 issue [#33](https://github.com/dhruv0641/Dolla/issues/33), implementation PR [#34](https://github.com/dhruv0641/Dolla/pull/34), and completion record PR [#35](https://github.com/dhruv0641/Dolla/pull/35) merged to `develop`; issue closed, checks and independent review passed.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
