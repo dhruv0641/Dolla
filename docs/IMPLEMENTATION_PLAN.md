@@ -138,3 +138,4 @@ Actual Flow MCP identity/manifest and authorized account → capability/auth pro
 - `SCHEMA.sql`: PostgreSQL entities/constraints; design-only, migration review required.
 - `FLOW_MCP_ADAPTER_CONTRACT.json`: proposed normalized contract and guardrails, not server support.
 - `DASHBOARD_DEMO.html`: UX reference with explicitly illustrative data.
+| 2026-11-18 03:01 IST | TASK-018 merge and completion record | PR #44 merged to `develop` at `ef36c14ee506e8c85bd41e1019ccb202b5cb3e94`; GitHub Actions passed, issue #43 closed, independent review passed, and backlog/story now mark TASK-018 done. Strategy scoring uses configured signals only; no live model integration is claimed. | 8h estimate | Done |
