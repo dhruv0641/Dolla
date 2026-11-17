@@ -44,7 +44,7 @@ P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 offi
 A user can inspect an approved scheduled idea, original playable Flow scenes, narration from zero, QC-approved MP4, verified per-platform publication links, reconciled per-account credit costs and analytics feeding the next schedule. Tasks require acceptance evidence, passing relevant tests, review and documentation; architecture or mocks alone never imply production readiness.
 
 ## Current implementation status
-**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-018 are merged to `develop`; TASK-019 has started on its feature branch. MCP capabilities and external credentials are unverified/unconfigured.
+**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-019 are merged to `develop`. MCP capabilities and external credentials are unverified/unconfigured.
 
 ## Outstanding work and blockers
 No planning blocker. Flow proof requires actual authorized server/tool manifest, supported auth mode, generation/status/download/credit capabilities and authorized account. Publishing requires eligible channels, OAuth grants and current API validation. Never paste credentials into chat.
@@ -73,3 +73,4 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-018 merged to `develop` as `ef36c14ee506e8c85bd41e1019ccb202b5cb3e94` through PR #44; CI passed, issue #43 closed, and independent review passed. No live model or provider integration is claimed.
 - 2026-11-18: TASK-019 script and storyboard workflow began on `feature/TASK-019-script-and-storyboard-generation`; issue #46 opened. Planned boundary is injected and provider-neutral; external generation remains unverified.
 - 2026-11-18: TASK-019 implementation commit `6ecc43a` is in PR #47 to `develop`, linked to issue #46. All 134 Python tests and plan validation pass; independent review passed after mutation and impossible-timing fixes. GitHub CI is pending; no live model/provider integration is claimed.
+- 2026-11-18: TASK-019 merged to `develop` as `10fa7c5fa0af193b7472e53e5475115a903f05b0` through PR #47; both GitHub Actions checks passed, issue #46 closed, and independent review passed. Live model/provider integration remains unverified.

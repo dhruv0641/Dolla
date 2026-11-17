@@ -32,7 +32,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-016 Agent schemas and validation** — DONE · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013 · Issue: [#37](https://github.com/dhruv0641/Dolla/issues/37) · PR: [#38](https://github.com/dhruv0641/Dolla/pull/38) · merged to develop as `cf90289`; CI and independent review passed
 - **TASK-017 Research with source evidence** — DONE · AI Workflow Engineer · 6h · deps: TASK-016 · Issue: [#40](https://github.com/dhruv0641/Dolla/issues/40) · PR: [#41](https://github.com/dhruv0641/Dolla/pull/41) · merged to develop as `1052800`; CI and independent review passed
 - **TASK-018 Strategy and idea scoring** — DONE · AI Workflow Engineer · 8h · deps: TASK-017 · Issue: [#43](https://github.com/dhruv0641/Dolla/issues/43) · PR: [#44](https://github.com/dhruv0641/Dolla/pull/44) · merged to develop as `ef36c14`; CI and independent review passed
-- **TASK-019 Script and storyboard generation** — IN_REVIEW · AI Workflow Engineer · 12h · deps: TASK-018 · Issue: [#46](https://github.com/dhruv0641/Dolla/issues/46) · PR: [#47](https://github.com/dhruv0641/Dolla/pull/47) · independent review passed; CI pending
+- **TASK-019 Script and storyboard generation** — DONE · AI Workflow Engineer · 12h · deps: TASK-018 · Issue: [#46](https://github.com/dhruv0641/Dolla/issues/46) · PR: [#47](https://github.com/dhruv0641/Dolla/pull/47) · merged to develop as `10fa7c5`; CI and independent review passed
 - **TASK-020 Prompt, review and analyst agents** — BACKLOG · AI Workflow Engineer · 16h · deps: TASK-019
 
 ## EPIC-05: Google Flow MCP Integration
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 18 (TASK-001 through TASK-018).
+- DONE: 19 (TASK-001 through TASK-019).
 
 ## GitHub delivery references
 
@@ -174,3 +174,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - TASK-019 issue [#46](https://github.com/dhruv0641/Dolla/issues/46) opened; branch `feature/TASK-019-script-and-storyboard-generation` targets `develop`.
 - TASK-019 implementation commit `6ecc43a` is in PR [#47](https://github.com/dhruv0641/Dolla/pull/47) to `develop`; independent review passed and CI is pending.
+
+- TASK-019 issue [#46](https://github.com/dhruv0641/Dolla/issues/46) and PR [#47](https://github.com/dhruv0641/Dolla/pull/47) merged to `develop` as `10fa7c5`; checks and independent review passed.
