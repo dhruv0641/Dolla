@@ -36,6 +36,14 @@ from flowx_os.agents.strategy import (
     rank_ideas,
     score_idea,
 )
+from flowx_os.agents.script_storyboard import (
+    ScriptStoryboardContext,
+    ScriptStoryboardDraft,
+    ScriptStoryboardError,
+    ScriptStoryboardErrorCode,
+    ScriptStoryboardGenerator,
+    ScriptStoryboardWorkflow,
+)
 
 __all__ = [
     "AgentRequest", "AgentRole", "AgentSchemaError", "EvidenceReference",
@@ -46,5 +54,7 @@ __all__ = [
     "IdeaBlocker", "IdeaCandidate", "IdeaContribution", "IdeaDimension",
     "IdeaScoringError", "IdeaScoringErrorCode", "IdeaScoringProfile",
     "IdeaScoreStatus", "IdeaSignals", "IdeaWeights", "ScoredIdea", "rank_ideas",
-    "score_idea",
+    "score_idea", "ScriptStoryboardContext", "ScriptStoryboardDraft",
+    "ScriptStoryboardError", "ScriptStoryboardErrorCode", "ScriptStoryboardGenerator",
+    "ScriptStoryboardWorkflow",
 ]

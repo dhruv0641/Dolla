@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-018
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#46](https://github.com/dhruv0641/Dolla/issues/46); branch `feature/TASK-019-script-and-storyboard-generation` targets `develop`.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +24,12 @@ Deliver script and storyboard generation as an independently verifiable capabili
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/agents/script_storyboard.py` defines a bounded context, injected async generator protocol, typed workflow results and sanitized errors. It binds strategy/script/scene citations to supplied source snapshots and enforces exact requested scene count/duration, matching titles and ordered narration partitioning. Public exports are in `src/flowx_os/agents/__init__.py`; deterministic fake-provider coverage is in `tests/test_script_storyboard.py`; operator boundary and limitations are in `docs/SCRIPT_STORYBOARD_WORKFLOW.md`. No provider SDK or persistence is added.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind a typed, injected provider interface; it makes no implicit provider/network calls.
+- [x] Inputs, untrusted provider outputs, evidence provenance, timing and scene/narration coherence are explicitly bounded and validated; errors are payload-safe.
+- [x] Deterministic workflow tests and operator documentation record the boundary; no external integration is claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
