@@ -93,3 +93,7 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-053 merged through PR #62 as 970369; both CI checks and independent review passed, issue #61 closed. All content lifecycle states are represented; scene/asset endpoints and authenticated content data remain unavailable and are not simulated.
 
 - 2026-11-18: TASK-054 Flow controls/ledger/jobs blocked on missing authorized Flow MCP server and actual manifest (TASK-021); issue #64 opened. No provider alternatives or simulated credits/jobs are used.
+
+- 2026-11-18: TASK-072 threat model/access/audit selected as next eligible P2 after P1 backlog became blocked by TASK-021/054; issue #66 opened. Repository security controls and production gaps are being documented from source evidence.
+
+- 2026-11-18: TASK-072 threat model and access/audit review completed with independent review; documented public health/readiness probes, token/role controls, tenant isolation and audit gaps, and release gates. No production security certification is claimed.

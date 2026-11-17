@@ -5,7 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** None
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#66](https://github.com/dhruv0641/Dolla/issues/66); branch `feature/TASK-072-threat-model-access-and-audit` targets `develop`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +24,12 @@ Deliver threat model, access and audit as an independently verifiable capability
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`docs/THREAT_MODEL.md` records trust boundaries, repository-backed controls, residual risks, access/audit limits and release gates. This is a design review; it does not claim that documented future controls have been implemented.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Threats, trust boundaries, existing controls, residual risks and owners are documented from repository evidence.
+- [x] Access and audit guarantees are accurately distinguished from current partial controls, including public health/readiness endpoints.
+- [x] Prioritized security release gates and verification evidence are recorded; production readiness is not claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -37,3 +38,10 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Tests and Verification
+- `python scripts/validate_project_plan.py` — passed; 15 epics, 76 task specs and dependency graph validated.
+- `git diff --check` — passed.
+- Manually reviewed `src/flowx_os/auth/tokens.py`, `src/flowx_os/auth/dependencies.py`, `src/flowx_os/api/main.py`, repository ownership queries, `src/flowx_os/db/workflow_events.py`, `src/flowx_os/db/outbox.py`, schema migration and current docs.
+- Independent Technical Reviewer passed after clarifying public probe routes, runtime startup injection limits, and updating stale outbox documentation.
+- No penetration test, PostgreSQL run, deployment, external credentials or provider access was performed; production security is not claimed.
