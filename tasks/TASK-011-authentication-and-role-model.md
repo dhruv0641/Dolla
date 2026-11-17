@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-003, TASK-006, TASK-009
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,26 @@ Deliver authentication and role model as an independently verifiable capability 
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/auth/`, `src/flowx_os/api/main.py`, `tests/test_auth_tokens.py`, `tests/test_api.py`, `docs/AUTHENTICATION.md`, README and trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Protected API routes require verified bearer tokens; unconfigured auth fails closed.
+- [x] HS256 algorithm, signature, issuer/audience, expiry/not-before, subject, and supported roles are validated.
+- [x] Role guards enforce least-privilege access and return safe errors without token echo.
+- [x] Tests cover valid/expired/tampered/unsupported tokens, role authorization, and unconfigured auth.
+- [x] Operator docs explicitly distinguish verification from token issuance/identity provider integration.
+- [ ] CI passes.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
+- Record PR and GitHub Actions evidence in this specification and `docs/IMPLEMENTATION_PLAN.md`.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/22
+- Branch: `feature/TASK-011-authentication-and-role-model`
+- Pull request: pending
+- CI run: pending
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

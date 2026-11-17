@@ -17,11 +17,11 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-007 Data access and transaction boundaries** — DONE · Backend Engineer · 16h · deps: TASK-006 · Issue: [#14](https://github.com/dhruv0641/Dolla/issues/14) · PR: [#15](https://github.com/dhruv0641/Dolla/pull/15) · merged to develop as `4687820`; CI passed
 - **TASK-008 Workflow event and audit persistence** — DONE · Backend Engineer · 4h · deps: TASK-007 · Issue: [#16](https://github.com/dhruv0641/Dolla/issues/16) · PR: [#17](https://github.com/dhruv0641/Dolla/pull/17) · merged to develop as `5d0845c`; CI passed
 - **TASK-009 Transactional outbox and worker leasing** — DONE · Backend Engineer · 6h · deps: TASK-008 · Issue: [#18](https://github.com/dhruv0641/Dolla/issues/18) · PR: [#19](https://github.com/dhruv0641/Dolla/pull/19) · merged to develop as `ff6f521`; CI passed
-- **TASK-010 Backup, restore and retention** — IN_REVIEW · Backend Engineer · 8h · deps: TASK-009 · Issue: [#20](https://github.com/dhruv0641/Dolla/issues/20) · Branch: `feature/TASK-010-backup-restore-and-retention` · PR: [#21](https://github.com/dhruv0641/Dolla/pull/21) · CI pending
+- **TASK-010 Backup, restore and retention** — DONE · Backend Engineer · 8h · deps: TASK-009 · Issue: [#20](https://github.com/dhruv0641/Dolla/issues/20) · PR: [#21](https://github.com/dhruv0641/Dolla/pull/21) · merged to develop as `426bf84`; CI passed
 
 ## EPIC-03: Backend and Orchestration
 
-- **TASK-011 Authentication and role model** — BACKLOG · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009
+- **TASK-011 Authentication and role model** — IN_PROGRESS · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009 · Issue: [#22](https://github.com/dhruv0641/Dolla/issues/22) · Branch: `feature/TASK-011-authentication-and-role-model` · PR: pending
 - **TASK-012 Brand and content lifecycle APIs** — BACKLOG · Backend Engineer · 4h · deps: TASK-011
 - **TASK-013 Typed state machines and validation** — BACKLOG · Backend Engineer · 6h · deps: TASK-012
 - **TASK-014 Idempotent workflow processing** — BACKLOG · Backend Engineer · 8h · deps: TASK-013
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 9 (TASK-001 through TASK-009); TASK-010 is now in progress.
+- DONE: 10 (TASK-001 through TASK-010); TASK-011 is now in progress.
 
 ## GitHub delivery references
 
@@ -157,6 +157,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-009 PR: [#19](https://github.com/dhruv0641/Dolla/pull/19), merged to `develop` as `ff6f521`; CI passed.
 - TASK-010 issue: [#20](https://github.com/dhruv0641/Dolla/issues/20); branch `feature/TASK-010-backup-restore-and-retention`.
 - TASK-010 PR: [#21](https://github.com/dhruv0641/Dolla/pull/21), targeting `develop`; CI pending.
+- TASK-010 merged to `develop` at `426bf84b38cd2da45cd63bf61cceda3878dd7874`; issue #20 closed and PR/push CI passed.
+- TASK-011 issue: [#22](https://github.com/dhruv0641/Dolla/issues/22); branch `feature/TASK-011-authentication-and-role-model`.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.

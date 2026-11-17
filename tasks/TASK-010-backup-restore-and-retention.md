@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-009
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -32,7 +32,7 @@ Deliver backup, restore and retention as an independently verifiable capability 
 - [x] Retention planning is dry-run only and preserves a minimum latest-backup count.
 - [x] Tests use mocks/temp directories and do not access a real database or delete user data.
 - [x] Operator docs record unverified live backup/restore and production deployment requirements.
-- [ ] CI passes.
+- [x] CI passes on pull request and push events.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -43,6 +43,7 @@ Deliver backup, restore and retention as an independently verifiable capability 
 - Issue: https://github.com/dhruv0641/Dolla/issues/20
 - Branch: `feature/TASK-010-backup-restore-and-retention`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/21
+- CI runs: passing on latest head `b63b42cda46a6dcc3eff76689a3416af3a7fe21a`
 - CI run: pending
 
 ## Definition of Done

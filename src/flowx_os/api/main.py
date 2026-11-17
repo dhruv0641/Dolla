@@ -3,7 +3,11 @@
 from collections.abc import Callable
 
 from fastapi import FastAPI, Response
+from fastapi import Depends
 from pydantic import BaseModel
+
+from flowx_os.auth.dependencies import current_principal, require_roles
+from flowx_os.auth.tokens import Principal, Role, TokenVerifier
 
 
 class ServiceDescriptor(BaseModel):
@@ -28,6 +32,7 @@ class Readiness(BaseModel):
 
 def create_app(
     readiness_checks: dict[str, Callable[[], bool]] | None = None,
+    token_verifier: TokenVerifier | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -41,6 +46,7 @@ def create_app(
         version="0.1.0",
         description="Backend shell for FLOW AI Content OS. Integration readiness is reported separately.",
     )
+    app.state.token_verifier = token_verifier
 
     @app.get("/", response_model=ServiceDescriptor, tags=["service"])
     async def describe_service() -> ServiceDescriptor:
@@ -72,6 +78,16 @@ def create_app(
         )
         response.status_code = 200 if ready else 503
         return Readiness(status="ready" if ready else "not_ready", checks=checks)
+
+    @app.get("/api/v1/me", tags=["authentication"])
+    async def who_am_i(principal: Principal = Depends(current_principal)) -> dict[str, object]:
+        return {"subject": principal.subject, "roles": sorted(role.value for role in principal.roles)}
+
+    @app.get("/api/v1/admin/access-check", tags=["authentication"])
+    async def admin_access_check(
+        principal: Principal = Depends(require_roles(Role.ADMIN)),
+    ) -> dict[str, bool]:
+        return {"allowed": True}
 
     return app
 
