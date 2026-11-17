@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+type DashboardStatus =
+  | { state: "connected"; checkedAt: string; readiness: { status: "ready" | "not_ready"; checks: Record<string, { status: string }> } | null }
+  | { state: "unavailable"; reason: string };
 
 const sections = [
   {
@@ -87,7 +91,36 @@ function EmptyPanel({
 
 export function DashboardShell() {
   const [activeSection, setActiveSection] = useState<SectionId>("overview");
+  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>({ state: "unavailable", reason: "not_checked" });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
   const section = sections.find((item) => item.id === activeSection) ?? sections[0];
+
+  const refreshStatus = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setIsRefreshing(true);
+    try {
+      const response = await fetch("/api/dashboard-status", { cache: "no-store" });
+      const value = await response.json() as DashboardStatus;
+      setDashboardStatus(value);
+    } catch {
+      setDashboardStatus({ state: "unavailable", reason: "request_failed" });
+    } finally {
+      refreshInFlight.current = false;
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshStatus();
+    const timer = window.setInterval(() => void refreshStatus(), 60_000);
+    return () => window.clearInterval(timer);
+  }, [refreshStatus]);
+
+  const statusLabel = dashboardStatus.state === "connected"
+    ? dashboardStatus.readiness === null ? "API healthy · readiness unknown" : dashboardStatus.readiness.status === "ready" ? "API ready" : "API dependencies unavailable"
+    : dashboardStatus.reason === "not_checked" ? "Checking API status" : "API unavailable";
 
   return (
     <div className="app-shell">
@@ -127,9 +160,14 @@ export function DashboardShell() {
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumb"><span>FLOW AI Content OS</span><span aria-hidden="true">/</span><strong>{section.title}</strong></div>
-          <div className="system-status" role="status">
-            <span className="system-status-dot" aria-hidden="true" />
-            <span>Dashboard data not connected</span>
+          <div className="system-status-group">
+            <div className={`system-status${dashboardStatus.state === "connected" && dashboardStatus.readiness?.status === "ready" ? " system-status--ready" : ""}`} role="status" aria-live="polite">
+              <span className="system-status-dot" aria-hidden="true" />
+              <span>{statusLabel}</span>
+            </div>
+            <button className="refresh-button" type="button" onClick={() => void refreshStatus()} disabled={isRefreshing}>
+              {isRefreshing ? "Checking…" : "Refresh"}
+            </button>
           </div>
         </header>
 
@@ -170,7 +208,7 @@ export function DashboardShell() {
                       </div>
                     ))}
                   </div>
-                  <p className="card-footnote">Stage counts are unavailable until backend records are connected.</p>
+                  <p className="card-footnote">Stage counts require an authenticated dashboard summary API; unavailable until that contract is connected.</p>
                 </section>
 
                 <section className="surface-card activity-card" aria-labelledby="activity-title">
@@ -208,6 +246,32 @@ export function DashboardShell() {
                     <span className="status-pill status-pill--neutral">Required</span>
                   </div>
                   <p className="flow-status-copy">Automated assessments do not approve, schedule, generate, or publish content. A connected workflow will show its pending items here.</p>
+                </section>
+
+                <section className="surface-card service-card" aria-labelledby="service-health-title">
+                  <div className="card-heading">
+                    <div>
+                      <h2 id="service-health-title">Backend service health</h2>
+                      <p>Live health and dependency readiness</p>
+                    </div>
+                    <span className={`status-pill ${dashboardStatus.state === "connected" && dashboardStatus.readiness?.status === "ready" ? "status-pill--success" : "status-pill--warning"}`}>
+                      {dashboardStatus.state === "connected" ? dashboardStatus.readiness?.status.replace("_", " ") ?? "health only" : "Unavailable"}
+                    </span>
+                  </div>
+                  {dashboardStatus.state === "connected" ? (
+                    <>
+                      <p className="flow-status-copy">Health endpoint responded. {dashboardStatus.readiness ? `Overall readiness: ${dashboardStatus.readiness.status.replace("_", " ")}.` : "Readiness could not be verified."}</p>
+                      {dashboardStatus.readiness && Object.keys(dashboardStatus.readiness.checks).length > 0 && (
+                        <ul className="readiness-list">
+                          {Object.entries(dashboardStatus.readiness.checks).map(([name, check]) => (
+                            <li key={name}><span>{name}</span><strong>{check.status.replaceAll("_", " ")}</strong></li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  ) : (
+                    <p className="flow-status-copy">{dashboardStatus.reason === "api_not_configured" ? "Set FLOWX_API_BASE_URL on the Next.js server to connect the health endpoints." : "The API did not return a verified health response. Operational counts remain unavailable."}</p>
+                  )}
                 </section>
               </div>
             </>
