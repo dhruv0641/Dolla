@@ -23,7 +23,7 @@ Deliver repository baseline and developer workflow as an independently verifiabl
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`README.md`, `CONTRIBUTING.md`, `.gitignore`, `scripts/validate_project_plan.py`, `.github/workflows/project-validation.yml`, `TASKS.md`, `GOALS.md`, `story.md`, `docs/IMPLEMENTATION_PLAN.md`, and this task specification.
 
 ## Acceptance Criteria
 - [ ] Repository has a documented `main`/`develop` and task-branch workflow; no workflow directs contributors to push to `main`.

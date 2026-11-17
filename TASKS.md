@@ -5,7 +5,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-01: Project Foundation
 
 
-- **TASK-001 Repository baseline and developer workflow** — IN_PROGRESS · DevOps Engineer · 8h · deps: none · Issue: [#2](https://github.com/dhruv0641/Dolla/issues/2)
+- **TASK-001 Repository baseline and developer workflow** — IN_PROGRESS · DevOps Engineer · 8h · deps: none · Issue: [#2](https://github.com/dhruv0641/Dolla/issues/2) · Branch: `feature/TASK-001-repository-baseline-and-developer-workflow` · PR: pending
 - **TASK-002 Environment and secret handling** — BACKLOG · DevOps Engineer · 12h · deps: TASK-001
 - **TASK-003 API and frontend shells** — BACKLOG · Backend Engineer · 16h · deps: TASK-002
 - **TASK-004 Prompt and policy registry** — BACKLOG · AI Workflow Engineer · 4h · deps: TASK-003
@@ -135,5 +135,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - Repository: [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
 - Main branch ruleset: [ID 27482128](https://github.com/dhruv0641/Dolla/settings/rules/27482128) — active; PR required, one approval, deletion and force-push blocked.
-- Integration branch: `develop` (initializing).
+- Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.

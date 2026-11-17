@@ -1,0 +1,29 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+.secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local media, runtime data and editor state
+data/
+media/
+*.mp4
+*.mov
+*.wav
+*.mp3
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
