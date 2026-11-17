@@ -31,15 +31,18 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Owner predicates are applied in parameterized repository SQL; absent and foreign-owned brand IDs return the same safe 404.
 - [x] Inputs enforce field bounds, known timezone names and non-blank required fields; missing/unavailable database responses fail closed.
 - [x] API contract, limitations and verification state are documented in `docs/CONTENT_API.md`.
-- [x] Local API/repository test suite (56 tests), project-plan validation, compilation and diff whitespace checks pass.
-- [ ] GitHub CI passes, PR is merged to `develop`, and reviewer evidence is recorded.
+- [x] Local API/repository test suite (59 tests), project-plan validation, compilation and diff whitespace checks pass.
+- [x] PR [#25](https://github.com/dhruv0641/Dolla/pull/25) merged to `develop` as `8a8338c`; both GitHub Actions runs passed.
+- [x] Add reviewer-requested API-level 404/503 and reviewer-role write tests; follow-up PR [#27](https://github.com/dhruv0641/Dolla/pull/27) targets `develop` and closes issue [#26](https://github.com/dhruv0641/Dolla/issues/26).
+- [ ] Follow-up GitHub CI passes and merges; reconcile final task status.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Mock-boundary API tests cover authentication, owner subject propagation, response mapping, input validation and unconfigured database behavior.
 - Repository tests assert parameterized owner filters and hide foreign-owned brands as not found.
+- Independent technical review found no correctness or tenant-isolation defect. Reviewer-requested API error mapping and reviewer write restriction tests are added in the follow-up branch; CI is pending.
 - Record actual commands/results; live PostgreSQL integration is not available in this environment and is required before claiming production readiness.
 
 ## Definition of Done
-Implementation is submitted on `feature/TASK-012-brand-and-content-lifecycle-apis`; issue [#24](https://github.com/dhruv0641/Dolla/issues/24), PR [#25](https://github.com/dhruv0641/Dolla/pull/25). CI is running; merge/reviewer evidence will be recorded here and in the single development log.
+Implementation is merged to `develop` via PR [#25](https://github.com/dhruv0641/Dolla/pull/25). Reviewer follow-up tests are submitted in PR [#27](https://github.com/dhruv0641/Dolla/pull/27); final task closure awaits its CI and merge.

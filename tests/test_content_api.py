@@ -12,7 +12,12 @@ import httpx
 
 from flowx_os.api.main import create_app
 from flowx_os.auth.tokens import TokenVerifier
-from flowx_os.db.content import BrandRecord, ContentRecord
+from flowx_os.db.content import (
+    BrandRecord,
+    ContentRecord,
+    OwnedBrandNotFound,
+    RepositoryUnavailable,
+)
 
 
 KEY = b"test-key-that-is-long-enough-for-hmac"
@@ -28,36 +33,47 @@ class StubPool:
 class StubRepository:
     owner_ids: list[str] = []
     brand_ids: list[UUID] = []
+    failures: dict[str, Exception] = {}
 
     def __init__(self, _pool):
         pass
 
     async def create_brand(self, *, owner_user_id, name, timezone_name, niche, audience):
+        self._raise_configured("create_brand")
         self.owner_ids.append(owner_user_id)
         return BrandRecord(BRAND_ID, name, owner_user_id, timezone_name, niche, audience, NOW, NOW)
 
     async def list_brands(self, *, owner_user_id):
+        self._raise_configured("list_brands")
         self.owner_ids.append(owner_user_id)
         return [BrandRecord(BRAND_ID, "Studio", owner_user_id, "Asia/Kolkata", "", "", NOW, NOW)]
 
     async def create_content(self, *, brand_id, owner_user_id, title, idea_text, topic,
                              audience_segment, language, target_duration_seconds, priority):
+        self._raise_configured("create_content")
         self.owner_ids.append(owner_user_id)
         self.brand_ids.append(brand_id)
         return ContentRecord(CONTENT_ID, brand_id, title, idea_text, topic, audience_segment,
                              language, target_duration_seconds, priority, "IDEA", NOW)
 
     async def list_content(self, *, brand_id, owner_user_id):
+        self._raise_configured("list_content")
         self.owner_ids.append(owner_user_id)
         self.brand_ids.append(brand_id)
         return [ContentRecord(CONTENT_ID, brand_id, "Launch", "An idea", None, None,
                               "en-IN", 32, 3, "IDEA", NOW)]
+
+    @classmethod
+    def _raise_configured(cls, operation):
+        if operation in cls.failures:
+            raise cls.failures[operation]
 
 
 class ContentApiTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         StubRepository.owner_ids = []
         StubRepository.brand_ids = []
+        StubRepository.failures = {}
         verifier = TokenVerifier(KEY, issuer="flowx-test", audience="flowx-api", clock_skew_seconds=0)
         token = _signed_token(KEY, roles=["operator"], now=int(time.time()))
         self.client = httpx.AsyncClient(
@@ -118,6 +134,38 @@ class ContentApiTests(unittest.IsolatedAsyncioTestCase):
             response = await client.get("/api/v1/brands")
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["detail"], "database_not_configured")
+
+    async def test_missing_or_foreign_brand_maps_to_same_404_for_both_content_routes(self):
+        StubRepository.failures = {
+            "create_content": OwnedBrandNotFound("brand not found"),
+            "list_content": OwnedBrandNotFound("brand not found"),
+        }
+        created = await self.client.post(
+            f"/api/v1/brands/{BRAND_ID}/content",
+            json={"title": "Launch", "idea_text": "An idea"},
+        )
+        listed = await self.client.get(f"/api/v1/brands/{BRAND_ID}/content")
+        self.assertEqual((created.status_code, created.json()), (404, {"detail": "brand_not_found"}))
+        self.assertEqual((listed.status_code, listed.json()), (404, {"detail": "brand_not_found"}))
+
+    async def test_configured_database_failures_return_safe_503(self):
+        StubRepository.failures = {"list_brands": RepositoryUnavailable("private db details")}
+        response = await self.client.get("/api/v1/brands")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"detail": "database_unavailable"})
+        self.assertNotIn("private", response.text)
+
+    async def test_reviewer_role_cannot_write_brands(self):
+        verifier = TokenVerifier(KEY, issuer="flowx-test", audience="flowx-api", clock_skew_seconds=0)
+        token = _signed_token(KEY, roles=["reviewer"], now=int(time.time()))
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(token_verifier=verifier, database_pool=StubPool())),
+            base_url="http://testserver",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        async with client:
+            response = await client.post("/api/v1/brands", json={"name": "Studio"})
+        self.assertEqual(response.status_code, 403)
 
 
 def _b64(data: bytes) -> str:
