@@ -37,7 +37,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-05: Google Flow MCP Integration
 
-- **TASK-021 Discover actual MCP manifest** — BACKLOG · Flow MCP Integration Engineer · 6h · deps: TASK-002
+- **TASK-021 Discover actual MCP manifest** — BLOCKED · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · discovery record PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) · no authorized Flow MCP server/manifest available
 - **TASK-022 Capability-gated adapter interface** — BACKLOG · Flow MCP Integration Engineer · 8h · deps: TASK-021
 - **TASK-023 Auth and account health** — BACKLOG · Flow MCP Integration Engineer · 12h · deps: TASK-022
 - **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
@@ -130,6 +130,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 20 (TASK-001 through TASK-020).
+- BLOCKED: 1 (TASK-021; waiting for an authorized Google Flow MCP server/manifest).
 
 ## GitHub delivery references
 
@@ -180,3 +181,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-020 implementation commit `1fbbffd` is in PR [#50](https://github.com/dhruv0641/Dolla/pull/50) to `develop`; independent review passed and CI is pending.
 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
+
+- TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) is open and blocked: no authorized Google Flow MCP server/manifest is exposed to the current session.

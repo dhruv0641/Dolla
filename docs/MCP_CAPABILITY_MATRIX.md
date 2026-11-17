@@ -1,10 +1,10 @@
 # Google Flow MCP Capability Matrix
 
-**Status:** No Google Flow MCP server or tool manifest was present in the supplied materials or the connected MCP resource inventory checked on 2026-11-17. The adapter JSON is a proposed logical contract, not actual tool documentation. All capabilities are **UNVERIFIED**; the connected resource inventory exposed no Flow server to inspect.
+**Status checked 2026-11-18:** No Google Flow MCP server or tool manifest is exposed to this Codex session. The active tool inventory contains no Flow generation/manifest operations; the current MCP resource inventory contains `codex_apps` plugin resources only, with no Flow MCP server. Plugin discovery for “Google Flow video generation MCP” returned other video providers, not a Google Flow manifest; results are not exhaustive and those providers are not substitutes for this architecture. The adapter JSON is a proposed logical contract, not actual tool documentation. All Flow capabilities remain **UNVERIFIED**. TASK-021 is blocked pending an authorized server/manifest.
 
 | Capability | Contract expectation | Status | Next check |
 |---|---|---|---|
-| Server identity/transport | stdio or streamable HTTP | UNVERIFIED | Obtain configured server identity and manifest. |
+| Server identity/transport | stdio or streamable HTTP | UNVERIFIED | No authorized server exposed in current tool/resource inventories; expose the configured server and manifest. |
 | Authentication/account health | Authorized account scope | UNVERIFIED | Inspect auth without exporting credentials. |
 | Video generation | Required | UNVERIFIED | Inspect actual operation schema; no calls made. |
 | Playable result/download | Required | UNVERIFIED | Confirm bytes or authorized temporary URI. |
