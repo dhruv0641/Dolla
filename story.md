@@ -44,7 +44,7 @@ P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 offi
 A user can inspect an approved scheduled idea, original playable Flow scenes, narration from zero, QC-approved MP4, verified per-platform publication links, reconciled per-account credit costs and analytics feeding the next schedule. Tasks require acceptance evidence, passing relevant tests, review and documentation; architecture or mocks alone never imply production readiness.
 
 ## Current implementation status
-**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-011 are merged to `develop`, and TASK-012 is in progress. MCP capabilities and external credentials are unverified/unconfigured.
+**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-012 are merged to `develop`. MCP capabilities and external credentials are unverified/unconfigured.
 
 ## Outstanding work and blockers
 No planning blocker. Flow proof requires actual authorized server/tool manifest, supported auth mode, generation/status/download/credit capabilities and authorized account. Publishing requires eligible channels, OAuth grants and current API validation. Never paste credentials into chat.
@@ -56,3 +56,4 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-17: Read Master Agentic Prompt, architecture blueprint, SQL reference schema, proposed MCP contract and dashboard prototype. Generated planning files only.
 - 2026-11-17: Began GOAL-002. GitHub repository access verified for `dhruv0641`; active main protection ruleset 27482128 created. TASK-001 delivery in progress.
 - 2026-11-18: TASK-011 merged to `develop`; TASK-012 brand/content API work began. See `docs/IMPLEMENTATION_PLAN.md` for the single timestamped development log.
+- 2026-11-18: TASK-012 and its reviewer-requested API test follow-up merged to `develop`; CI and independent technical review passed. See the development log for exact evidence and remaining integration limit.

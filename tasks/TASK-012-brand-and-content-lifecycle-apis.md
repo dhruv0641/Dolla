@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-011
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -34,15 +34,15 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Local API/repository test suite (59 tests), project-plan validation, compilation and diff whitespace checks pass.
 - [x] PR [#25](https://github.com/dhruv0641/Dolla/pull/25) merged to `develop` as `8a8338c`; both GitHub Actions runs passed.
 - [x] Add reviewer-requested API-level 404/503 and reviewer-role write tests; follow-up PR [#27](https://github.com/dhruv0641/Dolla/pull/27) targets `develop` and closes issue [#26](https://github.com/dhruv0641/Dolla/issues/26).
-- [ ] Follow-up GitHub CI passes and merges; reconcile final task status.
+- [x] Follow-up PR [#27](https://github.com/dhruv0641/Dolla/pull/27) CI passed and merged to `develop` as `28b5677`; issue [#26](https://github.com/dhruv0641/Dolla/issues/26) closed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Mock-boundary API tests cover authentication, owner subject propagation, response mapping, input validation and unconfigured database behavior.
 - Repository tests assert parameterized owner filters and hide foreign-owned brands as not found.
-- Independent technical review found no correctness or tenant-isolation defect. Reviewer-requested API error mapping and reviewer write restriction tests are added in the follow-up branch; CI is pending.
+- Independent technical review found no correctness or tenant-isolation defect. Reviewer-requested API error mapping and reviewer write restriction tests passed in the follow-up CI.
 - Record actual commands/results; live PostgreSQL integration is not available in this environment and is required before claiming production readiness.
 
 ## Definition of Done
-Implementation is merged to `develop` via PR [#25](https://github.com/dhruv0641/Dolla/pull/25). Reviewer follow-up tests are submitted in PR [#27](https://github.com/dhruv0641/Dolla/pull/27); final task closure awaits its CI and merge.
+Implementation is merged to `develop` via PR [#25](https://github.com/dhruv0641/Dolla/pull/25); reviewer coverage follow-up merged via PR [#27](https://github.com/dhruv0641/Dolla/pull/27). Both CI runs passed and independent technical review is complete. Live PostgreSQL integration remains unverified.
