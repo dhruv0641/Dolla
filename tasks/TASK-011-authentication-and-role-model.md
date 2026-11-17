@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-003, TASK-006, TASK-009
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -41,7 +41,7 @@ Deliver authentication and role model as an independently verifiable capability 
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/22
 - Branch: `feature/TASK-011-authentication-and-role-model`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/23
 - CI run: pending
 
 ## Definition of Done

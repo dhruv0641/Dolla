@@ -17,10 +17,10 @@ Only one primary user goal may be active at a time.
 - **Related tasks:** TASK-001 through TASK-076; begin with TASK-001.
 - **Repository:** [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
 - **Branches:** `main` protected by active ruleset ID 27482128; `develop` is protected by active ruleset ID 27482560. TASK-001 branch: `feature/TASK-001-repository-baseline-and-developer-workflow`.
-- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. TASK-001 through TASK-010 are merged to `develop` with PR checks passing. TASK-011 auth implementation is underway.
+- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. TASK-001 through TASK-010 are merged to `develop` with PR checks passing. TASK-011 auth implementation and 49 local tests pass; PR #23 is in review.
 - **Goal issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
 - **Task issues:** TASK-001 through TASK-010 issues #2, #4, #6, #8, #10, #12, #14, #16, #18, and #20 are closed; TASK-011 [#22](https://github.com/dhruv0641/Dolla/issues/22) is open.
-- **Current PR:** TASK-001 through TASK-010 PRs [#3](https://github.com/dhruv0641/Dolla/pull/3), [#5](https://github.com/dhruv0641/Dolla/pull/5), [#7](https://github.com/dhruv0641/Dolla/pull/7), [#9](https://github.com/dhruv0641/Dolla/pull/9), [#11](https://github.com/dhruv0641/Dolla/pull/11), [#13](https://github.com/dhruv0641/Dolla/pull/13), [#15](https://github.com/dhruv0641/Dolla/pull/15), [#17](https://github.com/dhruv0641/Dolla/pull/17), [#19](https://github.com/dhruv0641/Dolla/pull/19), and [#21](https://github.com/dhruv0641/Dolla/pull/21) merged to `develop`.
+- **Current PR:** TASK-001 through TASK-010 PRs [#3](https://github.com/dhruv0641/Dolla/pull/3), [#5](https://github.com/dhruv0641/Dolla/pull/5), [#7](https://github.com/dhruv0641/Dolla/pull/7), [#9](https://github.com/dhruv0641/Dolla/pull/9), [#11](https://github.com/dhruv0641/Dolla/pull/11), [#13](https://github.com/dhruv0641/Dolla/pull/13), [#15](https://github.com/dhruv0641/Dolla/pull/15), [#17](https://github.com/dhruv0641/Dolla/pull/17), [#19](https://github.com/dhruv0641/Dolla/pull/19), and [#21](https://github.com/dhruv0641/Dolla/pull/21) merged to `develop`; TASK-011 PR [#23](https://github.com/dhruv0641/Dolla/pull/23) targets `develop`.
 - **Final status:** ACTIVE.
 
 

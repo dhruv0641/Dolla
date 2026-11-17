@@ -63,6 +63,7 @@ Later goals should unit-test state rules, schemas, idempotency and media checks;
 | 2026-11-18 01:09 IST | TASK-010 merge | Merged PR #21 to `develop` at `426bf84b38cd2da45cd63bf61cceda3878dd7874`; PR and push CI passed; issue #20 closed. | 8h estimate | Done |
 | 2026-11-18 01:09 IST | TASK-011 start | Opened issue [#22](https://github.com/dhruv0641/Dolla/issues/22); added signed bearer-token verification and role-guard foundations with unconfigured-auth fail-closed behavior. | 16h estimate | In progress |
 | 2026-11-18 01:14 IST | TASK-011 implementation | Added HS256 JWT validation, principal/role model, protected API identity and admin test routes, operator docs, and token/API security tests. Project-plan validation and all 49 Python tests passed locally; CI pending. | 16h estimate | In progress |
+| 2026-11-18 01:16 IST | TASK-011 PR | Opened [PR #23](https://github.com/dhruv0641/Dolla/pull/23) to `develop`; local validation and 49 Python tests pass. GitHub CI pending. | 16h estimate | In review |
 | TBD | P0 | Discover actual MCP tools/auth; after spend authorization generate one short clip, inspect download and reconcile credits. | 16–40h + wait | Not started |
 | TBD | P1 | Build one reviewed end-to-end video using Flow, local narration, FFmpeg and QC. | 80–140h | Not started |
 | TBD | P2 | Durable persistence, APIs, workers, asset lineage, approvals and data-backed dashboard. | 120–220h | Not started |
