@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-011
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,14 +26,20 @@ Deliver brand and content lifecycle apis as an independently verifiable capabili
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Authenticated operators/admins can create brands; authorized read roles can list only brands belonging to the token subject.
+- [x] Authenticated operators/admins can create content under an owned brand; authorized read roles can list content only for an owned brand.
+- [x] Owner predicates are applied in parameterized repository SQL; absent and foreign-owned brand IDs return the same safe 404.
+- [x] Inputs enforce field bounds, known timezone names and non-blank required fields; missing/unavailable database responses fail closed.
+- [x] API contract, limitations and verification state are documented in `docs/CONTENT_API.md`.
+- [x] Local API/repository test suite (56 tests), project-plan validation, compilation and diff whitespace checks pass.
+- [ ] GitHub CI passes, PR is merged to `develop`, and reviewer evidence is recorded.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Mock-boundary API tests cover authentication, owner subject propagation, response mapping, input validation and unconfigured database behavior.
+- Repository tests assert parameterized owner filters and hide foreign-owned brands as not found.
+- Record actual commands/results; live PostgreSQL integration is not available in this environment and is required before claiming production readiness.
 
 ## Definition of Done
-Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+Implementation is submitted on `feature/TASK-012-brand-and-content-lifecycle-apis`; issue [#24](https://github.com/dhruv0641/Dolla/issues/24), PR [#25](https://github.com/dhruv0641/Dolla/pull/25). CI is running; merge/reviewer evidence will be recorded here and in the single development log.
