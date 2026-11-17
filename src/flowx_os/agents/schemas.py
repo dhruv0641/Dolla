@@ -32,7 +32,9 @@ class AgentRole(StrEnum):
 
 
 class _StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
+    model_config = ConfigDict(
+        extra="forbid", strict=True, frozen=True, revalidate_instances="always"
+    )
 
 
 class AgentRequest(_StrictModel):
