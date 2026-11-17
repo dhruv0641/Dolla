@@ -5,19 +5,31 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from typing import Any, Protocol
 from uuid import UUID
 
-from flowx_os.db.outbox import complete_job
+from flowx_os.db.outbox import FailureOutcome, LeaseLostError, complete_job, record_job_failure
 from flowx_os.db.transaction import ConnectionPool, TransactionConnection, unit_of_work
-
-
-class UnknownWorkflowHandler(LookupError):
-    """Raised when an outbox event has no explicitly registered handler."""
 
 
 class WorkflowDispatchValidationError(ValueError):
     """Raised when a leased job or worker identity is invalid."""
+
+
+class WorkflowHandlerFailure(RuntimeError):
+    """Safe, classified handler failure; exception text is not persisted."""
+
+    def __init__(self, error_code: str, *, retryable: bool = True):
+        self.error_code = error_code
+        self.retryable = retryable
+        super().__init__(error_code)
+
+
+class DispatchOutcome(StrEnum):
+    DONE = "DONE"
+    RETRY_SCHEDULED = "RETRY_SCHEDULED"
+    DEAD = "DEAD"
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +43,7 @@ class LeasedJob:
     attempt_count: int
     lease_owner: str
     lease_until: datetime
+    max_attempts: int
 
     def __post_init__(self) -> None:
         if not isinstance(self.id, UUID) or not isinstance(self.correlation_id, UUID):
@@ -41,6 +54,9 @@ class LeasedJob:
             raise WorkflowDispatchValidationError("job payload must be a JSON object")
         if isinstance(self.attempt_count, bool) or not isinstance(self.attempt_count, int) or self.attempt_count < 1:
             raise WorkflowDispatchValidationError("attempt count must be a positive integer")
+        if (isinstance(self.max_attempts, bool) or not isinstance(self.max_attempts, int)
+                or not self.attempt_count <= self.max_attempts <= 100):
+            raise WorkflowDispatchValidationError("max attempts must be between attempt count and 100")
         if not isinstance(self.lease_owner, str) or not self.lease_owner.strip():
             raise WorkflowDispatchValidationError("lease owner must be non-empty")
         if (not isinstance(self.lease_until, datetime) or self.lease_until.tzinfo is None
@@ -49,9 +65,9 @@ class LeasedJob:
 
     @classmethod
     def from_row(cls, row: Sequence[Any]) -> "LeasedJob":
-        """Convert the seven-column row returned by ``lease_due_jobs``."""
-        if not isinstance(row, Sequence) or isinstance(row, (str, bytes)) or len(row) != 7:
-            raise WorkflowDispatchValidationError("leased job row must contain seven columns")
+        """Convert the eight-column row returned by ``lease_due_jobs``."""
+        if not isinstance(row, Sequence) or isinstance(row, (str, bytes)) or len(row) != 8:
+            raise WorkflowDispatchValidationError("leased job row must contain eight columns")
         return cls(*row)
 
     @property
@@ -83,7 +99,7 @@ class OutboxDispatcher:
         self._pool = pool
         self._handlers = dict(handlers)
 
-    async def dispatch(self, job: LeasedJob, *, worker_id: str) -> None:
+    async def dispatch(self, job: LeasedJob, *, worker_id: str) -> DispatchOutcome:
         if not isinstance(job, LeasedJob):
             raise WorkflowDispatchValidationError("job must be a validated LeasedJob")
         if not isinstance(worker_id, str) or not worker_id.strip():
@@ -94,10 +110,43 @@ class OutboxDispatcher:
             raise WorkflowDispatchValidationError("worker does not own this job lease")
         handler = self._handlers.get(job.event_name)
         if handler is None:
-            raise UnknownWorkflowHandler("no handler registered for outbox event")
+            outcome = await self._record_failure(
+                job, worker_id=worker_id.strip(), error_code="handler_not_registered", retryable=False
+            )
+            return DispatchOutcome.DEAD if outcome.status == "DEAD" else DispatchOutcome.RETRY_SCHEDULED
 
         # Handler writes and acknowledgement share one transaction. A crash or
         # lease-loss before commit rolls back both, allowing safe redelivery.
+        try:
+            async with unit_of_work(self._pool) as connection:
+                await handler(connection, job)
+                await complete_job(
+                    connection, job_id=job.id, worker_id=worker_id.strip(),
+                    attempt_count=job.attempt_count,
+                )
+        except LeaseLostError:
+            raise
+        except Exception as exc:
+            if isinstance(exc, WorkflowHandlerFailure):
+                error_code, retryable = exc.error_code, exc.retryable
+            else:
+                error_code, retryable = "handler_error", True
+            outcome = await self._record_failure(
+                job, worker_id=worker_id.strip(), error_code=error_code, retryable=retryable
+            )
+            return DispatchOutcome.DEAD if outcome.status == "DEAD" else DispatchOutcome.RETRY_SCHEDULED
+        return DispatchOutcome.DONE
+
+    async def _record_failure(
+        self, job: LeasedJob, *, worker_id: str, error_code: str, retryable: bool
+    ) -> FailureOutcome:
         async with unit_of_work(self._pool) as connection:
-            await handler(connection, job)
-            await complete_job(connection, job_id=job.id, worker_id=worker_id.strip())
+            return await record_job_failure(
+                connection,
+                job_id=job.id,
+                worker_id=worker_id,
+                attempt_count=job.attempt_count,
+                max_attempts=job.max_attempts,
+                error_code=error_code,
+                retryable=retryable,
+            )

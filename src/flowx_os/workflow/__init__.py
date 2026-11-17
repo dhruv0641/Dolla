@@ -1,13 +1,14 @@
 """Workflow orchestration primitives."""
 
 from flowx_os.workflow.dispatcher import (
+    DispatchOutcome,
     LeasedJob,
     OutboxDispatcher,
-    UnknownWorkflowHandler,
     WorkflowDispatchValidationError,
+    WorkflowHandlerFailure,
 )
 
 __all__ = [
-    "LeasedJob", "OutboxDispatcher", "UnknownWorkflowHandler",
-    "WorkflowDispatchValidationError",
+    "DispatchOutcome", "LeasedJob", "OutboxDispatcher",
+    "WorkflowDispatchValidationError", "WorkflowHandlerFailure",
 ]

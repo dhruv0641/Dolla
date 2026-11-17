@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-014
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,8 +26,8 @@ Deliver scheduling, retries and dead letters as an independently verifiable capa
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Capability is implemented behind documented interfaces and configuration, including scheduled enqueue, bounded retries and dead-letter metadata/requeue helpers.
+- [x] Errors, state transitions and security boundaries are explicit: only safe codes are persisted; replay authorization/audit belongs to the calling admin service.
 - [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
