@@ -42,8 +42,8 @@ Deliver environment and secret handling as an independently verifiable capabilit
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/4
 - Branch: `feature/TASK-002-environment-and-secret-handling`
-- Pull request: pending
-- CI run: local tests passing; GitHub Actions pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/5
+- CI run: initial checks passed on head `8f4939b8958ab7bfac42ae9121ed502be2a65769`; latest tracker update will rerun CI
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
