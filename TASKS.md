@@ -29,7 +29,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-04: AI Agent System
 
-- **TASK-016 Agent schemas and validation** — IN_REVIEW · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013 · Issue: [#37](https://github.com/dhruv0641/Dolla/issues/37) · PR: [#38](https://github.com/dhruv0641/Dolla/pull/38) · independent review passed; CI pending
+- **TASK-016 Agent schemas and validation** — DONE · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013 · Issue: [#37](https://github.com/dhruv0641/Dolla/issues/37) · PR: [#38](https://github.com/dhruv0641/Dolla/pull/38) · merged to develop as `cf90289`; CI and independent review passed
 - **TASK-017 Research with source evidence** — BACKLOG · AI Workflow Engineer · 6h · deps: TASK-016
 - **TASK-018 Strategy and idea scoring** — BACKLOG · AI Workflow Engineer · 8h · deps: TASK-017
 - **TASK-019 Script and storyboard generation** — BACKLOG · AI Workflow Engineer · 12h · deps: TASK-018
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 15 (TASK-001 through TASK-015).
+- DONE: 16 (TASK-001 through TASK-016).
 
 ## GitHub delivery references
 
@@ -164,6 +164,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-013 merged to `develop` as `527586ca034343e4ee72f5a36ea120745dc08218`; issue #29 closed, CI and independent review passed.
 - TASK-014 merged to `develop` as `d8baa38b904ef98a6d955d179ff176414823708c`; issue #31 closed, CI and independent review passed.
 - TASK-015 issue [#33](https://github.com/dhruv0641/Dolla/issues/33), implementation PR [#34](https://github.com/dhruv0641/Dolla/pull/34), and completion record PR [#35](https://github.com/dhruv0641/Dolla/pull/35) merged to `develop`; issue closed, checks and independent review passed.
+- TASK-016 issue [#37](https://github.com/dhruv0641/Dolla/issues/37) and PR [#38](https://github.com/dhruv0641/Dolla/pull/38) merged to `develop` as `cf90289`; checks and independent review passed.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
