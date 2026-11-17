@@ -99,6 +99,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
             {
                 "/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check",
                 "/api/v1/brands", "/api/v1/brands/{brand_id}/content",
+                "/api/v1/brands/{brand_id}/content/{content_id}/transition",
             },
         )
 

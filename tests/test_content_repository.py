@@ -3,7 +3,13 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from uuid import UUID
 
-from flowx_os.db.content import ContentRepository, OwnedBrandNotFound
+from flowx_os.db.content import (
+    ContentRepository,
+    InvalidContentTransition,
+    OwnedBrandNotFound,
+    OwnedContentNotFound,
+)
+from flowx_os.domain.content_state import ContentStatus
 
 
 class FakeCursor:
@@ -78,6 +84,57 @@ class ContentRepositoryTests(unittest.IsolatedAsyncioTestCase):
                 owner_user_id="owner-1", title="Launch", idea_text="Idea", topic=None,
                 audience_segment=None, language="en-IN", target_duration_seconds=32, priority=3,
             )
+
+    async def test_transition_locks_owned_content_and_updates_expected_state(self):
+        content_id = UUID("64135a38-e28b-4e22-bebf-c1906761b681")
+        brand_id = UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01")
+        now = datetime(2026, 11, 18, tzinfo=timezone.utc)
+        updated = (content_id, brand_id, "Launch", "Idea", None, None,
+                   "en-IN", 32, 3, "RESEARCHED", now)
+        connection = FakeConnection([FakeCursor(one=("IDEA",)), FakeCursor(one=updated)])
+        result = await ContentRepository(FakePool(connection)).transition_content(
+            brand_id=brand_id, content_id=content_id, owner_user_id="owner-1",
+            target_status=ContentStatus.RESEARCHED,
+        )
+        select_sql, select_params = connection.queries[0]
+        update_sql, update_params = connection.queries[1]
+        self.assertIn("b.owner_user_id = %s", select_sql)
+        self.assertIn("FOR UPDATE OF c", select_sql)
+        self.assertEqual(select_params, (content_id, brand_id, "owner-1"))
+        self.assertIn("AND c.status = %s", update_sql)
+        self.assertEqual(update_params[-1], "IDEA")
+        self.assertEqual(result.typed_status, ContentStatus.RESEARCHED)
+
+    async def test_transition_rejects_invalid_edge_without_mutating(self):
+        connection = FakeConnection([FakeCursor(one=("IDEA",))])
+        with self.assertRaises(InvalidContentTransition):
+            await ContentRepository(FakePool(connection)).transition_content(
+                brand_id=UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01"),
+                content_id=UUID("64135a38-e28b-4e22-bebf-c1906761b681"),
+                owner_user_id="owner-1", target_status=ContentStatus.PUBLISHED,
+            )
+        self.assertEqual(len(connection.queries), 1)
+
+    async def test_transition_hides_foreign_owned_content(self):
+        connection = FakeConnection([FakeCursor(one=None)])
+        with self.assertRaises(OwnedContentNotFound):
+            await ContentRepository(FakePool(connection)).transition_content(
+                brand_id=UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01"),
+                content_id=UUID("64135a38-e28b-4e22-bebf-c1906761b681"),
+                owner_user_id="other-owner", target_status=ContentStatus.RESEARCHED,
+            )
+
+    async def test_generic_transition_cannot_change_workflow_managed_states(self):
+        for target in (ContentStatus.SCHEDULED, ContentStatus.PARTIALLY_PUBLISHED, ContentStatus.PUBLISHED):
+            with self.subTest(target=target):
+                connection = FakeConnection([FakeCursor(one=("READY",))])
+                with self.assertRaises(InvalidContentTransition):
+                    await ContentRepository(FakePool(connection)).transition_content(
+                        brand_id=UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01"),
+                        content_id=UUID("64135a38-e28b-4e22-bebf-c1906761b681"),
+                        owner_user_id="owner-1", target_status=target,
+                    )
+                self.assertEqual(len(connection.queries), 1)
 
 
 if __name__ == "__main__":
