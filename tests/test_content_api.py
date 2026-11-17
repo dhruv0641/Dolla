@@ -203,6 +203,17 @@ class ContentApiTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(response.status_code, 422)
 
+    async def test_generic_transition_route_cannot_claim_publication(self):
+        url = f"/api/v1/brands/{BRAND_ID}/content/{CONTENT_ID}/transition"
+        StubRepository.failures = {
+            "transition_content": InvalidContentTransition("publication requires verified evidence")
+        }
+        for target in ("PUBLISHED", "PARTIALLY_PUBLISHED"):
+            with self.subTest(target=target):
+                response = await self.client.post(url, json={"target_status": target})
+                self.assertEqual(response.status_code, 409)
+                self.assertEqual(response.json(), {"detail": "invalid_content_transition"})
+
 
 def _b64(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")

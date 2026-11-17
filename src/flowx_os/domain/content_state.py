@@ -44,11 +44,10 @@ ALLOWED_CONTENT_TRANSITIONS: dict[ContentStatus, frozenset[ContentStatus]] = {
         ContentStatus.SCHEDULED, ContentStatus.NEEDS_REVIEW, ContentStatus.ARCHIVED,
     }),
     ContentStatus.SCHEDULED: frozenset({
-        ContentStatus.PUBLISHED, ContentStatus.PARTIALLY_PUBLISHED,
         ContentStatus.READY, ContentStatus.FAILED,
     }),
     ContentStatus.PARTIALLY_PUBLISHED: frozenset({
-        ContentStatus.PUBLISHED, ContentStatus.SCHEDULED, ContentStatus.FAILED,
+        ContentStatus.SCHEDULED, ContentStatus.FAILED,
     }),
     # Re-entry starts at IDEA so failed artifacts cannot silently skip validation.
     ContentStatus.FAILED: frozenset({ContentStatus.IDEA, ContentStatus.ARCHIVED}),

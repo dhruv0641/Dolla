@@ -14,10 +14,10 @@
 | `QA_PENDING` | `NEEDS_REVIEW`, `FAILED` |
 | `NEEDS_REVIEW` | `READY`, `SCRIPT_READY`, `STORYBOARD_READY`, `ARCHIVED` |
 | `READY` | `SCHEDULED`, `NEEDS_REVIEW`, `ARCHIVED` |
-| `SCHEDULED` | `PUBLISHED`, `PARTIALLY_PUBLISHED`, `READY`, `FAILED` |
-| `PARTIALLY_PUBLISHED` | `PUBLISHED`, `SCHEDULED`, `FAILED` |
+| `SCHEDULED` | `READY`, `FAILED` |
+| `PARTIALLY_PUBLISHED` | `SCHEDULED`, `FAILED` |
 | `FAILED` | `IDEA`, `ARCHIVED` |
 | `PUBLISHED` | `ARCHIVED` |
 | `ARCHIVED` | none (terminal) |
 
-Failed content restarts at `IDEA` so prior artifacts cannot skip validation gates. Publishing integrations are not implemented by this transition endpoint; callers must only request `PUBLISHED` or `PARTIALLY_PUBLISHED` after an authorized platform workflow verifies remote publication. This state machine is a domain guard, not evidence of a live publish. Live database concurrency behavior remains unverified until PostgreSQL integration tests are available.
+The generic transition API has no incoming edge to `PUBLISHED` or `PARTIALLY_PUBLISHED`. Only a future trusted publishing workflow may set those outcomes after it records verified remote publication evidence; generic operators cannot claim publication through this endpoint. Failed content restarts at `IDEA` so prior artifacts cannot skip validation gates. Live database concurrency behavior remains unverified until PostgreSQL integration tests are available.

@@ -124,6 +124,16 @@ class ContentRepositoryTests(unittest.IsolatedAsyncioTestCase):
                 owner_user_id="other-owner", target_status=ContentStatus.RESEARCHED,
             )
 
+    async def test_generic_transition_cannot_mark_scheduled_content_published(self):
+        connection = FakeConnection([FakeCursor(one=("SCHEDULED",))])
+        with self.assertRaises(InvalidContentTransition):
+            await ContentRepository(FakePool(connection)).transition_content(
+                brand_id=UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01"),
+                content_id=UUID("64135a38-e28b-4e22-bebf-c1906761b681"),
+                owner_user_id="owner-1", target_status=ContentStatus.PUBLISHED,
+            )
+        self.assertEqual(len(connection.queries), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
