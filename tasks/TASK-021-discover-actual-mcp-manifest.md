@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
 - **Status:** BLOCKED
-- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; tracking branch `feature/TASK-021-discover-actual-mcp-manifest` targets `develop`.
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) targets `develop` from `feature/TASK-021-discover-actual-mcp-manifest`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** No authorized Google Flow MCP server or manifest is available to this Codex session. The actual server tool schema cannot be inspected until the server is configured/exposed. The proposed contract and unrelated video providers are not substitutes.
 
