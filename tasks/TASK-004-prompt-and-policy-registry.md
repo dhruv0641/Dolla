@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-003
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,7 +30,8 @@ Deliver prompt and policy registry as an independently verifiable capability wit
 - [x] Invalid schema, duplicate IDs, invalid retry caps, and inconsistent approval policy are rejected without exposing file contents.
 - [x] Default policy caps scene regenerations at two, requires human approval, and disables autonomous publishing.
 - [x] Operator docs define versioning, safe limits, and explicitly state no provider invocation occurs.
-- [ ] Unit tests cover valid loading and malformed/unsafe registry cases; CI passes.
+- [x] Unit tests cover valid loading and malformed/unsafe registry cases.
+- [ ] CI passes.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -40,7 +41,7 @@ Deliver prompt and policy registry as an independently verifiable capability wit
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/8
 - Branch: `feature/TASK-004-prompt-and-policy-registry`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/9
 - CI run: pending
 
 ## Definition of Done

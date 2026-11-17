@@ -8,7 +8,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-001 Repository baseline and developer workflow** — DONE · DevOps Engineer · 8h · deps: none · Issue: [#2](https://github.com/dhruv0641/Dolla/issues/2) · PR: [#3](https://github.com/dhruv0641/Dolla/pull/3) · merged to develop as `062b7bb`; CI passed
 - **TASK-002 Environment and secret handling** — DONE · DevOps Engineer · 12h · deps: TASK-001 · Issue: [#4](https://github.com/dhruv0641/Dolla/issues/4) · PR: [#5](https://github.com/dhruv0641/Dolla/pull/5) · merged to develop as `7c5537a`; CI passed
 - **TASK-003 API and frontend shells** — DONE · Backend Engineer · 16h · deps: TASK-002 · Issue: [#6](https://github.com/dhruv0641/Dolla/issues/6) · PR: [#7](https://github.com/dhruv0641/Dolla/pull/7) · merged to develop as `d33b945`; CI passed
-- **TASK-004 Prompt and policy registry** — IN_PROGRESS · AI Workflow Engineer · 4h · deps: TASK-003 · Issue: [#8](https://github.com/dhruv0641/Dolla/issues/8) · Branch: `feature/TASK-004-prompt-and-policy-registry` · PR: pending
+- **TASK-004 Prompt and policy registry** — IN_REVIEW · AI Workflow Engineer · 4h · deps: TASK-003 · Issue: [#8](https://github.com/dhruv0641/Dolla/issues/8) · Branch: `feature/TASK-004-prompt-and-policy-registry` · PR: [#9](https://github.com/dhruv0641/Dolla/pull/9) · CI pending
 - **TASK-005 Health and readiness endpoints** — BACKLOG · Backend Engineer · 6h · deps: TASK-004
 
 ## EPIC-02: Database and Persistence
@@ -143,5 +143,6 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-003 PR: [#7](https://github.com/dhruv0641/Dolla/pull/7), targeting `develop`; GitHub Actions passed on head `7d0a9d0d777d9fa9e3389eefdbd1d27f5c750209`.
 - TASK-003 merged to `develop` at `d33b9451e18933f37e4fc5b35f0fa7cae7fad269`; issue [#6](https://github.com/dhruv0641/Dolla/issues/6) closed and post-merge CI passed.
 - TASK-004 issue: [#8](https://github.com/dhruv0641/Dolla/issues/8); branch `feature/TASK-004-prompt-and-policy-registry`.
+- TASK-004 PR: [#9](https://github.com/dhruv0641/Dolla/pull/9), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
