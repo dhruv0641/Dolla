@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-001
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -43,7 +43,7 @@ Deliver environment and secret handling as an independently verifiable capabilit
 - Issue: https://github.com/dhruv0641/Dolla/issues/4
 - Branch: `feature/TASK-002-environment-and-secret-handling`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/5
-- CI run: initial checks passed on head `8f4939b8958ab7bfac42ae9121ed502be2a65769`; latest tracker update will rerun CI
+- CI run: passing on head `ae5d29aa10dbd9c9ca23c4bd4fc141cc44710d63`; PR merged to `develop` as `7c5537a8af31dc90baaef3cb9b33437a3850c957`
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

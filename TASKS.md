@@ -6,8 +6,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 
 - **TASK-001 Repository baseline and developer workflow** — DONE · DevOps Engineer · 8h · deps: none · Issue: [#2](https://github.com/dhruv0641/Dolla/issues/2) · PR: [#3](https://github.com/dhruv0641/Dolla/pull/3) · merged to develop as `062b7bb`; CI passed
-- **TASK-002 Environment and secret handling** — IN_REVIEW · DevOps Engineer · 12h · deps: TASK-001 · Issue: [#4](https://github.com/dhruv0641/Dolla/issues/4) · Branch: `feature/TASK-002-environment-and-secret-handling` · PR: [#5](https://github.com/dhruv0641/Dolla/pull/5) · initial CI passing
-- **TASK-003 API and frontend shells** — BACKLOG · Backend Engineer · 16h · deps: TASK-002
+- **TASK-002 Environment and secret handling** — DONE · DevOps Engineer · 12h · deps: TASK-001 · Issue: [#4](https://github.com/dhruv0641/Dolla/issues/4) · PR: [#5](https://github.com/dhruv0641/Dolla/pull/5) · merged to develop as `7c5537a`; CI passed
+- **TASK-003 API and frontend shells** — IN_PROGRESS · Backend Engineer · 16h · deps: TASK-002 · Issue: [#6](https://github.com/dhruv0641/Dolla/issues/6) · Branch: `feature/TASK-003-api-and-frontend-shells` · PR: pending
 - **TASK-004 Prompt and policy registry** — BACKLOG · AI Workflow Engineer · 4h · deps: TASK-003
 - **TASK-005 Health and readiness endpoints** — BACKLOG · Backend Engineer · 6h · deps: TASK-004
 
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 1 (TASK-001); TASK-002 is now in progress.
+- DONE: 2 (TASK-001, TASK-002); TASK-003 is now in progress.
 
 ## GitHub delivery references
 
@@ -139,5 +139,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-001 PR: [#3](https://github.com/dhruv0641/Dolla/pull/3), merged to `develop`; issue [#2](https://github.com/dhruv0641/Dolla/issues/2) closed by merge.
 - TASK-002 issue: [#4](https://github.com/dhruv0641/Dolla/issues/4); branch `feature/TASK-002-environment-and-secret-handling`.
 - TASK-002 PR: [#5](https://github.com/dhruv0641/Dolla/pull/5), targeting `develop`; CI passed on initial implementation commit.
+- TASK-002 merged to `develop` at `7c5537a8af31dc90baaef3cb9b33437a3850c957`; issue [#4](https://github.com/dhruv0641/Dolla/issues/4) closed by merge.
+- TASK-003 issue: [#6](https://github.com/dhruv0641/Dolla/issues/6); branch `feature/TASK-003-api-and-frontend-shells`.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.

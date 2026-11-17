@@ -8,9 +8,12 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 
 ## Development setup
 
-- Python 3.11+ for project-plan validation: `python scripts/validate_project_plan.py`
+- Python 3.11+; install backend dependencies with `python -m pip install -e ".[dev]"`.
+- Run the API locally with `uvicorn flowx_os.api.main:app --reload --app-dir src`.
 - Local configuration: copy `.env.example` to `.env`; configuration accepts secret references only.
 - Run tests: `python -m unittest discover -s tests -v`
+- Start the Next.js dashboard from `web/` with `npm ci && npm run dev`.
+- Validate planning structure with `python scripts/validate_project_plan.py`.
 - Git and Git Credential Manager for GitHub operations
 - Feature runtime dependencies will be recorded with their implementation tasks.
 
