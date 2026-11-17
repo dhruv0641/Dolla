@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-051
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#58](https://github.com/dhruv0641/Dolla/issues/58); branch `feature/TASK-052-live-executive-command-center` targets `develop`.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,7 +24,7 @@ Deliver live executive command center as an independently verifiable capability 
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`web/src/app/api/dashboard-status/route.ts` validates and relays the existing public backend health/readiness contracts; `web/src/components/dashboard-shell.tsx` renders refreshed service status while preserving unavailable states for metrics without a backend summary API. Configure the server-side `FLOWX_API_BASE_URL`; no bearer token or external account access is involved.
 
 ## Acceptance Criteria
 - [ ] Capability is implemented behind documented interfaces and configuration.
@@ -38,3 +39,11 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Tests and Verification
+- `cd web; npm run typecheck` — passed.
+- `cd web; npm run build` — passed; `/api/dashboard-status` is dynamically served.
+- `git diff --check` — passed.
+- Manual HTTP check with `FLOWX_API_BASE_URL` unset returned HTTP 503 `{ "state": "unavailable", "reason": "api_not_configured" }`.
+- Independent Technical Reviewer: passed with no blocker. Reviewer findings on independent readiness failure handling, overlapping refreshes, and HTTP/body consistency were addressed and re-reviewed.
+- No visual browser review or successful upstream integration check completed; no authenticated content, Flow MCP, publishing or analytics data is claimed.
