@@ -121,7 +121,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-072 Threat model, access and audit** — DONE · DevOps Engineer · 6h · deps: none · Issue: [#66](https://github.com/dhruv0641/Dolla/issues/66) · PR: [#67](https://github.com/dhruv0641/Dolla/pull/67) · merged to develop as `c070ea7`; CI passed; reviewer passed
 - **TASK-073 Logs, metrics, traces and alerts** — DONE · DevOps Engineer · 8h · deps: TASK-072 · Issue: [#69](https://github.com/dhruv0641/Dolla/issues/69) · PR: [#70](https://github.com/dhruv0641/Dolla/pull/70) · merged to develop as `2a7faa8`; CI passed; reviewer passed
 - **TASK-074 Docker Compose and environment profiles** — DONE · DevOps Engineer · 12h · deps: TASK-073 · Issue: [#72](https://github.com/dhruv0641/Dolla/issues/72) · PR: [#73](https://github.com/dhruv0641/Dolla/pull/73) · merged to develop as `e789e14`; CI passed; reviewer passed
-- **TASK-075 Encrypted backups and runbooks** — BACKLOG · DevOps Engineer · 16h · deps: TASK-074
+- **TASK-075 Encrypted backups and runbooks** — IN_REVIEW · DevOps Engineer · 16h · deps: TASK-074 · Issue: [#75](https://github.com/dhruv0641/Dolla/issues/75) · Branch: `feature/TASK-075-encrypted-backups-runbooks`
 - **TASK-076 Security and release gates** — BACKLOG · DevOps Engineer · 4h · deps: TASK-075
 
 ## Totals
@@ -210,3 +210,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-074 issue [#72](https://github.com/dhruv0641/Dolla/issues/72) opened after TASK-073; local application-shell container work started. PostgreSQL/auth are not wired and will not be represented as ready.
 
 - TASK-074 issue [#72](https://github.com/dhruv0641/Dolla/issues/72) closed by PR [#73](https://github.com/dhruv0641/Dolla/pull/73), merged to develop as 789e14; CI and independent review passed. Compose config validates, but Docker Engine was unavailable for image/runtime verification.
+
+- TASK-075 issue [#75](https://github.com/dhruv0641/Dolla/issues/75) opened after TASK-074 completion; implementation and tests are in review. It streams encrypted archives without plaintext intermediates, authenticates a ciphertext snapshot before restore, and records live integration limits in the runbook.

@@ -111,3 +111,6 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-074 Compose profile passed configuration validation and independent review. Docker Engine is unavailable, so images and runtime health were not verified; the local shell is not a production deployment.
 
 - 2026-11-18: TASK-074 merged through PR #73 as 789e14; CI and independent review passed, issue #72 closed. Compose config is valid; image build/runtime checks remain unverified because Docker Engine was unavailable.
+
+- 2026-11-18: TASK-075 encrypted backups selected after TASK-074; issue #75 opened. Existing PostgreSQL backups were checksum-verified but plaintext; extending them with streaming age encryption and external identity paths to avoid plaintext disk files.
+- 2026-11-18: TASK-075 encrypted PostgreSQL backup/restore implementation passed 157 tests, plan validation and independent security review; PR preparation in progress. Live age/PostgreSQL recovery remains unverified. See `docs/IMPLEMENTATION_PLAN.md` for the timestamped development log.
