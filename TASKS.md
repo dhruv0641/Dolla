@@ -29,7 +29,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-04: AI Agent System
 
-- **TASK-016 Agent schemas and validation** — BACKLOG · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013
+- **TASK-016 Agent schemas and validation** — IN_REVIEW · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013 · Issue: [#37](https://github.com/dhruv0641/Dolla/issues/37) · Branch: `feature/TASK-016-agent-schemas-and-validation`
 - **TASK-017 Research with source evidence** — BACKLOG · AI Workflow Engineer · 6h · deps: TASK-016
 - **TASK-018 Strategy and idea scoring** — BACKLOG · AI Workflow Engineer · 8h · deps: TASK-017
 - **TASK-019 Script and storyboard generation** — BACKLOG · AI Workflow Engineer · 12h · deps: TASK-018

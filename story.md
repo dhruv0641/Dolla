@@ -44,7 +44,7 @@ P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 offi
 A user can inspect an approved scheduled idea, original playable Flow scenes, narration from zero, QC-approved MP4, verified per-platform publication links, reconciled per-account credit costs and analytics feeding the next schedule. Tasks require acceptance evidence, passing relevant tests, review and documentation; architecture or mocks alone never imply production readiness.
 
 ## Current implementation status
-**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-015 are merged to `develop`. MCP capabilities and external credentials are unverified/unconfigured.
+**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-015 are merged to `develop`, with TASK-016 under review. MCP capabilities and external credentials are unverified/unconfigured.
 
 ## Outstanding work and blockers
 No planning blocker. Flow proof requires actual authorized server/tool manifest, supported auth mode, generation/status/download/credit capabilities and authorized account. Publishing requires eligible channels, OAuth grants and current API validation. Never paste credentials into chat.
@@ -62,3 +62,5 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-014 merged to `develop` after CI and independent review; TASK-015 scheduling, bounded retries and dead-letter handling began.
 - 2026-11-18: TASK-015 implementation pushed on its feature branch as commit `3e46e50`; PR #34 targets `develop`. Unit tests and plan validation pass; an independent review's lease-fencing finding was fixed and re-reviewed without remaining blockers. GitHub CI pending.
 - 2026-11-18: TASK-015 PR #34 merged to `develop` as `61c5ae93264db56bb257bcca8df4d92f1721274c`; both GitHub Actions checks passed, issue #33 closed, and independent review found no remaining blocker. Local PostgreSQL integration was not run.
+- 2026-11-18: TASK-016 agent schemas and validation began on `feature/TASK-016-agent-schemas-and-validation`; see the unified development log for issue and verification evidence.
+- 2026-11-18: TASK-016 strict request/output schemas passed independent schema/security review; malformed URL and error-redaction findings were fixed. Local tests are green; CI and PR are pending.
