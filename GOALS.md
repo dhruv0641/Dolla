@@ -16,11 +16,11 @@ Only one primary user goal may be active at a time.
 - **Requested outcome:** Adopt `https://github.com/dhruv0641/Dolla.git`, protect `main`, integrate through `develop`, use task/epic branches and PRs, run CI, maintain GitHub references and proceed through the 76-task backlog without pushing directly to `main` or force-pushing shared branches.
 - **Related tasks:** TASK-001 through TASK-076; begin with TASK-001.
 - **Repository:** [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
-- **Branches:** `main` protected by active ruleset ID 27482128; `develop` is the integration branch (being initialized).
-- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access; main ruleset created. TASK-001 implementation and CI are in progress.
+- **Branches:** `main` protected by active ruleset ID 27482128; `develop` is protected by active ruleset ID 27482560. TASK-001 branch: `feature/TASK-001-repository-baseline-and-developer-workflow`.
+- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access; main ruleset created. Planning seed pushed to `develop` at `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`. TASK-001 implementation and CI are in progress.
 - **GitHub issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
-- **Current PR:** None yet; TASK-001 branch is being prepared.
+- **Current PR:** [#3 TASK-001](https://github.com/dhruv0641/Dolla/pull/3), targets `develop`; initial GitHub Actions checks passed.
 - **Final status:** ACTIVE.
 
-## Active goal
+## Active goal details
 GOAL-002. Continue from the latest verified checkpoint; update this record, TASKS.md and story.md after each task or significant milestone.
