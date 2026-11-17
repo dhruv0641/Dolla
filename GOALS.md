@@ -21,7 +21,7 @@ Only one primary user goal may be active at a time.
 - **GitHub issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
 - **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), closed; TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), open.
 - **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 through TASK-005 issues [#2](https://github.com/dhruv0641/Dolla/issues/2), [#4](https://github.com/dhruv0641/Dolla/issues/4), [#6](https://github.com/dhruv0641/Dolla/issues/6), [#8](https://github.com/dhruv0641/Dolla/issues/8), and [#10](https://github.com/dhruv0641/Dolla/issues/10) closed; TASK-006 [#12](https://github.com/dhruv0641/Dolla/issues/12) open.
-- **Current PR:** TASK-001 through TASK-005 PRs [#3](https://github.com/dhruv0641/Dolla/pull/3), [#5](https://github.com/dhruv0641/Dolla/pull/5), [#7](https://github.com/dhruv0641/Dolla/pull/7), [#9](https://github.com/dhruv0641/Dolla/pull/9), and [#11](https://github.com/dhruv0641/Dolla/pull/11) merged to `develop`.
+- **Current PR:** TASK-001 through TASK-005 PRs [#3](https://github.com/dhruv0641/Dolla/pull/3), [#5](https://github.com/dhruv0641/Dolla/pull/5), [#7](https://github.com/dhruv0641/Dolla/pull/7), [#9](https://github.com/dhruv0641/Dolla/pull/9), and [#11](https://github.com/dhruv0641/Dolla/pull/11) merged to `develop`; TASK-006 PR [#13](https://github.com/dhruv0641/Dolla/pull/13) is open.
 - **Final status:** ACTIVE.
 
 

@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-001
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,7 +30,7 @@ Deliver review schema and create migrations as an independently verifiable capab
 - [x] Schema findings cover tenant/RLS, lineage, secrets, payload/error retention, credit semantics, event identity, deletion and leases.
 - [x] README/operator docs explain one-time forward-only migration handling and deployment prerequisites.
 - [x] Migration parsed by PostgreSQL grammar parser (33 statements); local PostgreSQL server/client is unavailable, so execution is not claimed.
-- [ ] CI installs the parser and validates the migration syntax on each change.
+- [x] CI installs the parser and validates the migration syntax on each change.
 - [ ] CI passes.
 
 ## Tests and Verification
@@ -41,7 +41,7 @@ Deliver review schema and create migrations as an independently verifiable capab
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/12
 - Branch: `feature/TASK-006-review-schema-and-create-migrations`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/13
 - CI run: pending
 
 ## Definition of Done
