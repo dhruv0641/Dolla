@@ -63,4 +63,4 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-015 implementation pushed on its feature branch as commit `3e46e50`; PR #34 targets `develop`. Unit tests and plan validation pass; an independent review's lease-fencing finding was fixed and re-reviewed without remaining blockers. GitHub CI pending.
 - 2026-11-18: TASK-015 PR #34 merged to `develop` as `61c5ae93264db56bb257bcca8df4d92f1721274c`; both GitHub Actions checks passed, issue #33 closed, and independent review found no remaining blocker. Local PostgreSQL integration was not run.
 - 2026-11-18: TASK-016 agent schemas and validation began on `feature/TASK-016-agent-schemas-and-validation`; see the unified development log for issue and verification evidence.
-- 2026-11-18: TASK-016 strict request/output schemas passed independent schema/security review; malformed URL and error-redaction findings were fixed. Local tests are green; CI and PR are pending.
+- 2026-11-18: TASK-016 implementation commit `c54014d` is in PR #38 to `develop`, linked to issue #37. Independent schema/security review passed; local checks are green and GitHub CI is pending.
