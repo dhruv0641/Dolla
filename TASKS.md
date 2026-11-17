@@ -31,7 +31,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-016 Agent schemas and validation** — DONE · AI Workflow Engineer · 4h · deps: TASK-011, TASK-013 · Issue: [#37](https://github.com/dhruv0641/Dolla/issues/37) · PR: [#38](https://github.com/dhruv0641/Dolla/pull/38) · merged to develop as `cf90289`; CI and independent review passed
 - **TASK-017 Research with source evidence** — DONE · AI Workflow Engineer · 6h · deps: TASK-016 · Issue: [#40](https://github.com/dhruv0641/Dolla/issues/40) · PR: [#41](https://github.com/dhruv0641/Dolla/pull/41) · merged to develop as `1052800`; CI and independent review passed
-- **TASK-018 Strategy and idea scoring** — IN_REVIEW · AI Workflow Engineer · 8h · deps: TASK-017 · Issue: [#43](https://github.com/dhruv0641/Dolla/issues/43) · PR: [#44](https://github.com/dhruv0641/Dolla/pull/44) · independent review passed; CI pending
+- **TASK-018 Strategy and idea scoring** — DONE · AI Workflow Engineer · 8h · deps: TASK-017 · Issue: [#43](https://github.com/dhruv0641/Dolla/issues/43) · PR: [#44](https://github.com/dhruv0641/Dolla/pull/44) · merged to develop as `ef36c14`; CI and independent review passed
 - **TASK-019 Script and storyboard generation** — BACKLOG · AI Workflow Engineer · 12h · deps: TASK-018
 - **TASK-020 Prompt, review and analyst agents** — BACKLOG · AI Workflow Engineer · 16h · deps: TASK-019
 
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 17 (TASK-001 through TASK-017).
+- DONE: 18 (TASK-001 through TASK-018).
 
 ## GitHub delivery references
 
@@ -169,3 +169,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
+
+- TASK-018 issue [#43](https://github.com/dhruv0641/Dolla/issues/43) and PR [#44](https://github.com/dhruv0641/Dolla/pull/44) merged to `develop` as `ef36c14`; checks and independent review passed.
