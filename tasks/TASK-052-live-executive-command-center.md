@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-051
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#58](https://github.com/dhruv0641/Dolla/issues/58); branch `feature/TASK-052-live-executive-command-center` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#58](https://github.com/dhruv0641/Dolla/issues/58) closed; PR [#59](https://github.com/dhruv0641/Dolla/pull/59) merged to `develop` as `a8ce250`; CI passed.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
