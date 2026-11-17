@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-019
 - **Estimated complexity:** 16 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
-- **GitHub:** Issue [#49](https://github.com/dhruv0641/Dolla/issues/49); branch `feature/TASK-020-prompt-review-and-analyst-agents` targets `develop`.
+- **GitHub:** Issue [#49](https://github.com/dhruv0641/Dolla/issues/49); PR [#50](https://github.com/dhruv0641/Dolla/pull/50) targets `develop` from `feature/TASK-020-prompt-review-and-analyst-agents`.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
