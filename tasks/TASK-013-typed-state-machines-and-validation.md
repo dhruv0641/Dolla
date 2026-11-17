@@ -44,4 +44,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Live PostgreSQL integration is unavailable; do not claim database concurrency behavior is production-verified. GitHub CI and independent technical review remain pending.
 
 ## Definition of Done
-Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Reviewer found a publication-evidence gate violation; a fix is in progress before merge.
+Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Reviewer finding on publication-evidence gating was addressed in commit `29711a8`; refreshed CI and reviewer confirmation are pending.
