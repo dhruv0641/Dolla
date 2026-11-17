@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-011
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -42,4 +42,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Record actual commands/results; live PostgreSQL integration is not available in this environment and is required before claiming production readiness.
 
 ## Definition of Done
-Implementation is in progress on `feature/TASK-012-brand-and-content-lifecycle-apis`; issue [#24](https://github.com/dhruv0641/Dolla/issues/24). PR/CI/review evidence will be recorded here and in the single development log.
+Implementation is submitted on `feature/TASK-012-brand-and-content-lifecycle-apis`; issue [#24](https://github.com/dhruv0641/Dolla/issues/24), PR [#25](https://github.com/dhruv0641/Dolla/pull/25). CI is running; merge/reviewer evidence will be recorded here and in the single development log.

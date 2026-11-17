@@ -22,7 +22,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-03: Backend and Orchestration
 
 - **TASK-011 Authentication and role model** — DONE · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009 · Issue: [#22](https://github.com/dhruv0641/Dolla/issues/22) · Branch: `feature/TASK-011-authentication-and-role-model` · PR: [#23](https://github.com/dhruv0641/Dolla/pull/23) · merged to develop as `46c6caa`; CI passed
-- **TASK-012 Brand and content lifecycle APIs** — IN_PROGRESS · Backend Engineer · 4h · deps: TASK-011 · Issue: [#24](https://github.com/dhruv0641/Dolla/issues/24) · Branch: `feature/TASK-012-brand-and-content-lifecycle-apis`
+- **TASK-012 Brand and content lifecycle APIs** — IN_REVIEW · Backend Engineer · 4h · deps: TASK-011 · Issue: [#24](https://github.com/dhruv0641/Dolla/issues/24) · Branch: `feature/TASK-012-brand-and-content-lifecycle-apis` · PR: [#25](https://github.com/dhruv0641/Dolla/pull/25) · CI pending
 - **TASK-013 Typed state machines and validation** — BACKLOG · Backend Engineer · 6h · deps: TASK-012
 - **TASK-014 Idempotent workflow processing** — BACKLOG · Backend Engineer · 8h · deps: TASK-013
 - **TASK-015 Scheduling, retries and dead letters** — BACKLOG · Backend Engineer · 12h · deps: TASK-014
@@ -159,7 +159,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-010 PR: [#21](https://github.com/dhruv0641/Dolla/pull/21), targeting `develop`; CI pending.
 - TASK-010 merged to `develop` at `426bf84b38cd2da45cd63bf61cceda3878dd7874`; issue #20 closed and PR/push CI passed.
 - TASK-011 issue [#22](https://github.com/dhruv0641/Dolla/issues/22) and PR [#23](https://github.com/dhruv0641/Dolla/pull/23) merged to develop; CI passed.
-- TASK-012 issue [#24](https://github.com/dhruv0641/Dolla/issues/24); branch `feature/TASK-012-brand-and-content-lifecycle-apis`; PR pending.
+- TASK-012 issue [#24](https://github.com/dhruv0641/Dolla/issues/24); branch `feature/TASK-012-brand-and-content-lifecycle-apis`; PR [#25](https://github.com/dhruv0641/Dolla/pull/25) targets `develop`; CI pending.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
