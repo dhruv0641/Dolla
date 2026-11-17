@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-003
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -31,7 +31,7 @@ Deliver prompt and policy registry as an independently verifiable capability wit
 - [x] Default policy caps scene regenerations at two, requires human approval, and disables autonomous publishing.
 - [x] Operator docs define versioning, safe limits, and explicitly state no provider invocation occurs.
 - [x] Unit tests cover valid loading and malformed/unsafe registry cases.
-- [ ] CI passes.
+- [x] CI passes on PR and push events.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.

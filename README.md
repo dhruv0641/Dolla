@@ -10,6 +10,7 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 
 - Python 3.11+; install backend dependencies with `python -m pip install -e ".[dev]"`.
 - Run the API locally with `uvicorn flowx_os.api.main:app --reload --app-dir src`.
+- API liveness and readiness semantics are documented in [HEALTH_READINESS.md](docs/HEALTH_READINESS.md).
 - Prompt and policy defaults are versioned in `config/prompt_registry.json`; see [registry documentation](docs/PROMPT_POLICY_REGISTRY.md).
 - Local configuration: copy `.env.example` to `.env`; configuration accepts secret references only.
 - Run tests: `python -m unittest discover -s tests -v`

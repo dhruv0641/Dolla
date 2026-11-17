@@ -17,11 +17,11 @@ Only one primary user goal may be active at a time.
 - **Related tasks:** TASK-001 through TASK-076; begin with TASK-001.
 - **Repository:** [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
 - **Branches:** `main` protected by active ruleset ID 27482128; `develop` is protected by active ruleset ID 27482560. TASK-001 branch: `feature/TASK-001-repository-baseline-and-developer-workflow`.
-- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. TASK-001 PR #3 merged to `develop` at `062b7bb`; TASK-002 PR #5 merged at `7c5537a`; TASK-003 PR #7 merged at `d33b945`. All passed CI. TASK-004 implementation and 16 local tests are complete; PR #9 is in review.
+- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. TASK-001 PR #3 merged to `develop` at `062b7bb`; TASK-002 PR #5 merged at `7c5537a`; TASK-003 PR #7 merged at `d33b945`; TASK-004 PR #9 merged at `dc81b5b`. All passed CI. TASK-005 implementation and 20 backend tests pass locally; PR pending.
 - **GitHub issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
 - **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), closed; TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), open.
-- **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), and TASK-003 [#6](https://github.com/dhruv0641/Dolla/issues/6) closed; TASK-004 [#8](https://github.com/dhruv0641/Dolla/issues/8) open.
-- **Current PR:** TASK-004 [#9](https://github.com/dhruv0641/Dolla/pull/9) targets `develop`; TASK-001 [#3](https://github.com/dhruv0641/Dolla/pull/3), TASK-002 [#5](https://github.com/dhruv0641/Dolla/pull/5), and TASK-003 [#7](https://github.com/dhruv0641/Dolla/pull/7) are merged to `develop` with CI passing.
+- **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), TASK-003 [#6](https://github.com/dhruv0641/Dolla/issues/6), and TASK-004 [#8](https://github.com/dhruv0641/Dolla/issues/8) closed; TASK-005 [#10](https://github.com/dhruv0641/Dolla/issues/10) open.
+- **Current PR:** TASK-001 [#3](https://github.com/dhruv0641/Dolla/pull/3), TASK-002 [#5](https://github.com/dhruv0641/Dolla/pull/5), TASK-003 [#7](https://github.com/dhruv0641/Dolla/pull/7), and TASK-004 [#9](https://github.com/dhruv0641/Dolla/pull/9) merged to `develop`; all CI runs passed.
 - **Final status:** ACTIVE.
 
 
