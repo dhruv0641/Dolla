@@ -25,7 +25,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-012 Brand and content lifecycle APIs** — DONE · Backend Engineer · 4h · deps: TASK-011 · Issues: [#24](https://github.com/dhruv0641/Dolla/issues/24), [#26](https://github.com/dhruv0641/Dolla/issues/26) · PRs: [#25](https://github.com/dhruv0641/Dolla/pull/25), [#27](https://github.com/dhruv0641/Dolla/pull/27) · merged to develop at `8a8338c` and `28b5677`; CI and independent review passed
 - **TASK-013 Typed state machines and validation** — DONE · Backend Engineer · 6h · deps: TASK-012 · Issue: [#29](https://github.com/dhruv0641/Dolla/issues/29) · PR: [#30](https://github.com/dhruv0641/Dolla/pull/30) · merged to develop as `527586c`; CI and independent review passed
 - **TASK-014 Idempotent workflow processing** — DONE · Backend Engineer · 8h · deps: TASK-013 · Issue: [#31](https://github.com/dhruv0641/Dolla/issues/31) · PR: [#32](https://github.com/dhruv0641/Dolla/pull/32) · merged to develop as `d8baa38`; CI and independent review passed
-- **TASK-015 Scheduling, retries and dead letters** — IN_REVIEW · Backend Engineer · 12h · deps: TASK-014 · Issue: [#33](https://github.com/dhruv0641/Dolla/issues/33) · PR: [#34](https://github.com/dhruv0641/Dolla/pull/34) · independent review passed; CI pending
+- **TASK-015 Scheduling, retries and dead letters** — DONE · Backend Engineer · 12h · deps: TASK-014 · Issue: [#33](https://github.com/dhruv0641/Dolla/issues/33) · PR: [#34](https://github.com/dhruv0641/Dolla/pull/34) · merged to develop as `61c5ae9`; CI and independent review passed
 
 ## EPIC-04: AI Agent System
 
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 14 (TASK-001 through TASK-014); TASK-015 is in review.
+- DONE: 15 (TASK-001 through TASK-015).
 
 ## GitHub delivery references
 
