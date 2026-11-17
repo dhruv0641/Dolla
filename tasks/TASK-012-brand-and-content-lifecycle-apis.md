@@ -33,7 +33,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] API contract, limitations and verification state are documented in `docs/CONTENT_API.md`.
 - [x] Local API/repository test suite (59 tests), project-plan validation, compilation and diff whitespace checks pass.
 - [x] PR [#25](https://github.com/dhruv0641/Dolla/pull/25) merged to `develop` as `8a8338c`; both GitHub Actions runs passed.
-- [ ] Add reviewer-requested API-level 404/503 and reviewer-role write tests under follow-up issue [#26](https://github.com/dhruv0641/Dolla/issues/26), run CI, and reconcile final task status.
+- [x] Add reviewer-requested API-level 404/503 and reviewer-role write tests; follow-up PR [#27](https://github.com/dhruv0641/Dolla/pull/27) targets `develop` and closes issue [#26](https://github.com/dhruv0641/Dolla/issues/26).
+- [ ] Follow-up GitHub CI passes and merges; reconcile final task status.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -44,4 +45,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Record actual commands/results; live PostgreSQL integration is not available in this environment and is required before claiming production readiness.
 
 ## Definition of Done
-Implementation is merged to `develop` via PR [#25](https://github.com/dhruv0641/Dolla/pull/25). Final task closure awaits reviewer follow-up tests tracked by issue [#26](https://github.com/dhruv0641/Dolla/issues/26).
+Implementation is merged to `develop` via PR [#25](https://github.com/dhruv0641/Dolla/pull/25). Reviewer follow-up tests are submitted in PR [#27](https://github.com/dhruv0641/Dolla/pull/27); final task closure awaits its CI and merge.
