@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-008
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -41,7 +41,7 @@ Deliver transactional outbox and worker leasing as an independently verifiable c
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/18
 - Branch: `feature/TASK-009-transactional-outbox-and-leasing`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/19
 - CI run: pending
 
 ## Definition of Done
