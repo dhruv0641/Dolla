@@ -15,6 +15,7 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 - The reviewed PostgreSQL baseline and open design findings are in [SCHEMA_REVIEW.md](docs/SCHEMA_REVIEW.md) and `migrations/`.
 - Async transaction boundaries are documented in [DATABASE_TRANSACTIONS.md](docs/DATABASE_TRANSACTIONS.md).
 - Workflow audit-event persistence is documented in [WORKFLOW_EVENTS.md](docs/WORKFLOW_EVENTS.md).
+- Outbox leasing invariants and remaining worker lifecycle limits are documented in [WORKER_OUTBOX.md](docs/WORKER_OUTBOX.md).
 - Local configuration: copy `.env.example` to `.env`; configuration accepts secret references only.
 - Run tests: `python -m unittest discover -s tests -v`
 - Start the Next.js dashboard from `web/` with `npm ci && npm run dev`.

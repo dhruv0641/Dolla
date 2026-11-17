@@ -15,8 +15,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-006 Review schema and create migrations** — DONE · Backend Engineer · 12h · deps: TASK-001 · Issue: [#12](https://github.com/dhruv0641/Dolla/issues/12) · PR: [#13](https://github.com/dhruv0641/Dolla/pull/13) · merged to develop as `3d61d80`; CI passed
 - **TASK-007 Data access and transaction boundaries** — DONE · Backend Engineer · 16h · deps: TASK-006 · Issue: [#14](https://github.com/dhruv0641/Dolla/issues/14) · PR: [#15](https://github.com/dhruv0641/Dolla/pull/15) · merged to develop as `4687820`; CI passed
-- **TASK-008 Workflow event and audit persistence** — IN_REVIEW · Backend Engineer · 4h · deps: TASK-007 · Issue: [#16](https://github.com/dhruv0641/Dolla/issues/16) · Branch: `feature/TASK-008-workflow-event-audit-persistence` · PR: [#17](https://github.com/dhruv0641/Dolla/pull/17) · CI pending
-- **TASK-009 Transactional outbox and worker leasing** — BACKLOG · Backend Engineer · 6h · deps: TASK-008
+- **TASK-008 Workflow event and audit persistence** — DONE · Backend Engineer · 4h · deps: TASK-007 · Issue: [#16](https://github.com/dhruv0641/Dolla/issues/16) · PR: [#17](https://github.com/dhruv0641/Dolla/pull/17) · merged to develop as `5d0845c`; CI passed
+- **TASK-009 Transactional outbox and worker leasing** — IN_PROGRESS · Backend Engineer · 6h · deps: TASK-008 · Issue: [#18](https://github.com/dhruv0641/Dolla/issues/18) · Branch: `feature/TASK-009-transactional-outbox-and-leasing` · PR: pending
 - **TASK-010 Backup, restore and retention** — BACKLOG · Backend Engineer · 8h · deps: TASK-009
 
 ## EPIC-03: Backend and Orchestration
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 7 (TASK-001 through TASK-007); TASK-008 is now in progress.
+- DONE: 8 (TASK-001 through TASK-008); TASK-009 is now in progress.
 
 ## GitHub delivery references
 
@@ -152,6 +152,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-007 issue: [#14](https://github.com/dhruv0641/Dolla/issues/14); branch `feature/TASK-007-data-access-and-transactions`.
 - TASK-007 merged to `develop` at `4687820978745e4abbd0e8c43c2b4d9388b46a04`; issue [#14](https://github.com/dhruv0641/Dolla/issues/14) closed; PR and push CI passed.
 - TASK-008 issue: [#16](https://github.com/dhruv0641/Dolla/issues/16); branch `feature/TASK-008-workflow-event-audit-persistence`.
+- TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), merged to `develop` as `5d0845c9ab6afec85e818417af0ffdc6765f7ca8`; issue #16 closed and CI passed.
+- TASK-009 issue: [#18](https://github.com/dhruv0641/Dolla/issues/18); branch `feature/TASK-009-transactional-outbox-and-leasing`.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
