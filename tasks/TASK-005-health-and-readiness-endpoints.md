@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-004
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,7 +30,7 @@ Deliver health and readiness endpoints as an independently verifiable capability
 - [x] Readiness returns 503 when no dependencies are configured, any probe is unavailable, or a probe errors; private exception text is suppressed.
 - [x] Tests cover liveness, default not-configured readiness, healthy/unhealthy probes, and probe errors.
 - [x] Operator docs define health/readiness behavior without claiming unverified service integration.
-- [ ] CI passes.
+- [x] CI passes on PR event; push verification completed.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
