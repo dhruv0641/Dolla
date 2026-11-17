@@ -13,8 +13,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-02: Database and Persistence
 
-- **TASK-006 Review schema and create migrations** — IN_REVIEW · Backend Engineer · 12h · deps: TASK-001 · Issue: [#12](https://github.com/dhruv0641/Dolla/issues/12) · Branch: `feature/TASK-006-review-schema-and-create-migrations` · PR: [#13](https://github.com/dhruv0641/Dolla/pull/13) · CI pending
-- **TASK-007 Data access and transaction boundaries** — BACKLOG · Backend Engineer · 16h · deps: TASK-006
+- **TASK-006 Review schema and create migrations** — DONE · Backend Engineer · 12h · deps: TASK-001 · Issue: [#12](https://github.com/dhruv0641/Dolla/issues/12) · PR: [#13](https://github.com/dhruv0641/Dolla/pull/13) · merged to develop as `3d61d80`; CI passed
+- **TASK-007 Data access and transaction boundaries** — IN_PROGRESS · Backend Engineer · 16h · deps: TASK-006 · Issue: [#14](https://github.com/dhruv0641/Dolla/issues/14) · Branch: `feature/TASK-007-data-access-and-transactions` · PR: pending
 - **TASK-008 Workflow event and audit persistence** — BACKLOG · Backend Engineer · 4h · deps: TASK-007
 - **TASK-009 Transactional outbox and worker leasing** — BACKLOG · Backend Engineer · 6h · deps: TASK-008
 - **TASK-010 Backup, restore and retention** — BACKLOG · Backend Engineer · 8h · deps: TASK-009
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 5 (TASK-001 through TASK-005); TASK-006 is now in progress.
+- DONE: 6 (TASK-001 through TASK-006); TASK-007 is now in progress.
 
 ## GitHub delivery references
 
@@ -149,5 +149,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-005 PR: [#11](https://github.com/dhruv0641/Dolla/pull/11), merged to `develop` at `404abb450460c30ccd16507708e7c5f73de26382`; issue #10 closed and PR CI passed.
 - TASK-006 issue: [#12](https://github.com/dhruv0641/Dolla/issues/12); branch `feature/TASK-006-review-schema-and-create-migrations`.
 - TASK-006 PR: [#13](https://github.com/dhruv0641/Dolla/pull/13), targeting `develop`; CI pending.
+- TASK-006 merged to `develop` at `3d61d80fdeb398c96e5cdb0f6b161af4526ff279`; issue [#12](https://github.com/dhruv0641/Dolla/issues/12) closed, PR/push CI passed.
+- TASK-007 issue: [#14](https://github.com/dhruv0641/Dolla/issues/14); branch `feature/TASK-007-data-access-and-transactions`.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
