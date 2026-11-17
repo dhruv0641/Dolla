@@ -5,9 +5,10 @@
 - **Priority:** P1
 - **Dependencies:** TASK-052
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#61](https://github.com/dhruv0641/Dolla/issues/61); branch `feature/TASK-053-production-board-scenes-and-assets` targets `develop`.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** Live records require an authenticated frontend session; scene and asset endpoints are not implemented. This task delivers truthful workspace presentation and leaves live rows unavailable until those dependencies exist.
 
 ## User Story
 As a FLOW AI Content OS operator, I want production board, scenes and assets, so the platform can progress safely through a traceable production lifecycle.
@@ -23,13 +24,13 @@ Deliver production board, scenes and assets as an independently verifiable capab
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`web/src/components/production-board.tsx` will render lifecycle-stage empty states and scene/asset detail panels without implying records exist. Current FastAPI exposes authenticated brand/content listing only; no browser bearer-token flow or scene/asset endpoints are implemented. The dashboard will make these integration gaps explicit rather than bypassing auth.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
-- [ ] Operational figures use backend data; absent data is shown unavailable, never fabricated.
+- [x] Board columns represent every current content lifecycle state exactly once, including scheduled, published, failed and archived records.
+- [x] Scene breakdown and asset lineage are distinct panels with clear unavailable states while APIs/auth are missing.
+- [x] No sample content, counts, media links or state transitions imply live records; access boundaries are stated.
+- [x] Responsive layout and integration limitations are documented; no live integration is claimed without verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -38,3 +39,11 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Tests and Verification
+- `cd web; npm run typecheck` — passed.
+- `cd web; npm run build` — passed.
+- `git diff --check` — passed.
+- Independent Technical Reviewer confirmed every backend `ContentStatus` is represented exactly once and found no blocker.
+- No browser preview was available; rendered responsive overflow remains visually unverified.
+- No live content, scene or asset API is available/configured; authenticated content data was not accessed.
