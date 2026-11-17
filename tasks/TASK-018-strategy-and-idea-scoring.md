@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-017
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +23,12 @@ Deliver strategy and idea scoring as an independently verifiable capability with
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/agents/strategy.py` provides versioned weights, candidate signals, scored contributions, readiness status, blockers and deterministic ranking. `tests/test_strategy.py` covers score math and readiness policy. `docs/STRATEGY_SCORING.md` documents defaults and configuration tradeoffs. No persistence or model provider is in scope.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Scoring and readiness rules are explicit and observable, with fixed blockers and profile-controlled thresholds/evidence minimums.
+- [x] Acceptance evidence and operator documentation are recorded; no provider-generated ratings are claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.

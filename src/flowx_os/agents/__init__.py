@@ -21,6 +21,21 @@ from flowx_os.agents.research import (
     ResearchSummarizer,
     RetrievedSource,
 )
+from flowx_os.agents.strategy import (
+    IdeaBlocker,
+    IdeaCandidate,
+    IdeaContribution,
+    IdeaDimension,
+    IdeaScoringError,
+    IdeaScoringErrorCode,
+    IdeaScoringProfile,
+    IdeaScoreStatus,
+    IdeaSignals,
+    IdeaWeights,
+    ScoredIdea,
+    rank_ideas,
+    score_idea,
+)
 
 __all__ = [
     "AgentRequest", "AgentRole", "AgentSchemaError", "EvidenceReference",
@@ -28,4 +43,8 @@ __all__ = [
     "validate_agent_request", "validate_agent_output", "EvidenceBackedResearch",
     "EvidenceBackedResearchWorkflow", "ResearchEvidenceError", "ResearchErrorCode",
     "ResearchSourceProvider", "ResearchSummarizer", "RetrievedSource",
+    "IdeaBlocker", "IdeaCandidate", "IdeaContribution", "IdeaDimension",
+    "IdeaScoringError", "IdeaScoringErrorCode", "IdeaScoringProfile",
+    "IdeaScoreStatus", "IdeaSignals", "IdeaWeights", "ScoredIdea", "rank_ideas",
+    "score_idea",
 ]
