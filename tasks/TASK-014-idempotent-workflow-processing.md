@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-013
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,14 +26,22 @@ Deliver idempotent workflow processing as an independently verifiable capability
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Leased jobs map to a validated typed contract with a stable job-ID idempotency key.
+- [x] Only explicitly registered event handlers can run; unknown events and non-owning workers fail closed.
+- [x] Handler database/outbox writes and job completion share one transaction; handler failure, lease loss, or lease expiry rolls back both.
+- [x] Handler contract prohibits external/non-transactional side effects; retries rely on transactional writes and stable idempotency keys.
+- [x] Retry/dead-letter timing remains owned by TASK-015 and no external processing is claimed.
+- [x] All 79 backend tests, plan validation, compileall, diff checks, frontend typecheck/build and dependency audit pass locally.
+- [x] Local tests, validator, compileall, diff checks, frontend typecheck/build and npm audit pass.
+- [x] Independent review found no blocking correctness issue; PostgreSQL behavior and the no-external-side-effect handler contract remain explicit verification limits.
+- [ ] GitHub CI passes and PR [#32](https://github.com/dhruv0641/Dolla/pull/32) merges to `develop`.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Fake-pool tests cover atomic handler+ack success, handler rollback, stale lease rollback, unknown event/worker denial and leased-row mapping.
+- Local verification: `python -m unittest discover -s tests -v` (78 passed); `python scripts/validate_project_plan.py`; `python -m compileall -q src tests`; `git diff --check`; frontend typecheck/build/audit.
+- No live PostgreSQL/worker deployment is available; do not claim end-to-end processing or external effect idempotency.
 
 ## Definition of Done
-Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+Implementation is submitted on `feature/TASK-014-idempotent-workflow-processing`; issue [#31](https://github.com/dhruv0641/Dolla/issues/31), PR [#32](https://github.com/dhruv0641/Dolla/pull/32). CI and independent review are pending.

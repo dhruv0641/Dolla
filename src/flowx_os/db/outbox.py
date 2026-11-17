@@ -127,7 +127,8 @@ async def complete_job(connection: OutboxConnection, *, job_id: UUID, worker_id:
     cursor = await connection.execute(
         """UPDATE outbox_jobs
            SET status = 'DONE', lease_owner = NULL, lease_until = NULL, updated_at = now()
-           WHERE id = %s AND status = 'LEASED' AND lease_owner = %s""",
+           WHERE id = %s AND status = 'LEASED' AND lease_owner = %s
+             AND lease_until > now()""",
         (job_id, worker_id.strip()),
     )
     if cursor.rowcount != 1:
