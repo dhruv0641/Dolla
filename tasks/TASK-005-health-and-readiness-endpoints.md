@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-004
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -40,7 +40,7 @@ Deliver health and readiness endpoints as an independently verifiable capability
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/10
 - Branch: `feature/TASK-005-health-readiness-endpoints`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/11
 - CI run: pending
 
 ## Definition of Done

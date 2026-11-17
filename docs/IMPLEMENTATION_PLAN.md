@@ -44,6 +44,7 @@ Later goals should unit-test state rules, schemas, idempotency and media checks;
 | 2026-11-18 00:28 IST | TASK-004 merge | Merged [PR #9](https://github.com/dhruv0641/Dolla/pull/9) to `develop` at `dc81b5b112a03266a0421ce943a1072b95ae5c4b`; CI passed and issue #8 closed. | 4h estimate | Done |
 | 2026-11-18 00:28 IST | TASK-005 start | Opened issue [#10](https://github.com/dhruv0641/Dolla/issues/10); added `/readyz` design on top of process-only `/healthz`, including explicit probe states and no secret-bearing errors. | 6h estimate | In progress |
 | 2026-11-18 01:00 IST | TASK-005 implementation | Implemented `/readyz` with injected probes, 200 only when all configured dependencies pass, explicit not-configured/unavailable states, and suppressed probe exception details. Added docs and tests. Plan validation and all 20 Python tests pass; PR pending. | 6h estimate | In progress |
+| 2026-11-18 01:01 IST | TASK-005 PR | Opened [PR #11](https://github.com/dhruv0641/Dolla/pull/11) to `develop`; local implementation checks passed. GitHub Actions pending. | 6h estimate | In review |
 | TBD | P0 | Discover actual MCP tools/auth; after spend authorization generate one short clip, inspect download and reconcile credits. | 16–40h + wait | Not started |
 | TBD | P1 | Build one reviewed end-to-end video using Flow, local narration, FFmpeg and QC. | 80–140h | Not started |
 | TBD | P2 | Durable persistence, APIs, workers, asset lineage, approvals and data-backed dashboard. | 120–220h | Not started |
