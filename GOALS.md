@@ -17,10 +17,11 @@ Only one primary user goal may be active at a time.
 - **Related tasks:** TASK-001 through TASK-076; begin with TASK-001.
 - **Repository:** [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
 - **Branches:** `main` protected by active ruleset ID 27482128; `develop` is protected by active ruleset ID 27482560. TASK-001 branch: `feature/TASK-001-repository-baseline-and-developer-workflow`.
-- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. Planning seed `1da41e4` and TASK-001 PR #3 are merged to `develop` at `062b7bb`; CI passed. TASK-001 is complete. TASK-002 implementation and 7 local tests pass; [PR #5](https://github.com/dhruv0641/Dolla/pull/5) targets `develop`; initial GitHub CI checks passed.
+- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. TASK-001 PR #3 merged to `develop` at `062b7bb`; TASK-002 PR #5 merged at `7c5537a`. Both passed CI. TASK-003 now has a FastAPI shell, unit tests, and a responsive Next.js app shell in progress on `feature/TASK-003-api-and-frontend-shells`.
 - **GitHub issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
 - **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), closed; TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), open.
-- **Current PR:** TASK-002 [PR #5](https://github.com/dhruv0641/Dolla/pull/5), open; TASK-001 [PR #3](https://github.com/dhruv0641/Dolla/pull/3) merged to `develop`.
+- **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2) closed; TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4) closed; TASK-003 [#6](https://github.com/dhruv0641/Dolla/issues/6) open.
+- **Current PR:** TASK-003 [PR #7](https://github.com/dhruv0641/Dolla/pull/7) targets `develop`; GitHub Actions passed. TASK-001 [#3](https://github.com/dhruv0641/Dolla/pull/3) and TASK-002 [#5](https://github.com/dhruv0641/Dolla/pull/5) merged to `develop`.
 - **Final status:** ACTIVE.
 
 ## Active goal details

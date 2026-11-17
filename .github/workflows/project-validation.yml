@@ -19,7 +19,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install backend dependencies
+        run: python -m pip install -e ".[dev]"
       - name: Validate task index and dependency graph
         run: python scripts/validate_project_plan.py
-      - name: Run configuration tests
+      - name: Run backend tests
         run: python -m unittest discover -s tests -v
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci --prefix web
+      - name: Type-check frontend
+        run: npm run typecheck --prefix web
+      - name: Build frontend
+        run: npm run build --prefix web
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high --prefix web

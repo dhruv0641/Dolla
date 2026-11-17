@@ -15,6 +15,7 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
 
 # Local media, runtime data and editor state
 data/
@@ -25,5 +26,8 @@ media/
 *.mp3
 .vscode/
 .idea/
+node_modules/
+.next/
+*.tsbuildinfo
 Thumbs.db
 Desktop.ini
