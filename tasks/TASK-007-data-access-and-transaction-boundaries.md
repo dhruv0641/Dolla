@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-006
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,7 +30,7 @@ Deliver data access and transaction boundaries as an independently verifiable ca
 - [x] No automatic retries or network side effects occur inside the transaction boundary.
 - [x] Unit tests verify connection release, commit, and rollback.
 - [x] Operator docs state supported pool/connection shape and integration limits.
-- [ ] CI passes.
+- [x] CI passes on pull request and push events.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -41,6 +41,7 @@ Deliver data access and transaction boundaries as an independently verifiable ca
 - Issue: https://github.com/dhruv0641/Dolla/issues/14
 - Branch: `feature/TASK-007-data-access-and-transactions`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/15
+- CI runs: passing on head `efd86729521393570526d0f99a390cfb98a7871e`
 - CI run: pending
 
 ## Definition of Done
