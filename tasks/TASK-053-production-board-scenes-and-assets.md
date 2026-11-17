@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-052
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#61](https://github.com/dhruv0641/Dolla/issues/61); branch `feature/TASK-053-production-board-scenes-and-assets` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#61](https://github.com/dhruv0641/Dolla/issues/61) closed; PR [#62](https://github.com/dhruv0641/Dolla/pull/62) merged to `develop` as `e970369`; CI passed.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** Live records require an authenticated frontend session; scene and asset endpoints are not implemented. This task delivers truthful workspace presentation and leaves live rows unavailable until those dependencies exist.
 
