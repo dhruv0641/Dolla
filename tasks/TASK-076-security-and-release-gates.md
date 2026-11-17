@@ -5,7 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-075
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#78](https://github.com/dhruv0641/Dolla/issues/78); branch `feature/TASK-076-security-release-gates` targets `develop`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +24,23 @@ Deliver security and release gates as an independently verifiable capability wit
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`.github/workflows/project-validation.yml` adds a Python package vulnerability audit to the required CI status check. `docs/RELEASE_GATES.md` documents automated checks, repository rulesets, manual release readiness and current limitations.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Known-vulnerability audit runs against installed runtime and development Python dependencies as part of the existing required PR status check; audit failures block that check.
+- [x] Automated checks and repository branch ruleset evidence are documented, including the limits of dependency scanning and absent deployment automation.
+- [x] Operator release checklist records manual environment-specific prerequisites and verification evidence without claiming integrations that are not live.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- `python -m pip_audit` in an isolated environment with `.[dev]` and `pip-audit==2.10.1` installed — passed after upgrading the environment's `pip` and `setuptools`; no known vulnerabilities found in the resolved Python environment.
+- `python -m unittest discover -s tests` — 157 tests passed.
+- `python -m compileall -q src tests` — passed.
+- `python scripts/validate_project_plan.py` — 15 epics and 76 task specs/dependency nodes validated; no cycles.
+- Workflow YAML parsed successfully; `npm audit --audit-level=high --prefix web` found 0 vulnerabilities; `npm run typecheck --prefix web` and `npm run build --prefix web` passed.
+- Independent Technical Reviewer — no blocking findings; confirmed the pinned action runs in the required check and includes development dependencies.
+- This release gate does not certify production readiness, malicious-package safety, or reproducible backend dependency resolution; Python has no committed lock file.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

@@ -122,7 +122,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-073 Logs, metrics, traces and alerts** — DONE · DevOps Engineer · 8h · deps: TASK-072 · Issue: [#69](https://github.com/dhruv0641/Dolla/issues/69) · PR: [#70](https://github.com/dhruv0641/Dolla/pull/70) · merged to develop as `2a7faa8`; CI passed; reviewer passed
 - **TASK-074 Docker Compose and environment profiles** — DONE · DevOps Engineer · 12h · deps: TASK-073 · Issue: [#72](https://github.com/dhruv0641/Dolla/issues/72) · PR: [#73](https://github.com/dhruv0641/Dolla/pull/73) · merged to develop as `e789e14`; CI passed; reviewer passed
 - **TASK-075 Encrypted backups and runbooks** — DONE · DevOps Engineer · 16h · deps: TASK-074 · Issue: [#75](https://github.com/dhruv0641/Dolla/issues/75) · PR: [#76](https://github.com/dhruv0641/Dolla/pull/76) · Commit: `b1b9e8d`
-- **TASK-076 Security and release gates** — BACKLOG · DevOps Engineer · 4h · deps: TASK-075
+- **TASK-076 Security and release gates** — IN_REVIEW · DevOps Engineer · 4h · deps: TASK-075 · Issue: [#78](https://github.com/dhruv0641/Dolla/issues/78) · Branch: `feature/TASK-076-security-release-gates`
 
 ## Totals
 
@@ -212,3 +212,4 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-074 issue [#72](https://github.com/dhruv0641/Dolla/issues/72) closed by PR [#73](https://github.com/dhruv0641/Dolla/pull/73), merged to develop as 789e14; CI and independent review passed. Compose config validates, but Docker Engine was unavailable for image/runtime verification.
 
 - TASK-075 issue [#75](https://github.com/dhruv0641/Dolla/issues/75) closed via PR [#76](https://github.com/dhruv0641/Dolla/pull/76), merged to `develop` as `b1b9e8d` after CI and independent review. All 157 tests pass; live PostgreSQL/age recovery remains unverified.
+- TASK-076 issue [#78](https://github.com/dhruv0641/Dolla/issues/78) opened after TASK-075. Implementation adds a Python dependency vulnerability scan to the required status check and documents automated and manual release gates; local checks and independent review passed.
