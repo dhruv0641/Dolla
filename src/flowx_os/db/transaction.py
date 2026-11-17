@@ -18,6 +18,8 @@ class TransactionConnection(Protocol):
 class QueryCursor(Protocol):
     """Minimum async cursor shape used by persistence repositories."""
 
+    rowcount: int
+
     async def fetchone(self) -> tuple[object, ...] | None: ...
 
     async def fetchall(self) -> list[tuple[object, ...]]: ...

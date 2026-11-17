@@ -81,6 +81,7 @@ class OutboxTests(unittest.IsolatedAsyncioTestCase):
         connection = FakeConnection([FakeCursor(rowcount=0)])
         with self.assertRaises(LeaseLostError):
             await complete_job(connection, job_id=uuid4(), worker_id="stale-worker")
+        self.assertIn("lease_until > now()", connection.calls[0][0])
 
 
 if __name__ == "__main__":
