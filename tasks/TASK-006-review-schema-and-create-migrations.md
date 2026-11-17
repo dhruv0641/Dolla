@@ -30,6 +30,7 @@ Deliver review schema and create migrations as an independently verifiable capab
 - [x] Schema findings cover tenant/RLS, lineage, secrets, payload/error retention, credit semantics, event identity, deletion and leases.
 - [x] README/operator docs explain one-time forward-only migration handling and deployment prerequisites.
 - [x] Migration parsed by PostgreSQL grammar parser (33 statements); local PostgreSQL server/client is unavailable, so execution is not claimed.
+- [ ] CI installs the parser and validates the migration syntax on each change.
 - [ ] CI passes.
 
 ## Tests and Verification
