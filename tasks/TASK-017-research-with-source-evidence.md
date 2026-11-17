@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-016
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +23,12 @@ Deliver research with source evidence as an independently verifiable capability 
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/agents/research.py` defines the injected provider/summarizer contracts, source snapshot bounds and citation-to-source verifier. `tests/test_research.py` covers valid and invalid evidence paths. `docs/RESEARCH_WITH_EVIDENCE.md` describes the trust boundary and provider network requirements. No migration or live provider is in scope.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented injected interfaces; source fetcher and summarizer providers are not fabricated.
+- [x] Errors and security boundaries are explicit: safe stable failure codes, bounded snapshots, citation-source binding, and quote presence checks.
+- [x] Acceptance evidence and operator documentation are recorded; source and model provider behavior are not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
