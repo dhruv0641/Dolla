@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+*.py[cod]
+tests
+docs
+web
+migrations
+data
+media
+.env
+.env.*

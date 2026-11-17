@@ -120,7 +120,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-072 Threat model, access and audit** — DONE · DevOps Engineer · 6h · deps: none · Issue: [#66](https://github.com/dhruv0641/Dolla/issues/66) · PR: [#67](https://github.com/dhruv0641/Dolla/pull/67) · merged to develop as `c070ea7`; CI passed; reviewer passed
 - **TASK-073 Logs, metrics, traces and alerts** — DONE · DevOps Engineer · 8h · deps: TASK-072 · Issue: [#69](https://github.com/dhruv0641/Dolla/issues/69) · PR: [#70](https://github.com/dhruv0641/Dolla/pull/70) · merged to develop as `2a7faa8`; CI passed; reviewer passed
-- **TASK-074 Docker Compose and environment profiles** — BACKLOG · DevOps Engineer · 12h · deps: TASK-073
+- **TASK-074 Docker Compose and environment profiles** — IN_REVIEW · DevOps Engineer · 12h · deps: TASK-073 · Issue: [#72](https://github.com/dhruv0641/Dolla/issues/72) · Branch: `feature/TASK-074-docker-compose-environment-profiles`
 - **TASK-075 Encrypted backups and runbooks** — BACKLOG · DevOps Engineer · 16h · deps: TASK-074
 - **TASK-076 Security and release gates** — BACKLOG · DevOps Engineer · 4h · deps: TASK-075
 
@@ -206,3 +206,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-073 issue [#69](https://github.com/dhruv0641/Dolla/issues/69) opened after TASK-072 completion; P2 observability implementation started on eature/TASK-073-observability.
 
 - TASK-073 issue [#69](https://github.com/dhruv0641/Dolla/issues/69) closed by PR [#70](https://github.com/dhruv0641/Dolla/pull/70), merged to develop as 2a7faa8; both CI checks, 152 tests and independent review passed. External log/metrics collection, distributed tracing and alert delivery remain unconfigured.
+
+- TASK-074 issue [#72](https://github.com/dhruv0641/Dolla/issues/72) opened after TASK-073; local application-shell container work started. PostgreSQL/auth are not wired and will not be represented as ready.

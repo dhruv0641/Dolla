@@ -105,3 +105,7 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-073 observability implementation passed independent review; 152 tests, compileall and project-plan validation pass. Request correlation is local only; external metrics, tracing and alerting are not configured.
 
 - 2026-11-18: TASK-073 merged through PR #70 as 2a7faa8; CI, 152 tests and independent review passed, issue #69 closed. External observability collection and alerting remain unconfigured.
+
+- 2026-11-18: TASK-074 local Compose profile selected after TASK-073; issue #72 opened. Docker and Compose are available in the environment. API/database/auth startup wiring is absent, so this work is scoped to a local shell and must not imply persistence or protected-route readiness.
+
+- 2026-11-18: TASK-074 Compose profile passed configuration validation and independent review. Docker Engine is unavailable, so images and runtime health were not verified; the local shell is not a production deployment.

@@ -5,7 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-073
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#72](https://github.com/dhruv0641/Dolla/issues/72); branch `feature/TASK-074-docker-compose-environment-profiles` targets `develop`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,12 +24,12 @@ Deliver docker compose and environment profiles as an independently verifiable c
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+Root and `web/` Dockerfiles, Docker ignore files and a Compose `local` profile package the API/dashboard shell with loopback-only ports and health checks. `docs/CONTAINERS.md` documents configuration and limitations. PostgreSQL/auth are intentionally not wired into the API startup yet; this profile is an application shell, not a persistent production deployment.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] The local Compose profile defines API and dashboard containers with non-root users, bounded privileges and loopback-only host ports.
+- [x] Health checks test process liveness without claiming database/auth readiness.
+- [x] Environment variables, start/stop commands, security defaults, runtime verification limits and production gaps are documented; no secrets or external integrations are required.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -37,3 +38,11 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Tests and Verification
+- `docker compose --env-file .env.example --profile local config --quiet` — passed.
+- `docker compose --env-file .env.example --profile local config --services` — lists only `api` and `web`.
+- `python scripts/validate_project_plan.py` — passed; all task metadata and dependency relationships validate.
+- `git diff --check` — passed.
+- Independent Technical Reviewer found no blocker; non-root users, capability drop, loopback defaults, process-only health checks and secret non-use were confirmed.
+- Docker Engine daemon is unavailable in this environment, so image build, container start and runtime health checks were not performed. Base image digest pinning and dependency locking remain production-hardening follow-ups.
