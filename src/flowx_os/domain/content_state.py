@@ -41,17 +41,13 @@ ALLOWED_CONTENT_TRANSITIONS: dict[ContentStatus, frozenset[ContentStatus]] = {
         ContentStatus.ARCHIVED,
     }),
     ContentStatus.READY: frozenset({
-        ContentStatus.SCHEDULED, ContentStatus.NEEDS_REVIEW, ContentStatus.ARCHIVED,
+        ContentStatus.NEEDS_REVIEW, ContentStatus.ARCHIVED,
     }),
-    ContentStatus.SCHEDULED: frozenset({
-        ContentStatus.READY, ContentStatus.FAILED,
-    }),
-    ContentStatus.PARTIALLY_PUBLISHED: frozenset({
-        ContentStatus.SCHEDULED, ContentStatus.FAILED,
-    }),
-    # Re-entry starts at IDEA so failed artifacts cannot silently skip validation.
-    ContentStatus.FAILED: frozenset({ContentStatus.IDEA, ContentStatus.ARCHIVED}),
-    ContentStatus.PUBLISHED: frozenset({ContentStatus.ARCHIVED}),
+    # Scheduling/publication states require coordinated job workflows.
+    ContentStatus.SCHEDULED: frozenset(),
+    ContentStatus.PARTIALLY_PUBLISHED: frozenset(),
+    ContentStatus.FAILED: frozenset({ContentStatus.ARCHIVED}),
+    ContentStatus.PUBLISHED: frozenset(),
     ContentStatus.ARCHIVED: frozenset(),
 }
 

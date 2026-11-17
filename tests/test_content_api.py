@@ -208,7 +208,7 @@ class ContentApiTests(unittest.IsolatedAsyncioTestCase):
         StubRepository.failures = {
             "transition_content": InvalidContentTransition("publication requires verified evidence")
         }
-        for target in ("PUBLISHED", "PARTIALLY_PUBLISHED"):
+        for target in ("SCHEDULED", "PUBLISHED", "PARTIALLY_PUBLISHED"):
             with self.subTest(target=target):
                 response = await self.client.post(url, json={"target_status": target})
                 self.assertEqual(response.status_code, 409)

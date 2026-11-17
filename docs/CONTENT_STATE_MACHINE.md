@@ -13,11 +13,11 @@
 | `ASSEMBLING` | `QA_PENDING`, `FAILED` |
 | `QA_PENDING` | `NEEDS_REVIEW`, `FAILED` |
 | `NEEDS_REVIEW` | `READY`, `SCRIPT_READY`, `STORYBOARD_READY`, `ARCHIVED` |
-| `READY` | `SCHEDULED`, `NEEDS_REVIEW`, `ARCHIVED` |
-| `SCHEDULED` | `READY`, `FAILED` |
-| `PARTIALLY_PUBLISHED` | `SCHEDULED`, `FAILED` |
-| `FAILED` | `IDEA`, `ARCHIVED` |
-| `PUBLISHED` | `ARCHIVED` |
+| `READY` | `NEEDS_REVIEW`, `ARCHIVED` |
+| `SCHEDULED` | none (workflow-managed) |
+| `PARTIALLY_PUBLISHED` | none (workflow-managed) |
+| `FAILED` | `ARCHIVED` |
+| `PUBLISHED` | none (workflow-managed) |
 | `ARCHIVED` | none (terminal) |
 
-The generic transition API has no incoming edge to `PUBLISHED` or `PARTIALLY_PUBLISHED`. Only a future trusted publishing workflow may set those outcomes after it records verified remote publication evidence; generic operators cannot claim publication through this endpoint. Failed content restarts at `IDEA` so prior artifacts cannot skip validation gates. Live database concurrency behavior remains unverified until PostgreSQL integration tests are available.
+The generic transition API cannot enter or leave `SCHEDULED`, `PARTIALLY_PUBLISHED` or `PUBLISHED`. Scheduling and publishing states have separate job records and require a future workflow that updates both records atomically and verifies remote publication before recording its outcome. Operators cannot use this generic endpoint to mark content scheduled or published. `FAILED` can only be archived until a versioned artifact reset/retry workflow exists, so stale scripts, scenes or assets cannot be reused accidentally. Live database concurrency behavior remains unverified until PostgreSQL integration tests are available.

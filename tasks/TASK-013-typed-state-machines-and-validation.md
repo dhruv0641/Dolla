@@ -31,6 +31,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] State changes require operator/admin authorization, target an owned content item, and serialize concurrent transitions under a row lock.
 - [x] API responses distinguish malformed target (`422`), invalid transition (`409`), hidden missing/foreign content (`404`) and unavailable database (`503`).
 - [x] Generic operator transitions cannot set `PUBLISHED` or `PARTIALLY_PUBLISHED`; those require a future trusted publisher with verified remote evidence.
+- [x] Generic transitions cannot change scheduler/publisher-managed states or restart failed content without an artifact reset workflow.
 - [x] Transition policy and live database verification limits are documented in `docs/CONTENT_STATE_MACHINE.md`.
 - [x] All 72 backend tests, plan validation, compileall, diff checks, frontend typecheck/build and dependency audit pass locally.
 - [x] Local tests, project-plan validator, frontend CI-equivalent checks, compileall and diff checks pass.
@@ -44,4 +45,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Live PostgreSQL integration is unavailable; do not claim database concurrency behavior is production-verified. GitHub CI and independent technical review remain pending.
 
 ## Definition of Done
-Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Reviewer finding on publication-evidence gating was addressed in commit `29711a8`; refreshed CI and reviewer confirmation are pending.
+Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Reviewer findings on publication evidence, scheduler coordination and failed-artifact reset are addressed in the current unmerged follow-up; refreshed CI and reviewer confirmation are pending.
