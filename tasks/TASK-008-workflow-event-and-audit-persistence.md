@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-007
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -40,7 +40,7 @@ Deliver workflow event and audit persistence as an independently verifiable capa
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/16
 - Branch: `feature/TASK-008-workflow-event-audit-persistence`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/17
 - CI run: pending
 
 ## Definition of Done
