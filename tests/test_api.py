@@ -97,7 +97,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             set(response.json()["paths"]),
             {
-                "/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check",
+                "/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check", "/api/v1/admin/metrics",
                 "/api/v1/brands", "/api/v1/brands/{brand_id}/content",
                 "/api/v1/brands/{brand_id}/content/{content_id}/transition",
             },

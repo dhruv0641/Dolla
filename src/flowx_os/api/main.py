@@ -2,11 +2,16 @@
 
 from collections.abc import Callable
 
-from datetime import datetime
+from datetime import datetime, timezone
+import json
+import logging
+from time import perf_counter
 from uuid import UUID
+from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from flowx_os.auth.dependencies import current_principal, require_roles
@@ -22,6 +27,11 @@ from flowx_os.db.content import (
 )
 from flowx_os.db.transaction import ConnectionPool
 from flowx_os.domain.content_state import ContentStatus
+from flowx_os.api.observability import RequestMetrics
+
+
+_request_logger = logging.getLogger("flowx.api.request")
+_request_logger.setLevel(logging.INFO)
 
 
 class ServiceDescriptor(BaseModel):
@@ -133,6 +143,51 @@ def create_app(
     )
     app.state.token_verifier = token_verifier
     app.state.database_pool = database_pool
+    request_metrics = RequestMetrics()
+    app.state.request_metrics = request_metrics
+
+    @app.middleware("http")
+    async def observe_request(request: Request, call_next: Callable) -> Response:
+        request_id = str(uuid4())
+        request.state.request_id = request_id
+        started = perf_counter()
+        status_code = 500
+        error_type: str | None = None
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+        except Exception as exc:
+            error_type = type(exc).__name__
+            response = JSONResponse(
+                status_code=500,
+                content={"detail": "internal_server_error", "request_id": request_id},
+            )
+        duration_ms = (perf_counter() - started) * 1000
+        route = request.scope.get("route")
+        route_template = getattr(route, "path", "unmatched")
+        if not isinstance(route_template, str) or not route_template.startswith("/"):
+            route_template = "unmatched"
+        request_metrics.observe(
+            method=request.method,
+            route=route_template,
+            status_code=status_code,
+            duration_ms=duration_ms,
+        )
+        event: dict[str, object] = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": "error" if status_code >= 500 else "info",
+            "event": "http.request",
+            "request_id": request_id,
+            "method": request.method if request.method in {"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"} else "OTHER",
+            "route": route_template,
+            "status_code": status_code,
+            "duration_ms": round(duration_ms, 3),
+        }
+        if error_type is not None:
+            event["exception_type"] = error_type
+        _request_logger.log(logging.ERROR if status_code >= 500 else logging.INFO, json.dumps(event, separators=(",", ":")))
+        response.headers["X-Request-ID"] = request_id
+        return response
 
     @app.get("/", response_model=ServiceDescriptor, tags=["service"])
     async def describe_service() -> ServiceDescriptor:
@@ -164,6 +219,13 @@ def create_app(
         )
         response.status_code = 200 if ready else 503
         return Readiness(status="ready" if ready else "not_ready", checks=checks)
+
+    @app.get("/api/v1/admin/metrics", tags=["operations"])
+    async def process_metrics(
+        principal: Principal = Depends(require_roles(Role.ADMIN)),
+    ) -> dict[str, object]:
+        """Return low-cardinality, process-local counters to administrators only."""
+        return request_metrics.snapshot()
 
     @app.get("/api/v1/me", tags=["authentication"])
     async def who_am_i(principal: Principal = Depends(current_principal)) -> dict[str, object]:
