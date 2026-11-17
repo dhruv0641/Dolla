@@ -5,9 +5,10 @@
 - **Priority:** P0
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** BLOCKED
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; tracking branch `feature/TASK-021-discover-actual-mcp-manifest` targets `develop`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** No authorized Google Flow MCP server or manifest is available to this Codex session. The actual server tool schema cannot be inspected until the server is configured/exposed. The proposed contract and unrelated video providers are not substitutes.
 
 ## User Story
 As a FLOW AI Content OS operator, I want discover actual mcp manifest, so the platform can progress safely through a traceable production lifecycle.
@@ -23,13 +24,12 @@ Deliver discover actual mcp manifest as an independently verifiable capability w
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MATRIX.md`, this task specification and the timestamped project log. No adapter/tool names are inferred and no external calls or credentials are used.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
-- [ ] Unsupported or unverified server capabilities fail closed.
+- [ ] Actual authorized server identity and manifest have been inspected and recorded.
+- [x] Current tool/resource inventories were inspected; absence of an authorized Flow MCP server and actual manifest is documented without claiming support.
+- [ ] Unsupported or unverified server capabilities are confirmed to fail closed by the implementation.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
