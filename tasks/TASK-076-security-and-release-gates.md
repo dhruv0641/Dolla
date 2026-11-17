@@ -5,8 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-075
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#78](https://github.com/dhruv0641/Dolla/issues/78); branch `feature/TASK-076-security-release-gates` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#78](https://github.com/dhruv0641/Dolla/issues/78) closed by PR [#79](https://github.com/dhruv0641/Dolla/pull/79), merged to `develop` as `996f7ea`; branch `feature/TASK-076-security-release-gates`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
