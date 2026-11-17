@@ -24,8 +24,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-011 Authentication and role model** — DONE · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009 · Issue: [#22](https://github.com/dhruv0641/Dolla/issues/22) · Branch: `feature/TASK-011-authentication-and-role-model` · PR: [#23](https://github.com/dhruv0641/Dolla/pull/23) · merged to develop as `46c6caa`; CI passed
 - **TASK-012 Brand and content lifecycle APIs** — DONE · Backend Engineer · 4h · deps: TASK-011 · Issues: [#24](https://github.com/dhruv0641/Dolla/issues/24), [#26](https://github.com/dhruv0641/Dolla/issues/26) · PRs: [#25](https://github.com/dhruv0641/Dolla/pull/25), [#27](https://github.com/dhruv0641/Dolla/pull/27) · merged to develop at `8a8338c` and `28b5677`; CI and independent review passed
 - **TASK-013 Typed state machines and validation** — DONE · Backend Engineer · 6h · deps: TASK-012 · Issue: [#29](https://github.com/dhruv0641/Dolla/issues/29) · PR: [#30](https://github.com/dhruv0641/Dolla/pull/30) · merged to develop as `527586c`; CI and independent review passed
-- **TASK-014 Idempotent workflow processing** — IN_REVIEW · Backend Engineer · 8h · deps: TASK-013 · Issue: [#31](https://github.com/dhruv0641/Dolla/issues/31) · Branch: `feature/TASK-014-idempotent-workflow-processing` · PR: [#32](https://github.com/dhruv0641/Dolla/pull/32) · independent review passed; CI pending
-- **TASK-015 Scheduling, retries and dead letters** — BACKLOG · Backend Engineer · 12h · deps: TASK-014
+- **TASK-014 Idempotent workflow processing** — DONE · Backend Engineer · 8h · deps: TASK-013 · Issue: [#31](https://github.com/dhruv0641/Dolla/issues/31) · PR: [#32](https://github.com/dhruv0641/Dolla/pull/32) · merged to develop as `d8baa38`; CI and independent review passed
+- **TASK-015 Scheduling, retries and dead letters** — IN_REVIEW · Backend Engineer · 12h · deps: TASK-014 · Issue: [#33](https://github.com/dhruv0641/Dolla/issues/33) · PR: [#34](https://github.com/dhruv0641/Dolla/pull/34) · independent review passed; CI pending
 
 ## EPIC-04: AI Agent System
 
@@ -129,7 +129,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 13 (TASK-001 through TASK-013); TASK-014 is in progress.
+- DONE: 14 (TASK-001 through TASK-014); TASK-015 is in review.
 
 ## GitHub delivery references
 
@@ -161,9 +161,9 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-011 issue [#22](https://github.com/dhruv0641/Dolla/issues/22) and PR [#23](https://github.com/dhruv0641/Dolla/pull/23) merged to develop; CI passed.
 - TASK-012 issues [#24](https://github.com/dhruv0641/Dolla/issues/24) and [#26](https://github.com/dhruv0641/Dolla/issues/26) closed. PR [#25](https://github.com/dhruv0641/Dolla/pull/25) merged to `develop` as `8a8338c`; reviewer follow-up PR [#27](https://github.com/dhruv0641/Dolla/pull/27) merged as `28b5677`. CI passed on both PRs; independent review found no correctness or tenant-isolation defect.
 - TASK-012 closeout record PR [#28](https://github.com/dhruv0641/Dolla/pull/28) merged to `develop` as `ce0d2b8`; CI passed.
-- TASK-013 issue [#29](https://github.com/dhruv0641/Dolla/issues/29); branch `feature/TASK-013-typed-state-machines-and-validation`; PR [#30](https://github.com/dhruv0641/Dolla/pull/30) targets `develop`; CI and independent review passed, merge pending.
 - TASK-013 merged to `develop` as `527586ca034343e4ee72f5a36ea120745dc08218`; issue #29 closed, CI and independent review passed.
-- TASK-014 issue [#31](https://github.com/dhruv0641/Dolla/issues/31); branch `feature/TASK-014-idempotent-workflow-processing`; PR [#32](https://github.com/dhruv0641/Dolla/pull/32) targets `develop`; independent review passed, CI pending.
+- TASK-014 merged to `develop` as `d8baa38b904ef98a6d955d179ff176414823708c`; issue #31 closed, CI and independent review passed.
+- TASK-015 issue [#33](https://github.com/dhruv0641/Dolla/issues/33); branch `feature/TASK-015-scheduling-retries-and-dead-letters`; implementation in progress.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.
