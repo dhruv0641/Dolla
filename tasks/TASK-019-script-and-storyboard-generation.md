@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-018
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#46](https://github.com/dhruv0641/Dolla/issues/46); PR [#47](https://github.com/dhruv0641/Dolla/pull/47) targets `develop` from `feature/TASK-019-script-and-storyboard-generation`.
+- **Status:** DONE
+- **GitHub:** Issue [#46](https://github.com/dhruv0641/Dolla/issues/46); PR [#47](https://github.com/dhruv0641/Dolla/pull/47) merged to `develop` as `10fa7c5`; both CI checks and independent review passed.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
