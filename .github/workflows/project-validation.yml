@@ -19,12 +19,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Update Python installer tools
+        run: python -m pip install --upgrade pip setuptools
       - name: Install backend dependencies
         run: python -m pip install -e ".[dev]"
       - name: Validate task index and dependency graph
         run: python scripts/validate_project_plan.py
       - name: Run backend tests
         run: python -m unittest discover -s tests -v
+      - name: Audit backend dependency vulnerabilities
+        uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
