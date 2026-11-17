@@ -109,3 +109,5 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-074 local Compose profile selected after TASK-073; issue #72 opened. Docker and Compose are available in the environment. API/database/auth startup wiring is absent, so this work is scoped to a local shell and must not imply persistence or protected-route readiness.
 
 - 2026-11-18: TASK-074 Compose profile passed configuration validation and independent review. Docker Engine is unavailable, so images and runtime health were not verified; the local shell is not a production deployment.
+
+- 2026-11-18: TASK-074 merged through PR #73 as 789e14; CI and independent review passed, issue #72 closed. Compose config is valid; image build/runtime checks remain unverified because Docker Engine was unavailable.
