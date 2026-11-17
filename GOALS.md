@@ -17,9 +17,10 @@ Only one primary user goal may be active at a time.
 - **Related tasks:** TASK-001 through TASK-076; begin with TASK-001.
 - **Repository:** [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla)
 - **Branches:** `main` protected by active ruleset ID 27482128; `develop` is protected by active ruleset ID 27482560. TASK-001 branch: `feature/TASK-001-repository-baseline-and-developer-workflow`.
-- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access; main ruleset created. Planning seed pushed to `develop` at `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`. TASK-001 implementation and CI are in progress.
+- **Progress:** Git Credential Manager account `dhruv0641` verified; GitHub API confirmed admin/push access. `main` ruleset 27482128 and `develop` ruleset 27482560 are active. Planning seed `1da41e4` and TASK-001 PR #3 are merged to `develop` at `062b7bb`; CI passed. TASK-001 is complete. TASK-002 implementation and 7 local tests pass; changes are in review on `feature/TASK-002-environment-and-secret-handling`, awaiting GitHub CI.
 - **GitHub issue:** [#1 GOAL-002 tracking](https://github.com/dhruv0641/Dolla/issues/1).
-- **Current PR:** [#3 TASK-001](https://github.com/dhruv0641/Dolla/pull/3), targets `develop`; initial GitHub Actions checks passed.
+- **GitHub issues:** GOAL-002 [#1](https://github.com/dhruv0641/Dolla/issues/1); TASK-001 [#2](https://github.com/dhruv0641/Dolla/issues/2), closed; TASK-002 [#4](https://github.com/dhruv0641/Dolla/issues/4), open.
+- **Current PR:** TASK-002 PR pending; TASK-001 [PR #3](https://github.com/dhruv0641/Dolla/pull/3) merged to `develop`.
 - **Final status:** ACTIVE.
 
 ## Active goal details

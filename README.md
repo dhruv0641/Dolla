@@ -9,6 +9,8 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 ## Development setup
 
 - Python 3.11+ for project-plan validation: `python scripts/validate_project_plan.py`
+- Local configuration: copy `.env.example` to `.env`; configuration accepts secret references only.
+- Run tests: `python -m unittest discover -s tests -v`
 - Git and Git Credential Manager for GitHub operations
 - Feature runtime dependencies will be recorded with their implementation tasks.
 

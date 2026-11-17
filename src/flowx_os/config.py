@@ -1,0 +1,110 @@
+"""Side-effect-free application settings with secret-reference validation.
+
+This module reads configuration only when ``Settings.from_env`` is called.
+It deliberately stores secret references, never resolves or logs secret values.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping
+
+
+class ConfigurationError(ValueError):
+    """Safe-to-display configuration error that does not echo supplied values."""
+
+
+_SECRET_REF = re.compile(r"^secretref://[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+$")
+_ENVIRONMENTS = {"development", "test", "production"}
+_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+_ENV_KEY = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def _secret_ref(env: Mapping[str, str], key: str) -> str | None:
+    value = env.get(key, "").strip()
+    if not value:
+        return None
+    if not _SECRET_REF.fullmatch(value):
+        raise ConfigurationError(
+            f"{key} must be a secret reference (secretref://provider/path); raw values are not accepted."
+        )
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    environment: str
+    log_level: str
+    storage_root: Path
+    database_credentials_ref: str | None
+    gemini_credentials_ref: str | None
+    flow_credentials_ref: str | None
+    youtube_credentials_ref: str | None
+    meta_credentials_ref: str | None
+
+    @classmethod
+    def from_env_file(
+        cls,
+        path: str | Path = ".env",
+        environ: Mapping[str, str] | None = None,
+    ) -> "Settings":
+        """Load a simple KEY=VALUE file, then let process environment override it.
+
+        No shell expansion, command substitution, or interpolation is performed.
+        """
+        file_values: dict[str, str] = {}
+        env_path = Path(path)
+        if env_path.exists():
+            for line_number, raw_line in enumerate(env_path.read_text(encoding="utf-8").splitlines(), 1):
+                line = raw_line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    raise ConfigurationError(f"Invalid .env syntax at line {line_number}.")
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
+                if not _ENV_KEY.fullmatch(key):
+                    raise ConfigurationError(f"Invalid environment variable name at line {line_number}.")
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+                    value = value[1:-1]
+                file_values[key] = value
+
+        process_values = os.environ if environ is None else environ
+        file_values.update(process_values)
+        return cls.from_env(file_values)
+
+    @classmethod
+    def from_env(cls, environ: Mapping[str, str] | None = None) -> "Settings":
+        """Parse and validate process environment or a supplied mapping."""
+        env = os.environ if environ is None else environ
+        environment = env.get("FLOWX_ENVIRONMENT", "development").strip().lower()
+        if environment not in _ENVIRONMENTS:
+            raise ConfigurationError("FLOWX_ENVIRONMENT must be development, test, or production.")
+
+        log_level = env.get("FLOWX_LOG_LEVEL", "INFO").strip().upper()
+        if log_level not in _LOG_LEVELS:
+            raise ConfigurationError("FLOWX_LOG_LEVEL must be a standard Python logging level.")
+
+        storage_value = env.get("FLOWX_STORAGE_ROOT", "./data").strip()
+        if not storage_value:
+            raise ConfigurationError("FLOWX_STORAGE_ROOT must not be empty.")
+        storage_root = Path(storage_value).expanduser()
+
+        database_ref = _secret_ref(env, "FLOWX_DATABASE_CREDENTIALS_REF")
+        if environment == "production" and database_ref is None:
+            raise ConfigurationError("FLOWX_DATABASE_CREDENTIALS_REF is required in production.")
+
+        return cls(
+            environment=environment,
+            log_level=log_level,
+            storage_root=storage_root,
+            database_credentials_ref=database_ref,
+            gemini_credentials_ref=_secret_ref(env, "FLOWX_GEMINI_CREDENTIALS_REF"),
+            flow_credentials_ref=_secret_ref(env, "FLOWX_FLOW_CREDENTIALS_REF"),
+            youtube_credentials_ref=_secret_ref(env, "FLOWX_YOUTUBE_CREDENTIALS_REF"),
+            meta_credentials_ref=_secret_ref(env, "FLOWX_META_CREDENTIALS_REF"),
+        )

@@ -21,3 +21,5 @@ jobs:
           python-version: "3.11"
       - name: Validate task index and dependency graph
         run: python scripts/validate_project_plan.py
+      - name: Run configuration tests
+        run: python -m unittest discover -s tests -v

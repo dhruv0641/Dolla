@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** None
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -31,7 +31,7 @@ Deliver repository baseline and developer workflow as an independently verifiabl
 - [x] GitHub Actions runs the validator for relevant pushes and pull requests.
 - [x] Git ignore rules exclude secrets, local configuration, and generated media.
 - [x] GitHub `main` has active PR-only protection; repository identity and protected-rule evidence are documented.
-- [ ] Task branch PR targeting `develop` passes required CI on the latest commit and is merged after review.
+- [x] Task branch PR targeting `develop` passes required CI on the latest commit and is merged after review.
 
 ## Tests and Verification
 - Run `python scripts/validate_project_plan.py` locally and in GitHub Actions.
@@ -43,7 +43,7 @@ Deliver repository baseline and developer workflow as an independently verifiabl
 - Issue: https://github.com/dhruv0641/Dolla/issues/2
 - Branch: `feature/TASK-001-repository-baseline-and-developer-workflow`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/3
-- CI run: initial commit checks passed; latest commit checks pending after tracker updates
+- CI run: passing on head `66305321e99a923e5633550f80f5529807877c1d`; PR merged to `develop` as `062b7bb0273360dcf483a4e804e526c0c4bc9b21`
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
