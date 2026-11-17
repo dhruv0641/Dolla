@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-006
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -40,7 +40,7 @@ Deliver data access and transaction boundaries as an independently verifiable ca
 - Repository: https://github.com/dhruv0641/Dolla
 - Issue: https://github.com/dhruv0641/Dolla/issues/14
 - Branch: `feature/TASK-007-data-access-and-transactions`
-- Pull request: pending
+- Pull request: https://github.com/dhruv0641/Dolla/pull/15
 - CI run: pending
 
 ## Definition of Done
