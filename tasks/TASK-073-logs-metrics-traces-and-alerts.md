@@ -5,8 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-072
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#69](https://github.com/dhruv0641/Dolla/issues/69); branch `feature/TASK-073-observability` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#69](https://github.com/dhruv0641/Dolla/issues/69) closed; PR [#70](https://github.com/dhruv0641/Dolla/pull/70) merged to `develop` as `2a7faa8`; CI passed.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 

@@ -103,3 +103,5 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-073 observability selected after TASK-072; issue #69 opened. Current API has health/readiness but no request logging, process metrics, distributed tracing or configured alert delivery; implementation scope and limitations are documented.
 
 - 2026-11-18: TASK-073 observability implementation passed independent review; 152 tests, compileall and project-plan validation pass. Request correlation is local only; external metrics, tracing and alerting are not configured.
+
+- 2026-11-18: TASK-073 merged through PR #70 as 2a7faa8; CI, 152 tests and independent review passed, issue #69 closed. External observability collection and alerting remain unconfigured.
