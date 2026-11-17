@@ -59,6 +59,7 @@ Later goals should unit-test state rules, schemas, idempotency and media checks;
 | 2026-11-18 00:59 IST | TASK-009 merge | Merged PR #19 to `develop` at `ff6f521f66e710ae0c06cf1b1991c4771c3aac6e`; CI passed and issue #18 closed. | 6h estimate | Done |
 | 2026-11-18 01:00 IST | TASK-010 start | Opened issue #20; implemented safe pg_dump/pg_restore primitives and dry-run retention planning without running database or deletion operations. | 8h estimate | In progress |
 | 2026-11-18 01:06 IST | TASK-010 implementation | Added archive verification and checksum manifests, safe service-file credentials, transactional restore flags, and dry-run retention planning. Mocked tests use temporary directories only; all 37 Python tests and project-plan validation passed. Live backup/restore remain unverified. | 8h estimate | In progress |
+| 2026-11-18 01:08 IST | TASK-010 PR | Opened [PR #21](https://github.com/dhruv0641/Dolla/pull/21) to `develop`; local checks passed. CI pending. | 8h estimate | In review |
 | TBD | P0 | Discover actual MCP tools/auth; after spend authorization generate one short clip, inspect download and reconcile credits. | 16–40h + wait | Not started |
 | TBD | P1 | Build one reviewed end-to-end video using Flow, local narration, FFmpeg and QC. | 80–140h | Not started |
 | TBD | P2 | Durable persistence, APIs, workers, asset lineage, approvals and data-backed dashboard. | 120–220h | Not started |
