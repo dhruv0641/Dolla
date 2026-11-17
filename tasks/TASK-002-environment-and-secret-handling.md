@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-001
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,27 @@ Deliver environment and secret handling as an independently verifiable capabilit
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/config.py`, `.env.example`, `docs/CONFIGURATION.md`, `tests/test_config.py`, `.github/workflows/project-validation.yml`, and project trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Configuration loads environment variables and a local `.env` file without import-time side effects, with process variables taking precedence; validates environment, log level, storage path, and secret references.
+- [x] Secret values are never accepted as credential references or included in validation errors; configuration stores references only.
+- [x] `.env.example` contains placeholders only, and `.gitignore` excludes actual `.env` files.
+- [x] Production mode requires a database credential reference; development defaults remain safe and usable without external credentials.
+- [x] Unit tests cover defaults, `.env` precedence, valid references, invalid settings, production requirements, and error redaction.
+- [x] Documentation explains local setup, OS secret-store references, and the rule against committing credentials.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and project-plan validation locally and in GitHub Actions.
+- Scan the staged diff for secrets and confirm `.env.example` uses only nonfunctional placeholders.
+- Record actual commands and CI run URL; do not claim a secret backend is integrated until an implementation task verifies it.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/4
+- Branch: `feature/TASK-002-environment-and-secret-handling`
+- Pull request: https://github.com/dhruv0641/Dolla/pull/5
+- CI run: initial checks passed on head `8f4939b8958ab7bfac42ae9121ed502be2a65769`; latest tracker update will rerun CI
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
