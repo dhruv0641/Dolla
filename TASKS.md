@@ -24,7 +24,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-011 Authentication and role model** — DONE · Backend Engineer · 16h · deps: TASK-003, TASK-006, TASK-009 · Issue: [#22](https://github.com/dhruv0641/Dolla/issues/22) · Branch: `feature/TASK-011-authentication-and-role-model` · PR: [#23](https://github.com/dhruv0641/Dolla/pull/23) · merged to develop as `46c6caa`; CI passed
 - **TASK-012 Brand and content lifecycle APIs** — DONE · Backend Engineer · 4h · deps: TASK-011 · Issues: [#24](https://github.com/dhruv0641/Dolla/issues/24), [#26](https://github.com/dhruv0641/Dolla/issues/26) · PRs: [#25](https://github.com/dhruv0641/Dolla/pull/25), [#27](https://github.com/dhruv0641/Dolla/pull/27) · merged to develop at `8a8338c` and `28b5677`; CI and independent review passed
 - **TASK-013 Typed state machines and validation** — DONE · Backend Engineer · 6h · deps: TASK-012 · Issue: [#29](https://github.com/dhruv0641/Dolla/issues/29) · PR: [#30](https://github.com/dhruv0641/Dolla/pull/30) · merged to develop as `527586c`; CI and independent review passed
-- **TASK-014 Idempotent workflow processing** — IN_PROGRESS · Backend Engineer · 8h · deps: TASK-013 · Issue: [#31](https://github.com/dhruv0641/Dolla/issues/31) · Branch: `feature/TASK-014-idempotent-workflow-processing`
+- **TASK-014 Idempotent workflow processing** — IN_REVIEW · Backend Engineer · 8h · deps: TASK-013 · Issue: [#31](https://github.com/dhruv0641/Dolla/issues/31) · Branch: `feature/TASK-014-idempotent-workflow-processing` · PR: [#32](https://github.com/dhruv0641/Dolla/pull/32) · CI pending
 - **TASK-015 Scheduling, retries and dead letters** — BACKLOG · Backend Engineer · 12h · deps: TASK-014
 
 ## EPIC-04: AI Agent System
@@ -163,7 +163,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-012 closeout record PR [#28](https://github.com/dhruv0641/Dolla/pull/28) merged to `develop` as `ce0d2b8`; CI passed.
 - TASK-013 issue [#29](https://github.com/dhruv0641/Dolla/issues/29); branch `feature/TASK-013-typed-state-machines-and-validation`; PR [#30](https://github.com/dhruv0641/Dolla/pull/30) targets `develop`; CI and independent review passed, merge pending.
 - TASK-013 merged to `develop` as `527586ca034343e4ee72f5a36ea120745dc08218`; issue #29 closed, CI and independent review passed.
-- TASK-014 issue [#31](https://github.com/dhruv0641/Dolla/issues/31); branch `feature/TASK-014-idempotent-workflow-processing`.
+- TASK-014 issue [#31](https://github.com/dhruv0641/Dolla/issues/31); branch `feature/TASK-014-idempotent-workflow-processing`; PR [#32](https://github.com/dhruv0641/Dolla/pull/32) targets `develop`, CI pending.
 - TASK-008 PR: [#17](https://github.com/dhruv0641/Dolla/pull/17), targeting `develop`; CI pending.
 - Integration branch: [`develop`](https://github.com/dhruv0641/Dolla/tree/develop) at seed commit `1da41e47410228b9fe3bdc87dba26a1931fb9d2a`.
 - Goal issue: [#1](https://github.com/dhruv0641/Dolla/issues/1). Task-linked issues and PRs are recorded here and in each task specification as created and verified.

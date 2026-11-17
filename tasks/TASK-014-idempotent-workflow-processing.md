@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-013
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -32,7 +32,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Handler contract prohibits external/non-transactional side effects; retries rely on transactional writes and stable idempotency keys.
 - [x] Retry/dead-letter timing remains owned by TASK-015 and no external processing is claimed.
 - [x] All 79 backend tests, plan validation, compileall, diff checks, frontend typecheck/build and dependency audit pass locally.
-- [ ] Tests, validator, CI and independent review pass; PR is merged to `develop`.
+- [x] Local tests, validator, compileall, diff checks, frontend typecheck/build and npm audit pass.
+- [ ] GitHub CI and independent review pass, and PR [#32](https://github.com/dhruv0641/Dolla/pull/32) merges to `develop`.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -42,4 +43,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - No live PostgreSQL/worker deployment is available; do not claim end-to-end processing or external effect idempotency.
 
 ## Definition of Done
-Implementation is in progress on `feature/TASK-014-idempotent-workflow-processing`; issue [#31](https://github.com/dhruv0641/Dolla/issues/31). Evidence will be recorded here and in the single development log.
+Implementation is submitted on `feature/TASK-014-idempotent-workflow-processing`; issue [#31](https://github.com/dhruv0641/Dolla/issues/31), PR [#32](https://github.com/dhruv0641/Dolla/pull/32). CI and independent review are pending.
