@@ -6,6 +6,7 @@
 - **Dependencies:** TASK-017
 - **Estimated complexity:** 8 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
+- **GitHub:** Issue [#43](https://github.com/dhruv0641/Dolla/issues/43); PR [#44](https://github.com/dhruv0641/Dolla/pull/44) targets `develop`.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
