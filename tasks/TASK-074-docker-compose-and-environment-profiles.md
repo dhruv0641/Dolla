@@ -5,8 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-073
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#72](https://github.com/dhruv0641/Dolla/issues/72); branch `feature/TASK-074-docker-compose-environment-profiles` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#72](https://github.com/dhruv0641/Dolla/issues/72) closed; PR [#73](https://github.com/dhruv0641/Dolla/pull/73) merged to `develop` as `e789e14`; CI passed.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
