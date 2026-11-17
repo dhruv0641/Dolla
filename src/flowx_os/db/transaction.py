@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Protocol
 
@@ -11,6 +11,16 @@ class TransactionConnection(Protocol):
     """Minimum shape required from an async PostgreSQL connection."""
 
     def transaction(self) -> AbstractAsyncContextManager[object]: ...
+
+    async def execute(self, query: str, params: Sequence[object] | None = None) -> "QueryCursor": ...
+
+
+class QueryCursor(Protocol):
+    """Minimum async cursor shape used by persistence repositories."""
+
+    async def fetchone(self) -> tuple[object, ...] | None: ...
+
+    async def fetchall(self) -> list[tuple[object, ...]]: ...
 
 
 class ConnectionPool(Protocol):

@@ -28,14 +28,14 @@ Use official YouTube Data API and authorized Instagram professional/Facebook Pag
 PostgreSQL, Python/FastAPI, React/Next.js, Docker/self-hosting, FFmpeg, local TTS, Gemini for selected reasoning and local LLMs where practical. Separate Google AI Pro entitlement from Gemini API billing. Use least privilege, encrypted/OS secret storage, audit, TLS/auth for remote access, backups, rate limits, outbound restrictions and recovery runbooks.
 
 ## GitHub delivery workflow
-Official repository: [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla). `main` is production and protected by active GitHub ruleset [27482128](https://github.com/dhruv0641/Dolla/settings/rules/27482128); `develop` is integration, protected by ruleset [27482560](https://github.com/dhruv0641/Dolla/settings/rules/27482560). Work uses `feature/TASK-###-*`, `fix/TASK-###-*`, or `epic/EPIC-##-*` branches and PRs target `develop`. No direct main pushes, shared force-pushes, secrets in commits, or production merges without owner authorization. Track issue/PR URLs, CI, acceptance evidence, and timestamps in this story, `GOALS.md`, `TASKS.md`, and the single development log. Goal tracker: [#1](https://github.com/dhruv0641/Dolla/issues/1). TASK-001 through TASK-010 are complete and merged to `develop` with PR checks passed. TASK-011 issue [#22](https://github.com/dhruv0641/Dolla/issues/22) is tracked by PR [#23](https://github.com/dhruv0641/Dolla/pull/23); local checks passed.
+Official repository: [dhruv0641/Dolla](https://github.com/dhruv0641/Dolla). `main` is production and protected by active GitHub ruleset [27482128](https://github.com/dhruv0641/Dolla/settings/rules/27482128); `develop` is integration, protected by ruleset [27482560](https://github.com/dhruv0641/Dolla/settings/rules/27482560). Work uses `feature/TASK-###-*`, `fix/TASK-###-*`, or `epic/EPIC-##-*` branches and PRs target `develop`. No direct main pushes, shared force-pushes, secrets in commits, or production merges without owner authorization. `docs/IMPLEMENTATION_PLAN.md` is the single chronological development log. Goal tracker: [#1](https://github.com/dhruv0641/Dolla/issues/1). TASK-001 through TASK-011 are complete and merged to `develop` with PR checks passed. TASK-012 issue [#24](https://github.com/dhruv0641/Dolla/issues/24) is in progress on `feature/TASK-012-brand-and-content-lifecycle-apis`.
 
 ## Decisions and unresolved assumptions
 - PostgreSQL schema is a design starting point; migration review must resolve constraints, tenant isolation/RLS, credential references, retention and event semantics.
 - MCP server identity, transport, auth, manifest, generation/status/download/credit capabilities and schemas are unverified. See `docs/MCP_CAPABILITY_MATRIX.md`.
 - Exact Gemini/local models, TTS, media storage, deployment host, user authentication, OAuth scopes/quotas and licensing remain for goal-specific decisions.
 - Validate current external API capabilities and policies before integrations.
-- Repository was empty; no application code or external service was initialized.
+- External integrations remain unconfigured; code delivered so far is a backend foundation and is not evidence of live Flow or publishing capabilities.
 
 ## Milestones
 P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 official publishing; P4 automated schedules; P5 intelligence loop; P6 multi-account operations. See `docs/IMPLEMENTATION_PLAN.md`.
@@ -44,7 +44,7 @@ P0 Flow proof; P1 single-video vertical slice; P2 production management; P3 offi
 A user can inspect an approved scheduled idea, original playable Flow scenes, narration from zero, QC-approved MP4, verified per-platform publication links, reconciled per-account credit costs and analytics feeding the next schedule. Tasks require acceptance evidence, passing relevant tests, review and documentation; architecture or mocks alone never imply production readiness.
 
 ## Current implementation status
-**Initialization complete; feature implementation not started.** 15 epics and 76 dependency-linked tasks are planned. Zero tasks are DONE. MCP capabilities and external credentials are unverified/unconfigured.
+**Implementation is underway.** 15 epics and 76 dependency-linked tasks are planned; TASK-001 through TASK-011 are merged to `develop`, and TASK-012 is in progress. MCP capabilities and external credentials are unverified/unconfigured.
 
 ## Outstanding work and blockers
 No planning blocker. Flow proof requires actual authorized server/tool manifest, supported auth mode, generation/status/download/credit capabilities and authorized account. Publishing requires eligible channels, OAuth grants and current API validation. Never paste credentials into chat.
@@ -55,3 +55,4 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 ## Progress and decision history
 - 2026-11-17: Read Master Agentic Prompt, architecture blueprint, SQL reference schema, proposed MCP contract and dashboard prototype. Generated planning files only.
 - 2026-11-17: Began GOAL-002. GitHub repository access verified for `dhruv0641`; active main protection ruleset 27482128 created. TASK-001 delivery in progress.
+- 2026-11-18: TASK-011 merged to `develop`; TASK-012 brand/content API work began. See `docs/IMPLEMENTATION_PLAN.md` for the single timestamped development log.

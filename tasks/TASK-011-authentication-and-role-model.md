@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-003, TASK-006, TASK-009
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -31,7 +31,7 @@ Deliver authentication and role model as an independently verifiable capability 
 - [x] Role guards enforce least-privilege access and return safe errors without token echo.
 - [x] Tests cover valid/expired/tampered/unsupported tokens, role authorization, and unconfigured auth.
 - [x] Operator docs explicitly distinguish verification from token issuance/identity provider integration.
-- [ ] CI passes.
+- [x] Local test suite and GitHub Actions CI pass; PR #23 merged to `develop`.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -42,7 +42,7 @@ Deliver authentication and role model as an independently verifiable capability 
 - Issue: https://github.com/dhruv0641/Dolla/issues/22
 - Branch: `feature/TASK-011-authentication-and-role-model`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/23
-- CI run: pending
+- CI: passed on PR and post-merge runs; merged as `46c6caa9aeb555b84b6cb96199245d9716deee3a`.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

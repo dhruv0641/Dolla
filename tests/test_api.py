@@ -91,12 +91,15 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 503)
         self.assertNotIn("private", response.text)
 
-    async def test_openapi_exposes_only_shell_routes(self) -> None:
+    async def test_openapi_exposes_service_auth_and_content_routes(self) -> None:
         response = await self.client.get("/openapi.json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             set(response.json()["paths"]),
-            {"/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check"},
+            {
+                "/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check",
+                "/api/v1/brands", "/api/v1/brands/{brand_id}/content",
+            },
         )
 
     async def test_authenticated_identity_route_fails_closed_when_not_configured(self) -> None:
