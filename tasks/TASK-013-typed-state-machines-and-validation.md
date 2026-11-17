@@ -35,7 +35,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Transition policy and live database verification limits are documented in `docs/CONTENT_STATE_MACHINE.md`.
 - [x] All 72 backend tests, plan validation, compileall, diff checks, frontend typecheck/build and dependency audit pass locally.
 - [x] Local tests, project-plan validator, frontend CI-equivalent checks, compileall and diff checks pass.
-- [ ] GitHub CI passes, independent review completes, and PR [#30](https://github.com/dhruv0641/Dolla/pull/30) merges to `develop`.
+- [x] GitHub CI passed; independent review found no remaining blocker after publication/scheduling safety corrections.
+- [ ] PR [#30](https://github.com/dhruv0641/Dolla/pull/30) merges to `develop`.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -45,4 +46,4 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Live PostgreSQL integration is unavailable; do not claim database concurrency behavior is production-verified. GitHub CI and independent technical review remain pending.
 
 ## Definition of Done
-Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Reviewer findings on publication evidence, scheduler coordination and failed-artifact reset are addressed in the current unmerged follow-up; refreshed CI and reviewer confirmation are pending.
+Implementation is submitted on `feature/TASK-013-typed-state-machines-and-validation`; issue [#29](https://github.com/dhruv0641/Dolla/issues/29), PR [#30](https://github.com/dhruv0641/Dolla/pull/30). Refreshed CI passed and independent review found no remaining blocker. Merge is pending final tracker commit checks. Live PostgreSQL concurrency remains unverified.
