@@ -16,8 +16,10 @@ from flowx_os.db.content import (
     BrandRecord,
     ContentRecord,
     OwnedBrandNotFound,
+    OwnedContentNotFound,
     RepositoryUnavailable,
 )
+from flowx_os.domain.content_state import InvalidContentTransition
 
 
 KEY = b"test-key-that-is-long-enough-for-hmac"
@@ -62,6 +64,13 @@ class StubRepository:
         self.brand_ids.append(brand_id)
         return [ContentRecord(CONTENT_ID, brand_id, "Launch", "An idea", None, None,
                               "en-IN", 32, 3, "IDEA", NOW)]
+
+    async def transition_content(self, *, brand_id, content_id, owner_user_id, target_status):
+        self._raise_configured("transition_content")
+        self.owner_ids.append(owner_user_id)
+        self.brand_ids.append(brand_id)
+        return ContentRecord(content_id, brand_id, "Launch", "An idea", None, None,
+                             "en-IN", 32, 3, target_status.value, NOW)
 
     @classmethod
     def _raise_configured(cls, operation):
@@ -166,6 +175,33 @@ class ContentApiTests(unittest.IsolatedAsyncioTestCase):
         async with client:
             response = await client.post("/api/v1/brands", json={"name": "Studio"})
         self.assertEqual(response.status_code, 403)
+
+    async def test_transition_route_returns_typed_status_and_owner_subject(self):
+        response = await self.client.post(
+            f"/api/v1/brands/{BRAND_ID}/content/{CONTENT_ID}/transition",
+            json={"target_status": "RESEARCHED"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "RESEARCHED")
+        self.assertEqual(StubRepository.owner_ids, ["operator-1"])
+        self.assertEqual(StubRepository.brand_ids, [BRAND_ID])
+
+    async def test_transition_route_maps_domain_errors_safely(self):
+        url = f"/api/v1/brands/{BRAND_ID}/content/{CONTENT_ID}/transition"
+        StubRepository.failures = {"transition_content": InvalidContentTransition("private details")}
+        invalid = await self.client.post(url, json={"target_status": "RESEARCHED"})
+        StubRepository.failures = {"transition_content": OwnedContentNotFound("private details")}
+        missing = await self.client.post(url, json={"target_status": "RESEARCHED"})
+        self.assertEqual((invalid.status_code, invalid.json()), (409, {"detail": "invalid_content_transition"}))
+        self.assertEqual((missing.status_code, missing.json()), (404, {"detail": "content_not_found"}))
+        self.assertNotIn("private", invalid.text + missing.text)
+
+    async def test_unknown_transition_target_is_rejected(self):
+        response = await self.client.post(
+            f"/api/v1/brands/{BRAND_ID}/content/{CONTENT_ID}/transition",
+            json={"target_status": "UNKNOWN"},
+        )
+        self.assertEqual(response.status_code, 422)
 
 
 def _b64(data: bytes) -> str:

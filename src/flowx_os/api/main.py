@@ -15,10 +15,13 @@ from flowx_os.db.content import (
     BrandRecord,
     ContentRecord,
     ContentRepository,
+    InvalidContentTransition,
     OwnedBrandNotFound,
+    OwnedContentNotFound,
     RepositoryUnavailable,
 )
 from flowx_os.db.transaction import ConnectionPool
+from flowx_os.domain.content_state import ContentStatus
 
 
 class ServiceDescriptor(BaseModel):
@@ -103,8 +106,12 @@ class ContentResponse(BaseModel):
     language: str
     target_duration_seconds: int
     priority: int
-    status: str
+    status: ContentStatus
     created_at: datetime
+
+
+class ContentTransition(BaseModel):
+    target_status: ContentStatus
 
 
 def create_app(
@@ -266,6 +273,39 @@ def create_app(
             target_duration_seconds=row.target_duration_seconds, priority=row.priority,
             status=row.status, created_at=row.created_at,
         ) for row in records]
+
+    @app.post(
+        "/api/v1/brands/{brand_id}/content/{content_id}/transition",
+        response_model=ContentResponse,
+        tags=["content"],
+    )
+    async def transition_content(
+        brand_id: UUID,
+        content_id: UUID,
+        body: ContentTransition,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> ContentResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            row = await ContentRepository(database_pool).transition_content(
+                brand_id=brand_id,
+                content_id=content_id,
+                owner_user_id=principal.subject,
+                target_status=body.target_status,
+            )
+        except (OwnedBrandNotFound, OwnedContentNotFound) as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except InvalidContentTransition as exc:
+            raise HTTPException(status_code=409, detail="invalid_content_transition") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return ContentResponse(
+            id=row.id, brand_id=row.brand_id, title=row.title, idea_text=row.idea_text,
+            topic=row.topic, audience_segment=row.audience_segment, language=row.language,
+            target_duration_seconds=row.target_duration_seconds, priority=row.priority,
+            status=row.typed_status, created_at=row.created_at,
+        )
 
     return app
 
