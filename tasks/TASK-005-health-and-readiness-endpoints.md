@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-004
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,25 @@ Deliver health and readiness endpoints as an independently verifiable capability
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/api/main.py`, `tests/test_api.py`, `docs/HEALTH_READINESS.md`, README and project trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] `/healthz` stays process-only and `/readyz` reports configured dependency probe results.
+- [x] Readiness returns 503 when no dependencies are configured, any probe is unavailable, or a probe errors; private exception text is suppressed.
+- [x] Tests cover liveness, default not-configured readiness, healthy/unhealthy probes, and probe errors.
+- [x] Operator docs define health/readiness behavior without claiming unverified service integration.
+- [ ] CI passes.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
+- Record PR and GitHub Actions evidence in this specification and `docs/IMPLEMENTATION_PLAN.md`.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/10
+- Branch: `feature/TASK-005-health-readiness-endpoints`
+- Pull request: https://github.com/dhruv0641/Dolla/pull/11
+- CI run: pending
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
