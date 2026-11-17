@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-019
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#49](https://github.com/dhruv0641/Dolla/issues/49); PR [#50](https://github.com/dhruv0641/Dolla/pull/50) targets `develop` from `feature/TASK-020-prompt-review-and-analyst-agents`.
+- **Status:** DONE
+- **GitHub:** Issue [#49](https://github.com/dhruv0641/Dolla/issues/49); PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; both CI checks and independent review passed.
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
