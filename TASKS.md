@@ -88,7 +88,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-051 Responsive design system and shell** — DONE · Frontend Engineer · 8h · deps: TASK-003, TASK-012 · Issue: [#55](https://github.com/dhruv0641/Dolla/issues/55) · PR: [#56](https://github.com/dhruv0641/Dolla/pull/56) · merged to develop as `2f74e90`; CI passed; reviewer passed
 - **TASK-052 Live executive command center** — DONE · Frontend Engineer · 12h · deps: TASK-051 · Issue: [#58](https://github.com/dhruv0641/Dolla/issues/58) · PR: [#59](https://github.com/dhruv0641/Dolla/pull/59) · merged to develop as `a8ce250`; CI passed; reviewer passed
 - **TASK-053 Production board, scenes and assets** — DONE · Frontend Engineer · 16h · deps: TASK-052 · Issue: [#61](https://github.com/dhruv0641/Dolla/issues/61) · PR: [#62](https://github.com/dhruv0641/Dolla/pull/62) · merged to develop as `e970369`; CI passed; reviewer passed
-- **TASK-054 Flow control, ledger and jobs** — BACKLOG · Frontend Engineer · 4h · deps: TASK-053
+- **TASK-054 Flow control, ledger and jobs** — BLOCKED · Frontend Engineer · 4h · deps: TASK-021, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64)
 - **TASK-055 QA, voice, calendar and publishing screens** — BACKLOG · Frontend Engineer · 6h · deps: TASK-054
 - **TASK-056 Agent, analytics, community and settings screens** — BACKLOG · Frontend Engineer · 8h · deps: TASK-055
 
@@ -196,3 +196,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-053 issue [#61](https://github.com/dhruv0641/Dolla/issues/61) opened; started the next unblocked P1 task on `feature/TASK-053-production-board-scenes-and-assets`. Existing APIs do not expose scenes/assets and require bearer authentication for content; UI will preserve unavailable states.
 
 - TASK-053 issue [#61](https://github.com/dhruv0641/Dolla/issues/61) closed by PR [#62](https://github.com/dhruv0641/Dolla/pull/62), merged to develop as 970369; both CI checks and independent review passed. Scene/assets APIs and authenticated content data remain unavailable, so corresponding panels show no loaded records.
+
+- TASK-054 issue [#64](https://github.com/dhruv0641/Dolla/issues/64) opened; marked blocked on missing authorized Flow MCP server/manifest (TASK-021). No simulated generation, jobs, balances, or alternate provider controls will be presented.
