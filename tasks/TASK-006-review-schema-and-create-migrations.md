@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-001
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -31,7 +31,7 @@ Deliver review schema and create migrations as an independently verifiable capab
 - [x] README/operator docs explain one-time forward-only migration handling and deployment prerequisites.
 - [x] Migration parsed by PostgreSQL grammar parser (33 statements); local PostgreSQL server/client is unavailable, so execution is not claimed.
 - [x] CI installs the parser and validates the migration syntax on each change.
-- [ ] CI passes.
+- [x] CI passes on PR and push events.
 
 ## Tests and Verification
 - Run `python scripts/validate_project_plan.py`; validate SQL syntax and apply on disposable PostgreSQL if tooling is available.
@@ -42,7 +42,7 @@ Deliver review schema and create migrations as an independently verifiable capab
 - Issue: https://github.com/dhruv0641/Dolla/issues/12
 - Branch: `feature/TASK-006-review-schema-and-create-migrations`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/13
-- CI run: pending
+- CI runs: passed on head `58e6817c95160fa215b146f23a0f115942e468b7` (pull_request and push events)
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
