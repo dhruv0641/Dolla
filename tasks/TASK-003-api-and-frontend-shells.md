@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
