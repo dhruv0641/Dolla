@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-014
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -28,7 +28,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 ## Acceptance Criteria
 - [x] Capability is implemented behind documented interfaces and configuration, including scheduled enqueue, bounded retries and dead-letter metadata/requeue helpers.
 - [x] Errors, state transitions and security boundaries are explicit: only safe codes are persisted; replay authorization/audit belongs to the calling admin service.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
