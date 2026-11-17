@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-003
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** MASTER PROMPT; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,26 @@ Deliver prompt and policy registry as an independently verifiable capability wit
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`config/prompt_registry.json`, `src/flowx_os/policies/`, `tests/test_policy_registry.py`, `docs/PROMPT_POLICY_REGISTRY.md`, README and project trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Versioned JSON registry provides typed lookup for named prompt versions.
+- [x] Invalid schema, duplicate IDs, invalid retry caps, and inconsistent approval policy are rejected without exposing file contents.
+- [x] Default policy caps scene regenerations at two, requires human approval, and disables autonomous publishing.
+- [x] Operator docs define versioning, safe limits, and explicitly state no provider invocation occurs.
+- [x] Unit tests cover valid loading and malformed/unsafe registry cases.
+- [ ] CI passes.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
+- Record PR and GitHub Actions evidence in this specification and `docs/IMPLEMENTATION_PLAN.md`.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/8
+- Branch: `feature/TASK-004-prompt-and-policy-registry`
+- Pull request: https://github.com/dhruv0641/Dolla/pull/9
+- CI run: pending
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
