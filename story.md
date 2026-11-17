@@ -97,3 +97,5 @@ No planning blocker. Flow proof requires actual authorized server/tool manifest,
 - 2026-11-18: TASK-072 threat model/access/audit selected as next eligible P2 after P1 backlog became blocked by TASK-021/054; issue #66 opened. Repository security controls and production gaps are being documented from source evidence.
 
 - 2026-11-18: TASK-072 threat model and access/audit review completed with independent review; documented public health/readiness probes, token/role controls, tenant isolation and audit gaps, and release gates. No production security certification is claimed.
+
+- 2026-11-18: TASK-072 merged via PR #67 as c070ea7; CI and independent review passed, issue #66 closed. Threat model records actual controls and production gaps, without claiming certification or penetration testing.

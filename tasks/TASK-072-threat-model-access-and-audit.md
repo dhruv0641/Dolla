@@ -5,8 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** None
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#66](https://github.com/dhruv0641/Dolla/issues/66); branch `feature/TASK-072-threat-model-access-and-audit` targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#66](https://github.com/dhruv0641/Dolla/issues/66) closed; PR [#67](https://github.com/dhruv0641/Dolla/pull/67) merged to `develop` as `c070ea7`; CI passed.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 

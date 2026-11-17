@@ -118,7 +118,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-15: Security Observability and Deployment
 
-- **TASK-072 Threat model, access and audit** — IN_REVIEW · DevOps Engineer · 6h · deps: none · Issue: [#66](https://github.com/dhruv0641/Dolla/issues/66) · Branch: `feature/TASK-072-threat-model-access-and-audit`
+- **TASK-072 Threat model, access and audit** — DONE · DevOps Engineer · 6h · deps: none · Issue: [#66](https://github.com/dhruv0641/Dolla/issues/66) · PR: [#67](https://github.com/dhruv0641/Dolla/pull/67) · merged to develop as `c070ea7`; CI passed; reviewer passed
 - **TASK-073 Logs, metrics, traces and alerts** — BACKLOG · DevOps Engineer · 8h · deps: TASK-072
 - **TASK-074 Docker Compose and environment profiles** — BACKLOG · DevOps Engineer · 12h · deps: TASK-073
 - **TASK-075 Encrypted backups and runbooks** — BACKLOG · DevOps Engineer · 16h · deps: TASK-074
@@ -200,3 +200,5 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-054 issue [#64](https://github.com/dhruv0641/Dolla/issues/64) opened; marked blocked on missing authorized Flow MCP server/manifest (TASK-021). No simulated generation, jobs, balances, or alternate provider controls will be presented.
 
 - TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) opened; selected as the next eligible P2 task because no P1 tasks have fully satisfied dependencies while TASK-021/054 remain blocked.
+
+- TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) closed by PR [#67](https://github.com/dhruv0641/Dolla/pull/67), merged to develop as c070ea7; CI and independent review passed. Threat model is evidence-based and does not claim production security certification.
