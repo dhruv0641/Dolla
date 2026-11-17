@@ -5,7 +5,8 @@
 - **Priority:** P2
 - **Dependencies:** TASK-074
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#75](https://github.com/dhruv0641/Dolla/issues/75); branch `feature/TASK-075-encrypted-backups-runbooks` targets `develop`.
 - **Related source documents:** ARCHITECTURE; SCHEMA.sql
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +24,21 @@ Deliver encrypted backups and runbooks as an independently verifiable capability
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/maintenance/backups.py` will stream `pg_dump` through age encryption and decrypt directly into `pg_restore`, requiring a public recipient and an externally mounted identity file. `docs/BACKUP_RESTORE.md` will document key custody and recovery drills. No plaintext dump may be written to disk.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability streams PostgreSQL custom dumps through age encryption without plaintext files; restores first authenticate a private ciphertext snapshot, then decrypt it to transactional `pg_restore` stdin.
+- [x] No-overwrite publication, least-privilege process environments, finite configurable timeouts, cleanup, manifest checksum/size checks and dry-run encrypted retention define the main safety boundaries.
+- [x] Operator runbooks describe key custody, recovery, retention and known limits; no live integration or production-readiness claim is made without verification.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- `python -m unittest tests.test_backups -v` — 10 tests passed, including no-overwrite publication and an authentication failure before any restore call.
+- `python -m unittest discover -s tests` — 157 tests passed.
+- `python -m compileall -q src tests` — passed.
+- `python scripts/validate_project_plan.py` — 15 epics and 76 task specs validated; no dependency cycles.
+- `git diff --check` — passed; only Git's LF/CRLF normalization warnings were reported.
+- Technical Reviewer re-review — no blockers; confirmed the restore authentication, race, environment, cleanup and timeout findings are resolved.
+- Live `pg_dump`/`pg_restore`/age/database recovery remains unverified because the tools, database and identity are not configured in this environment.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
