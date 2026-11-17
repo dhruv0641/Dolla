@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-007
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,7 +30,7 @@ Deliver workflow event and audit persistence as an independently verifiable capa
 - [x] Event identity, UUIDs, JSON encoding and payload size are validated before database access.
 - [x] Tests verify parameterization and reject invalid/oversized payloads without database writes.
 - [x] Operator documentation defines authorization, redaction, and polymorphic entity limitations.
-- [ ] CI passes.
+- [x] CI passes on PR and push events.
 
 ## Tests and Verification
 - Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
@@ -41,6 +41,7 @@ Deliver workflow event and audit persistence as an independently verifiable capa
 - Issue: https://github.com/dhruv0641/Dolla/issues/16
 - Branch: `feature/TASK-008-workflow-event-audit-persistence`
 - Pull request: https://github.com/dhruv0641/Dolla/pull/17
+- CI runs: passing on head `9ad0d5ceb6253a66042c015f522759e4cf09924a`
 - CI run: pending
 
 ## Definition of Done

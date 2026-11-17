@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-008
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,26 @@ Deliver transactional outbox and worker leasing as an independently verifiable c
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`migrations/0002_outbox_idempotency.sql`, `src/flowx_os/db/outbox.py`, `tests/test_outbox.py`, `tests/test_migrations.py`, `docs/WORKER_OUTBOX.md`, README and trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Outbox enqueue is transactional and idempotent by a unique key.
+- [x] Leasing uses `FOR UPDATE SKIP LOCKED`, reclaims expired leases, and enforces limits.
+- [x] Completion is conditional on current lease owner; lost leases are explicit.
+- [x] Tests cover insert idempotency, safe concurrent lease query construction, UTC time validation, and lease ownership.
+- [x] Operator docs describe lifecycle limits and forbid side effects before lease commit.
+- [ ] CI validates code and both SQL migrations.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
+- Record PR and GitHub Actions evidence in this specification and `docs/IMPLEMENTATION_PLAN.md`.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/18
+- Branch: `feature/TASK-009-transactional-outbox-and-leasing`
+- Pull request: https://github.com/dhruv0641/Dolla/pull/19
+- CI run: pending
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
