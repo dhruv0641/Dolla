@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-007
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +23,25 @@ Deliver workflow event and audit persistence as an independently verifiable capa
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+`src/flowx_os/db/workflow_events.py`, `tests/test_workflow_events.py`, `docs/WORKFLOW_EVENTS.md`, README and project trackers.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Events persist through parameterized SQL inside caller-owned transactions.
+- [x] Event identity, UUIDs, JSON encoding and payload size are validated before database access.
+- [x] Tests verify parameterization and reject invalid/oversized payloads without database writes.
+- [x] Operator documentation defines authorization, redaction, and polymorphic entity limitations.
+- [ ] CI passes.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Run `python -m unittest discover -s tests -v` and `python scripts/validate_project_plan.py`.
+- Record PR and GitHub Actions evidence in this specification and `docs/IMPLEMENTATION_PLAN.md`.
+
+## GitHub References
+- Repository: https://github.com/dhruv0641/Dolla
+- Issue: https://github.com/dhruv0641/Dolla/issues/16
+- Branch: `feature/TASK-008-workflow-event-audit-persistence`
+- Pull request: pending
+- CI run: pending
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
