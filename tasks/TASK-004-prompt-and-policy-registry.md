@@ -26,10 +26,10 @@ Deliver prompt and policy registry as an independently verifiable capability wit
 `config/prompt_registry.json`, `src/flowx_os/policies/`, `tests/test_policy_registry.py`, `docs/PROMPT_POLICY_REGISTRY.md`, README and project trackers.
 
 ## Acceptance Criteria
-- [ ] Versioned JSON registry provides typed lookup for named prompt versions.
-- [ ] Invalid schema, duplicate IDs, invalid retry caps, and inconsistent approval policy are rejected without exposing file contents.
-- [ ] Default policy caps scene regenerations at two, requires human approval, and disables autonomous publishing.
-- [ ] Operator docs define versioning, safe limits, and explicitly state no provider invocation occurs.
+- [x] Versioned JSON registry provides typed lookup for named prompt versions.
+- [x] Invalid schema, duplicate IDs, invalid retry caps, and inconsistent approval policy are rejected without exposing file contents.
+- [x] Default policy caps scene regenerations at two, requires human approval, and disables autonomous publishing.
+- [x] Operator docs define versioning, safe limits, and explicitly state no provider invocation occurs.
 - [ ] Unit tests cover valid loading and malformed/unsafe registry cases; CI passes.
 
 ## Tests and Verification
