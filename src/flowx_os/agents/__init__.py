@@ -44,6 +44,30 @@ from flowx_os.agents.script_storyboard import (
     ScriptStoryboardGenerator,
     ScriptStoryboardWorkflow,
 )
+from flowx_os.agents.review import (
+    ContentReviewWorkflow,
+    ContentReviewer,
+    HumanReviewResult,
+    ReviewAssessment,
+    ReviewCategory,
+    ReviewContext,
+    ReviewDisposition,
+    ReviewError,
+    ReviewErrorCode,
+    ReviewFinding,
+    ReviewSeverity,
+)
+from flowx_os.agents.analyst import (
+    AnalystAssessment,
+    AnalystContext,
+    AnalystError,
+    AnalystErrorCode,
+    AnalystFinding,
+    AnalystObservation,
+    AnalystProvider,
+    ContentAnalystWorkflow,
+    VerifiedAnalystResult,
+)
 
 __all__ = [
     "AgentRequest", "AgentRole", "AgentSchemaError", "EvidenceReference",
@@ -57,4 +81,9 @@ __all__ = [
     "score_idea", "ScriptStoryboardContext", "ScriptStoryboardDraft",
     "ScriptStoryboardError", "ScriptStoryboardErrorCode", "ScriptStoryboardGenerator",
     "ScriptStoryboardWorkflow",
+    "ContentReviewWorkflow", "ContentReviewer", "HumanReviewResult", "ReviewAssessment",
+    "ReviewCategory", "ReviewContext", "ReviewDisposition", "ReviewError", "ReviewErrorCode",
+    "ReviewFinding", "ReviewSeverity", "AnalystAssessment", "AnalystContext", "AnalystError",
+    "AnalystErrorCode", "AnalystFinding", "AnalystObservation", "AnalystProvider",
+    "ContentAnalystWorkflow", "VerifiedAnalystResult",
 ]
