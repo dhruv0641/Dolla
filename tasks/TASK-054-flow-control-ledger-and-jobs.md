@@ -5,9 +5,9 @@
 - **Priority:** P1
 - **Dependencies:** TASK-021, TASK-022, TASK-053
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BLOCKED
+- **Status:** READY
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
-- **Blockers:** TASK-021 is in review and TASK-022 has not implemented the backend capability boundary yet; TASK-053 is complete. Account verification and old job reconciliation are tracked in TASK-023/TASK-024. See [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks unblocking; no alternative video provider or simulated controls are permitted.
+- **Blockers:** No task dependency remains: TASK-021, TASK-022 and TASK-053 are complete. TASK-023 account verification and TASK-024 old-job reconciliation remain external Flow integration limits; dashboard controls must present these as unavailable until verified backend evidence exists. See [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks this task; no alternative video provider or simulated controls are permitted.
 
 ## User Story
 As a FLOW AI Content OS operator, I want flow control, ledger and jobs, so the platform can progress safely through a traceable production lifecycle.

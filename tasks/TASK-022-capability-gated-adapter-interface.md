@@ -5,9 +5,9 @@
 - **Priority:** P0
 - **Dependencies:** TASK-021
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Completion scope:** Adapter-boundary implementation only; no live transport or generation is configured.
-- **GitHub:** Issue [#83](https://github.com/dhruv0641/Dolla/issues/83); draft PR [#84](https://github.com/dhruv0641/Dolla/pull/84) targets `develop`; implementation branch `feature/TASK-022-capability-gated-adapter-interface`.
+- **GitHub:** Issue [#83](https://github.com/dhruv0641/Dolla/issues/83) closed; PR [#84](https://github.com/dhruv0641/Dolla/pull/84) merged to `develop` as `8d429b9`; required pre-merge and post-merge CI passed.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -41,7 +41,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Operator limits: [`docs/FLOW_MCP_ADAPTER.md`](../docs/FLOW_MCP_ADAPTER.md); runtime capability evidence: [`docs/MCP_CAPABILITY_MATRIX.md`](../docs/MCP_CAPABILITY_MATRIX.md).
 - Local verification: `python -m unittest tests.test_flow_mcp_adapter -v` — 13 passed; `python -m unittest discover -s tests` — 170 passed; `python scripts/validate_project_plan.py` — 15 epics/76 tasks/76 dependency nodes/no cycles; `git diff --check` — clean.
 - Independent Technical Reviewer re-review: no remaining blocker for this adapter-boundary scope. Reviewer confirmed schema immutability/validation and trusted, scoped spend approval checks. Live Flow transport and generation were not tested or invoked.
-- GitHub CI: PR #84 is open as draft; `validate-project-plan` is still running for head `62b9a2bb642500c1a29e15891416271def7ad38a`. Keep IN_REVIEW until required CI completes and PR is merged.
+- GitHub verification: PR #84 merged after required `validate-project-plan` checks passed on the PR head and post-merge `develop`; issue #83 closed automatically. Production merge was not performed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
