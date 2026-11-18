@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-006, TASK-021
 - **Estimated complexity:** 8 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
-- **GitHub:** Issue [#94](https://github.com/dhruv0641/Dolla/issues/94); branch `feature/TASK-026-authorized-account-registry` targets `develop`.
+- **GitHub:** Issue [#94](https://github.com/dhruv0641/Dolla/issues/94); draft PR [#95](https://github.com/dhruv0641/Dolla/pull/95) targets `develop` at `b60dce1`; CI is running.
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
