@@ -40,6 +40,15 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("UNIQUE INDEX idx_credit_entry_account_idempotency", sql)
         self.assertIn("flow_account_id, idempotency_key", sql)
 
+    def test_unknown_spend_alarm_is_unique_and_bound_to_reservation(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0005_credit_risk_alarms.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE flow_credit_alarms", sql)
+        self.assertIn("FOREIGN KEY (flow_account_id, request_id)", sql)
+        self.assertIn("UNIQUE (flow_account_id, request_id, alarm_type)", sql)
+        self.assertIn("created_by text NOT NULL", sql)
+        self.assertIn("'OPEN'", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

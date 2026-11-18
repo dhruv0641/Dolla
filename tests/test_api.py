@@ -104,6 +104,10 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
                 "/api/v1/flow-accounts/{account_id}/credit-reservations",
                 "/api/v1/flow-accounts/{account_id}/credit-reconciliations",
                 "/api/v1/flow-accounts/{account_id}/credit-entries",
+                "/api/v1/flow-accounts/{account_id}/credit-alarms",
+                "/api/v1/flow-accounts/{account_id}/credit-reservations/{request_id}/unknown-spend",
+                "/api/v1/flow-accounts/{account_id}/credit-alarms",
+                "/api/v1/flow-accounts/{account_id}/credit-reservations/{request_id}/unknown-spend",
                 "/api/v1/brands/{brand_id}/content/{content_id}/transition",
             },
         )

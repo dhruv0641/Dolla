@@ -33,6 +33,14 @@ from flowx_os.credits.ledger import (
     CreditReconciliationService,
     InvalidCreditObservation,
 )
+from flowx_os.credits.alarms import (
+    CreditRiskAlarmConflict,
+    CreditRiskAlarmRecord,
+    CreditRiskAlarmState,
+    CreditRiskAlarmService,
+    CreditRiskReservationUnavailable,
+    UnknownSpendReason,
+)
 from flowx_os.db.content import (
     BrandRecord,
     ContentRecord,
@@ -56,6 +64,7 @@ from flowx_os.db.credit_reservations import (
     CreditReservationConflict,
 )
 from flowx_os.db.credit_ledger import FlowCreditLedgerRepository
+from flowx_os.db.credit_alarms import FlowCreditRiskAlarmRepository
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.api.observability import RequestMetrics
 
@@ -257,6 +266,20 @@ class CreditReconciliationRequest(BaseModel):
     request_id: UUID
 
 
+class UnknownSpendReport(BaseModel):
+    reason: UnknownSpendReason
+
+
+class CreditRiskAlarmResponse(BaseModel):
+    id: UUID
+    flow_account_id: UUID
+    request_id: UUID
+    alarm_type: str
+    reason_code: UnknownSpendReason
+    state: CreditRiskAlarmState
+    created_at: datetime
+
+
 def _flow_account_response(record: FlowAccountRecord) -> FlowAccountResponse:
     return FlowAccountResponse(
         id=record.id,
@@ -325,12 +348,25 @@ def _credit_ledger_entry_response(record: CreditLedgerEntry) -> CreditLedgerEntr
     )
 
 
+def _credit_risk_alarm_response(record: CreditRiskAlarmRecord) -> CreditRiskAlarmResponse:
+    return CreditRiskAlarmResponse(
+        id=record.id,
+        flow_account_id=record.flow_account_id,
+        request_id=record.request_id,
+        alarm_type=record.alarm_type,
+        reason_code=record.reason_code,
+        state=record.state,
+        created_at=record.created_at,
+    )
+
+
 def create_app(
     readiness_checks: dict[str, Callable[[], bool]] | None = None,
     token_verifier: TokenVerifier | None = None,
     database_pool: ConnectionPool | None = None,
     credit_reservation_service: CreditReservationService | None = None,
     credit_reconciliation_service: CreditReconciliationService | None = None,
+    credit_risk_alarm_service: CreditRiskAlarmService | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -364,6 +400,11 @@ def create_app(
     if configured_credit_ledger_service is None and database_pool is not None:
         configured_credit_ledger_service = CreditReconciliationService(
             FlowCreditLedgerRepository(database_pool), None
+        )
+    configured_credit_risk_alarm_service = credit_risk_alarm_service
+    if configured_credit_risk_alarm_service is None and database_pool is not None:
+        configured_credit_risk_alarm_service = CreditRiskAlarmService(
+            FlowCreditRiskAlarmRepository(database_pool)
         )
     request_metrics = RequestMetrics()
     app.state.request_metrics = request_metrics
@@ -656,6 +697,67 @@ def create_app(
         except RepositoryUnavailable as exc:
             raise HTTPException(status_code=503, detail="database_unavailable") from exc
         return [_credit_ledger_entry_response(entry) for entry in entries]
+
+    @app.post(
+        "/api/v1/flow-accounts/{account_id}/credit-reservations/{request_id}/unknown-spend",
+        response_model=CreditRiskAlarmResponse,
+        tags=["flow-accounts"],
+    )
+    async def report_unknown_credit_spend(
+        account_id: UUID,
+        request_id: UUID,
+        body: UnknownSpendReport,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> CreditRiskAlarmResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if configured_credit_risk_alarm_service is None:
+            raise HTTPException(status_code=503, detail="credit_risk_alarm_unavailable")
+        try:
+            alarm = await configured_credit_risk_alarm_service.report_unknown_spend(
+                account_id=account_id,
+                owner_user_id=principal.subject,
+                request_id=request_id,
+                reason=body.reason,
+                actor=f"user:{principal.subject}",
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except CreditRiskReservationUnavailable as exc:
+            raise HTTPException(status_code=404, detail="credit_reservation_not_found") from exc
+        except CreditRiskAlarmConflict as exc:
+            raise HTTPException(status_code=409, detail="credit_risk_alarm_conflict") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return _credit_risk_alarm_response(alarm)
+
+    @app.get(
+        "/api/v1/flow-accounts/{account_id}/credit-alarms",
+        response_model=list[CreditRiskAlarmResponse],
+        tags=["flow-accounts"],
+    )
+    async def list_credit_risk_alarms(
+        account_id: UUID,
+        limit: int = 100,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> list[CreditRiskAlarmResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if configured_credit_risk_alarm_service is None:
+            raise HTTPException(status_code=503, detail="credit_risk_alarm_unavailable")
+        try:
+            alarms = await configured_credit_risk_alarm_service.list_open_alarms(
+                account_id=account_id,
+                owner_user_id=principal.subject,
+                limit=limit,
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="invalid_credit_alarm_page_size") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [_credit_risk_alarm_response(alarm) for alarm in alarms]
 
     @app.post(
         "/api/v1/brands/{brand_id}/content",
