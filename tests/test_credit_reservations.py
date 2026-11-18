@@ -318,6 +318,41 @@ class CreditReservationRepositoryTests(unittest.IsolatedAsyncioTestCase):
                     quote=QUOTE, now=NOW, max_quote_age=timedelta(minutes=5), max_balance_age=timedelta(minutes=15),
                 )
 
+    async def test_missing_reset_or_monthly_cycle_window_fails_closed(self):
+        for row in (
+            account_row(daily_reset=None),
+            account_row(cycle_start=None),
+        ):
+            repository, _ = self.repository([FakeCursor(one=row), FakeCursor(one=None)])
+            with self.assertRaises(CreditBalanceUnknown):
+                await repository.reserve(
+                    account_id=ACCOUNT_ID, owner_user_id="owner-1", request_id=REQUEST_ID,
+                    quote=QUOTE, now=NOW, max_quote_age=timedelta(minutes=5),
+                    max_balance_age=timedelta(minutes=15),
+                )
+
+    async def test_daily_reset_crossing_during_database_wait_blocks_reservation(self):
+        current = [NOW]
+
+        def advance_after_active_count(query):
+            if "SELECT COUNT(*)" in query:
+                current[0] = NOW + timedelta(hours=6)
+
+        long_lived_quote = CreditQuoteEvidence(
+            "long-lived", str(ACCOUNT_ID), REQUEST_ID, "veo-model", 8, 7,
+            CreditQuoteSource.FLOW_QUOTE, NOW - timedelta(seconds=10), NOW + timedelta(hours=8),
+        )
+        repository, connection = self.repository([
+            FakeCursor(one=account_row()), FakeCursor(one=None), FakeCursor(one=(0, 0)),
+        ], now=lambda: current[0], on_execute=advance_after_active_count)
+        with self.assertRaises(CreditBalanceUnknown):
+            await repository.reserve(
+                account_id=ACCOUNT_ID, owner_user_id="owner-1", request_id=REQUEST_ID,
+                quote=long_lived_quote, now=NOW, max_quote_age=timedelta(hours=10),
+                max_balance_age=timedelta(hours=24),
+            )
+        self.assertEqual(len(connection.queries), 3)
+
     async def test_active_reservations_reduce_both_wallet_limits_and_inflight_slots(self):
         repository, connection = self.repository([
             FakeCursor(one=account_row(daily=10, monthly=10, max_inflight=2)),

@@ -210,16 +210,18 @@ class FlowCreditReservationRepository:
             raise CreditBalanceUnknown("credit balance freshness policy is invalid")
         if reconciled > now or now - reconciled > max_balance_age:
             raise CreditBalanceUnknown("verified credit balance is stale")
-        if daily_reset is not None:
-            if daily_reset.tzinfo is None or daily_reset.utcoffset() is None:
-                raise CreditBalanceUnknown("daily reset time is invalid")
-            if now >= daily_reset:
-                raise CreditBalanceUnknown("daily credit balance crossed its reset window")
-        if cycle_start is not None:
-            if cycle_start.tzinfo is None or cycle_start.utcoffset() is None:
-                raise CreditBalanceUnknown("monthly cycle time is invalid")
-            if reconciled < cycle_start:
-                raise CreditBalanceUnknown("monthly credit balance predates its current cycle")
+        if daily_reset is None:
+            raise CreditBalanceUnknown("verified daily reset time is unavailable")
+        if daily_reset.tzinfo is None or daily_reset.utcoffset() is None:
+            raise CreditBalanceUnknown("daily reset time is invalid")
+        if now >= daily_reset:
+            raise CreditBalanceUnknown("daily credit balance crossed its reset window")
+        if cycle_start is None:
+            raise CreditBalanceUnknown("verified monthly cycle time is unavailable")
+        if cycle_start.tzinfo is None or cycle_start.utcoffset() is None:
+            raise CreditBalanceUnknown("monthly cycle time is invalid")
+        if reconciled < cycle_start:
+            raise CreditBalanceUnknown("monthly credit balance predates its current cycle")
 
     @staticmethod
     def _to_record(row) -> CreditReservationRecord:
