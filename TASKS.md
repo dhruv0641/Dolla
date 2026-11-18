@@ -37,7 +37,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-05: Google Flow MCP Integration
 
-- **TASK-021 Discover actual MCP manifest** — IN_PROGRESS · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · prior discovery PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) · live manifest recorded; account authorization, old job reconciliation and app fail-closed evidence remain open
+- **TASK-021 Discover actual MCP manifest** — IN_PROGRESS · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · prior discovery PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) · draft checkpoint PR: [#82](https://github.com/dhruv0641/Dolla/pull/82) · live manifest recorded; account authorization, old job reconciliation and app fail-closed evidence remain open
 - **TASK-022 Capability-gated adapter interface** — BACKLOG · Flow MCP Integration Engineer · 8h · deps: TASK-021
 - **TASK-023 Auth and account health** — BACKLOG · Flow MCP Integration Engineer · 12h · deps: TASK-022
 - **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
@@ -185,6 +185,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
 
 - TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) is open and in progress: the live tool manifest is now exposed; account identity, stale job state and app fail-closed boundary remain unverified. See `docs/MCP_CAPABILITY_MATRIX.md`.
+- TASK-021 live discovery checkpoint PR [#82](https://github.com/dhruv0641/Dolla/pull/82) is open as draft from `feature/TASK-021-live-flow-capability-discovery`; project-plan CI passes on the branch.
 - TASK-051 issue [#55](https://github.com/dhruv0641/Dolla/issues/55) opened; selected as the next unblocked P1 task because dependencies TASK-003 and TASK-012 are done. Branch `feature/TASK-051-responsive-design-system-and-shell` targets `develop`.
 
 - TASK-021 discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`; issue #52 remains open. The prior absence finding was superseded by live MCP tool exposure on 2026-11-18; account and app-boundary verification continue.
