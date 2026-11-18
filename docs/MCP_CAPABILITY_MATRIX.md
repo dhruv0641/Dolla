@@ -1,6 +1,6 @@
 # Google Flow MCP Capability Matrix
 
-**Checked 2026-11-18 21:49 IST.** The Codex runtime now exposes a connected Google Flow MCP tool server. A read-only `flow_status` call returned `connected: true`, `logged_in: true`, and URL `https://flow.google.com/u/1/?pli=1`. This confirms an authenticated Flow browser session but does **not** expose the signed-in email; the requested account `dobariyadhruvv@gmail.com` is therefore not yet verified. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
+**Checked 2026-11-18 22:07 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. This confirms an authenticated Flow browser session but does **not** expose the signed-in email; the requested account `dobariyadhruvv@gmail.com` is therefore not verified. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
 
 The connected runtime manifest includes the following tools. These are the actual exposed tool names, not names derived from `FLOW_MCP_ADAPTER_CONTRACT.json`:
 
@@ -33,7 +33,7 @@ The connected runtime manifest includes the following tools. These are the actua
 
 ## Outstanding external state
 
-`flow_status` still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. No retry, resume, or new generation was attempted. Reconcile this job in the authorized Flow account before any paid operation.
+`flow_status` still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. No retry, resume, or new generation was attempted. Reconcile this job in the authorized Flow account before any paid operation.
 
 ## Guardrails
 
