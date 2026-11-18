@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-054
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88); draft PR [#89](https://github.com/dhruv0641/Dolla/pull/89) targets `develop`; branch `feature/TASK-055-qa-voice-calendar-and-publishing`.
+- **Status:** DONE
+- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88) closed; PR [#89](https://github.com/dhruv0641/Dolla/pull/89) merged to `develop` as `fd134c7`; PR and post-merge CI passed.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -27,10 +27,10 @@ Deliver qa, voice, calendar and publishing screens as an independently verifiabl
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
-- [ ] Operational figures use backend data; absent data is shown unavailable, never fabricated.
+- [x] QA, voice, calendar, and publishing screens are implemented behind explicit unavailable states; live actions remain gated.
+- [x] Human approval, authorization, state, and remote verification boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Operational records are shown only when verified; absent data is shown unavailable, never fabricated.
 
 ## Implementation checkpoint — 2026-11-18
 - Added a QA workspace for media integrity, caption/timing, safety/evidence and human approval. It reports no QA asset/report and keeps review actions disabled.
@@ -41,6 +41,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Independent review identified an incomplete ARIA grid; it was replaced by a semantic table and UTC initialization was made explicit. Re-review found no remaining blocker.
 - Local browser preview confirmed the QA/voice and publishing/calendar workspaces render at a narrow viewport with clear unavailable states. No screenshot artifact was retained.
 - No TTS engine, QA media service, platform OAuth or publishing API is configured; no external connection, content submission or public publishing was attempted.
+- Operator limits are documented in [`docs/QA_VOICE_PUBLISHING_DASHBOARD.md`](../docs/QA_VOICE_PUBLISHING_DASHBOARD.md).
+- PR [#89](https://github.com/dhruv0641/Dolla/pull/89) merged as `fd134c7`; required pre-merge checks, independent review, and post-merge `validate-project-plan` CI passed. Issue #88 closed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
