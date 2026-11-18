@@ -7,6 +7,7 @@
 - **Estimated complexity:** 12 engineering hours (planning estimate)
 - **Status:** BACKLOG
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
+- **External prerequisite:** Verify the Google account shown in the authorized Flow browser matches the intended account `dobariyadhruvv@gmail.com`. The current connector status reports `logged_in: true` but does not expose the email; do not treat that as account verification.
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
 ## User Story

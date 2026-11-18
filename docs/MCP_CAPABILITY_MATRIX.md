@@ -21,19 +21,19 @@ The connected runtime manifest includes the following tools. These are the actua
 
 | Capability | Status | Evidence / remaining check |
 |---|---|---|
-| MCP server/tool identity | PARTIALLY VERIFIED | Runtime exposes `mcp__google_flow` and the actual tools above. Host deployment identity/version and transport are not available in metadata. |
+| MCP server/tool identity | RUNTIME IDENTITY VERIFIED; HOST DETAILS UNKNOWN | Runtime exposes `mcp__google_flow` and the actual tools above. Host deployment identity/version and transport are not available in metadata. |
 | Connection/login | VERIFIED AT SESSION LEVEL | `flow_connect` and `flow_status` succeeded and returned `logged_in: true`. This does not establish which Google identity is signed in. |
-| Intended account authorization | UNVERIFIED | Must visually verify the account email is `dobariyadhruvv@gmail.com` in the correct Flow Chrome profile. Current status URL `/u/1/` is not identity evidence. |
+| Intended account authorization | UNVERIFIED; TRACKED IN TASK-023 | Must verify the account email is `dobariyadhruvv@gmail.com` in the correct Flow Chrome profile. Connector status `logged_in: true` and account path `/u/1/` are not identity evidence. |
 | Video generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. Paid use requires explicit user authorization. |
 | Image generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. |
 | Media retrieval | PARTIALLY VERIFIED | Video generation result schema returns downloaded paths; separate download tool accepts media UUIDs, documented for media where UUID exists. No real asset was retrieved. |
 | Job completion/state | PARTIALLY VERIFIED | `flow_status` reports in-flight job records; generation tools accept `resume=true`. No standalone job polling/cancel operation appears in this manifest. |
 | Credit quote/balance/reconciliation | UNVERIFIED | No balance or quote tool is exposed. Generation approval text may contain a cost, but this is not a stable balance/ledger API. |
-| Fail-closed application integration | UNVERIFIED | Repository search found no Flow MCP adapter or generation route in `src/`; no app-level integration can yet demonstrate fail-closed behavior. |
+| Current application fail-closed boundary | VERIFIED; ADAPTER NOT IMPLEMENTED | OpenAPI exposes no Flow operation route; readiness is unavailable if the Flow probe is absent/false. Three focused API tests passed. The actual adapter gate is TASK-022 and is not claimed implemented. |
 
 ## Outstanding external state
 
-`flow_status` still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. No retry, resume, or new generation was attempted. Reconcile this job in the authorized Flow account before any paid operation.
+`flow_status` still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. Reconcile this job under TASK-024 before any retry or new generation.
 
 ## Guardrails
 
