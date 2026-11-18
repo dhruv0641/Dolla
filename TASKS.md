@@ -45,7 +45,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-06: Credit and Account Management
 
-- **TASK-026 Authorized account registry** — IN_REVIEW · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021 · Issue: [#94](https://github.com/dhruv0641/Dolla/issues/94) · draft PR: [#95](https://github.com/dhruv0641/Dolla/pull/95) · CI running
+- **TASK-026 Authorized account registry** — DONE · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021 · Issue: [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged to `develop` as `dd64b96`; required checks and post-merge validation passed
 - **TASK-027 Credit quote, reservation and limits** — BACKLOG · Credit and Account Engineer · 12h · deps: TASK-026
 - **TASK-028 Observed credit ledger and reconciliation** — BACKLOG · Credit and Account Engineer · 16h · deps: TASK-027
 - **TASK-029 Concurrency, pause and reset tracking** — BACKLOG · Credit and Account Engineer · 4h · deps: TASK-028
@@ -129,8 +129,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 33 (TASK-001 through TASK-022, TASK-051 through TASK-056, and TASK-072 through TASK-076).
-- IN_REVIEW: 2 (TASK-023; live identity evidence outstanding; TASK-026 local implementation and independent review pass, PR/CI pending).
+- DONE: 34 (TASK-001 through TASK-022, TASK-026, TASK-051 through TASK-056, and TASK-072 through TASK-076).
+- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
 - IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
@@ -217,6 +217,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-026 selected as the next dependency-ready P0 task because TASK-006 and TASK-021 are DONE. Issue [#94](https://github.com/dhruv0641/Dolla/issues/94) opened; branch `feature/TASK-026-authorized-account-registry` started from `develop`.
 - TASK-026 implementation and independent review pass locally; issue #94 is in review preparation. Owner-scoped aliases, syntax-only secret references, unverified/paused defaults, and no-unpause behavior are documented. Full suite: 193 passed; migration parse test passed; live PostgreSQL/Flow integration unverified.
 - TASK-026 implementation committed as `b60dce1`, pushed, and opened as draft PR [#95](https://github.com/dhruv0641/Dolla/pull/95) to `develop`; local tests and independent review pass, GitHub checks are running.
+- TASK-026 PR [#95](https://github.com/dhruv0641/Dolla/pull/95) merged to `develop` as `dd64b96`; PR CI and post-merge plan validation passed, issue #94 closed. Task DONE; no live PostgreSQL or Flow provider integration is claimed.
 
 - TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) opened; selected as the next eligible P2 task because no P1 tasks have fully satisfied dependencies while TASK-021/054 remain blocked.
 
