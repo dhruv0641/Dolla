@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-055
 - **Estimated complexity:** 8 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
-- **GitHub:** Issue [#91](https://github.com/dhruv0641/Dolla/issues/91); branch `feature/TASK-056-agent-analytics-community-settings` targets `develop`.
+- **GitHub:** Issue [#91](https://github.com/dhruv0641/Dolla/issues/91); draft PR [#92](https://github.com/dhruv0641/Dolla/pull/92) targets `develop` at `be512f5`; required CI is pending.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
