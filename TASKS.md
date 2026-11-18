@@ -48,7 +48,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-026 Authorized account registry** — DONE · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021 · Issue: [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged to `develop` as `dd64b96`; required checks and post-merge validation passed
 - **TASK-027 Credit quote, reservation and limits** — DONE · Credit and Account Engineer · 12h · deps: TASK-026 · Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) closed by PR [#99](https://github.com/dhruv0641/Dolla/pull/99), merged as `73eb39f`; PR and post-merge checks and independent review passed
 - **TASK-028 Observed credit ledger and reconciliation** — DONE · Credit and Account Engineer · 16h · deps: TASK-027 · Issue [#101](https://github.com/dhruv0641/Dolla/issues/101) closed by PR [#102](https://github.com/dhruv0641/Dolla/pull/102), merged to `develop` as `707310f`; 227 tests, independent review, PR and post-merge checks passed
-- **TASK-029 Concurrency, pause and reset tracking** — IN_REVIEW · Credit and Account Engineer · 4h · deps: TASK-028 · Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) · PR [#105](https://github.com/dhruv0641/Dolla/pull/105) · independent review and 229 local tests pass; CI pending
+- **TASK-029 Concurrency, pause and reset tracking** — DONE · Credit and Account Engineer · 4h · deps: TASK-028 · Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) closed by PR [#105](https://github.com/dhruv0641/Dolla/pull/105), merged to `develop` as `d91e400`; 229 tests, independent review, PR and post-merge checks passed
 - **TASK-030 Unknown-spend alarms and fail-closed controls** — BACKLOG · Credit and Account Engineer · 6h · deps: TASK-029
 
 ## EPIC-07: Scene and Media Management
@@ -129,8 +129,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 36 (TASK-001 through TASK-022, TASK-026 through TASK-028, TASK-051 through TASK-056, and TASK-072 through TASK-076).
-- IN_REVIEW: 2 (TASK-023 live identity evidence outstanding; TASK-029 PR #105 awaits CI).
+- DONE: 37 (TASK-001 through TASK-022, TASK-026 through TASK-029, TASK-051 through TASK-056, and TASK-072 through TASK-076).
+- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
 - IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
