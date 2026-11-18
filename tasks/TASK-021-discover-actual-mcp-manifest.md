@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
 - **Status:** IN_PROGRESS
-- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`. Live runtime discovery is on `feature/TASK-021-live-flow-capability-discovery`, draft [PR #82](https://github.com/dhruv0641/Dolla/pull/82), latest commit `0d26066`.
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`. Live runtime discovery is on `feature/TASK-021-live-flow-capability-discovery`, draft [PR #82](https://github.com/dhruv0641/Dolla/pull/82).
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** The signed-in Google account email cannot be verified from connector status; the intended `dobariyadhruvv@gmail.com` identity is unconfirmed. An old image job remains `sent` with unknown completion. The runtime does not report transport/deployment identity, and this repository has no Flow adapter whose fail-closed behavior can be verified. The proposed contract is not server documentation.
 
