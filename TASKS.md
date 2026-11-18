@@ -46,7 +46,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-06: Credit and Account Management
 
 - **TASK-026 Authorized account registry** — DONE · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021 · Issue: [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged to `develop` as `dd64b96`; required checks and post-merge validation passed
-- **TASK-027 Credit quote, reservation and limits** — IN_PROGRESS · Credit and Account Engineer · 12h · deps: TASK-026 · Issue: [#97](https://github.com/dhruv0641/Dolla/issues/97) reopened for owner-preflight hardening · implementation PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged; follow-up branch `feature/TASK-027-owner-scoped-quote-preflight`
+- **TASK-027 Credit quote, reservation and limits** — IN_REVIEW · Credit and Account Engineer · 12h · deps: TASK-026 · Issue: [#97](https://github.com/dhruv0641/Dolla/issues/97) reopened for owner-preflight hardening · initial PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged; follow-up PR [#99](https://github.com/dhruv0641/Dolla/pull/99); independent review passed, CI pending
 - **TASK-028 Observed credit ledger and reconciliation** — BACKLOG · Credit and Account Engineer · 16h · deps: TASK-027
 - **TASK-029 Concurrency, pause and reset tracking** — BACKLOG · Credit and Account Engineer · 4h · deps: TASK-028
 - **TASK-030 Unknown-spend alarms and fail-closed controls** — BACKLOG · Credit and Account Engineer · 6h · deps: TASK-029
@@ -130,8 +130,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 34 (TASK-001 through TASK-022, TASK-026, TASK-051 through TASK-056, and TASK-072 through TASK-076).
-- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
-- IN_PROGRESS: 1 (TASK-027; owner-preflight hardening after review).
+- IN_REVIEW: 2 (TASK-023; live identity evidence outstanding; TASK-027; follow-up CI pending).
+- IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 40.
@@ -219,7 +219,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-026 implementation committed as `b60dce1`, pushed, and opened as draft PR [#95](https://github.com/dhruv0641/Dolla/pull/95) to `develop`; local tests and independent review pass, GitHub checks are running.
 - TASK-026 PR [#95](https://github.com/dhruv0641/Dolla/pull/95) merged to `develop` as `dd64b96`; PR CI and post-merge plan validation passed, issue #94 closed. Task DONE; no live PostgreSQL or Flow provider integration is claimed.
 - TASK-026 tracker closeout PR [#96](https://github.com/dhruv0641/Dolla/pull/96) merged to `develop` as `eefbbfc`; checks passed. TASK-027 selected as the next dependency-ready P0 task; issue [#97](https://github.com/dhruv0641/Dolla/issues/97) opened and branch `feature/TASK-027-credit-quote-reservation-limits` started.
-- TASK-027 implementation PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged to `develop` as `8c4849e`; required and post-merge checks passed. Final tracker/security review reopened issue [#97](https://github.com/dhruv0641/Dolla/issues/97) after finding owner validation must precede quote-provider invocation. TASK-027 remains IN_PROGRESS while the tenant-scoped preflight fix is verified and delivered.
+- TASK-027 implementation PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged to `develop` as `8c4849e`; required and post-merge checks passed. Final tracker/security review reopened issue [#97](https://github.com/dhruv0641/Dolla/issues/97) after finding owner validation must precede quote-provider invocation. TASK-027 is IN_REVIEW on follow-up PR [#99](https://github.com/dhruv0641/Dolla/pull/99); independent review passed and CI is pending.
 
 - TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) opened; selected as the next eligible P2 task because no P1 tasks have fully satisfied dependencies while TASK-021/054 remain blocked.
 

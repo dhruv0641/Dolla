@@ -467,6 +467,34 @@ class CreditReservationApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("owner_user_id", response.json())
         self.assertNotIn("credentials_ref", response.json())
 
+    async def test_foreign_account_returns_generic_404_before_quote_provider(self):
+        from flowx_os.db.flow_accounts import OwnedFlowAccountNotFound
+
+        verifier, token = make_auth()
+        provider, approver = FakeQuoteProvider(), FakeApprover()
+        service = make_service(
+            provider,
+            approver,
+            FakeStore(owned_error=OwnedFlowAccountNotFound("Flow account not found")),
+        )
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(
+                token_verifier=verifier,
+                database_pool=FakePool(FakeConnection([])),
+                credit_reservation_service=service,
+            )),
+            base_url="http://testserver", headers={"Authorization": f"Bearer {token}"},
+        )
+        async with client:
+            response = await client.post(
+                f"/api/v1/flow-accounts/{ACCOUNT_ID}/credit-reservations",
+                json={"request_id": str(REQUEST_ID), "model_name": "veo-model", "duration_seconds": 8, "approval_ref": "approval-1"},
+            )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "flow_account_not_found")
+        self.assertEqual(provider.requests, [])
+        self.assertEqual(approver.calls, [])
+
 
 def make_auth():
     key = b"test-key-that-is-long-enough-for-hmac"
