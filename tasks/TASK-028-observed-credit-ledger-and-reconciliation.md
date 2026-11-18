@@ -5,13 +5,14 @@
 - **Priority:** P0
 - **Dependencies:** TASK-027
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
 ## Readiness and execution checkpoint — 2026-11-19
 - TASK-027 is DONE through merged implementation and owner-preflight PRs; this task's sole dependency is satisfied.
-- Issue [#101](https://github.com/dhruv0641/Dolla/issues/101) is open; implementation branch is `feature/TASK-028-observed-credit-ledger-reconciliation`, based on `develop` at `b6bf701`.
+- Issue [#101](https://github.com/dhruv0641/Dolla/issues/101) closed through PR [#102](https://github.com/dhruv0641/Dolla/pull/102), merged to `develop` as `707310f`; both required PR checks and post-merge `validate-project-plan` passed.
+- Implementation branch `feature/TASK-028-observed-credit-ledger-reconciliation` was based on refreshed `develop` at `b6bf701`.
 - Initial slice implemented: typed provider/domain contract, owner-preflight service, transactional repository for daily/monthly observations, replay-safe ledger keys and fingerprints, authenticated API routes, migration `0004`, and operator documentation.
 - No Flow balance provider is available. The reconciliation API fails closed by default; unit tests currently use synthetic provider evidence and database fakes. PostgreSQL and live Flow integration remain unverified.
 
@@ -40,7 +41,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Focused credit-ledger and migration suite: 15 tests pass, including provider fail-closed behavior, owner-preflight ordering, invalid/stale evidence, transaction queries, replay handling, API redaction and SQL parsing.
 - Full Python suite: 227 tests pass. Project-plan validator reports 15 epics/76 tasks/no cycles; compileall and `git diff --check` pass.
 - Independent Technical Reviewer found no remaining code blocker after verifying the under-lock freshness check and 11-minute wait regression test.
-- PR [#102](https://github.com/dhruv0641/Dolla/pull/102) targets `develop`; both required GitHub `validate-project-plan` checks pass. Post-merge validation remains pending.
+- PR [#102](https://github.com/dhruv0641/Dolla/pull/102) merged to `develop`; both required PR `validate-project-plan` checks and post-merge validation passed.
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
