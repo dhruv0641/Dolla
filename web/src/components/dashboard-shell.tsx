@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProductionBoard } from "./production-board";
 import { FlowControl } from "./flow-control";
+import { QaVoiceWorkspace } from "./qa-voice";
+import { PublishingCalendar } from "./publishing-calendar";
 
 type DashboardStatus =
   | { state: "connected"; checkedAt: string; readiness: { status: "ready" | "not_ready"; checks: Record<string, { status: string }> } | null }
@@ -91,7 +93,7 @@ function EmptyPanel({
   );
 }
 
-export function DashboardShell() {
+export function DashboardShell({ initialMonth }: { initialMonth: string }) {
   const [activeSection, setActiveSection] = useState<SectionId>("overview");
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>({ state: "unavailable", reason: "not_checked" });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -281,6 +283,10 @@ export function DashboardShell() {
             <ProductionBoard />
           ) : activeSection === "flow" ? (
             <FlowControl />
+          ) : activeSection === "quality" ? (
+            <QaVoiceWorkspace />
+          ) : activeSection === "publishing" ? (
+            <PublishingCalendar initialMonth={initialMonth} />
           ) : (
             <section className="surface-card section-placeholder" aria-labelledby={`${activeSection}-heading`}>
               <div className="section-placeholder-mark" aria-hidden="true">{section.icon}</div>

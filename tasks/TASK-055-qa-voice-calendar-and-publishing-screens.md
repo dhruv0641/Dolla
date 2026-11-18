@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-054
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88); branch `feature/TASK-055-qa-voice-calendar-and-publishing` targets `develop`.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -30,6 +31,16 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [ ] Errors, state transitions and security boundaries are explicit and observable.
 - [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 - [ ] Operational figures use backend data; absent data is shown unavailable, never fabricated.
+
+## Implementation checkpoint — 2026-11-18
+- Added a QA workspace for media integrity, caption/timing, safety/evidence and human approval. It reports no QA asset/report and keeps review actions disabled.
+- Added a voice workspace that shows local speech engine, approved profile/consent and narration assets as unavailable; generation and preview remain disabled.
+- Added a publishing workspace with independent platform authorization states, a month-navigable empty calendar and a per-platform publication ledger. Create/connect controls remain disabled; no posts or schedule records are fabricated.
+- The calendar receives its initial month from the server in UTC, uses semantic read-only table markup, and does not assert external schedules are empty.
+- `npm run typecheck` and `npm run build` pass in `web/`; project-plan validation reports 15 epics, 76 task specs and no cycles; `git diff --check` is clean.
+- Independent review identified an incomplete ARIA grid; it was replaced by a semantic table and UTC initialization was made explicit. Re-review found no remaining blocker.
+- Local browser preview confirmed the QA/voice and publishing/calendar workspaces render at a narrow viewport with clear unavailable states. No screenshot artifact was retained.
+- No TTS engine, QA media service, platform OAuth or publishing API is configured; no external connection, content submission or public publishing was attempted.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.

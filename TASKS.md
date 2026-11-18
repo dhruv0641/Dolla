@@ -88,8 +88,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-051 Responsive design system and shell** — DONE · Frontend Engineer · 8h · deps: TASK-003, TASK-012 · Issue: [#55](https://github.com/dhruv0641/Dolla/issues/55) · PR: [#56](https://github.com/dhruv0641/Dolla/pull/56) · merged to develop as `2f74e90`; CI passed; reviewer passed
 - **TASK-052 Live executive command center** — DONE · Frontend Engineer · 12h · deps: TASK-051 · Issue: [#58](https://github.com/dhruv0641/Dolla/issues/58) · PR: [#59](https://github.com/dhruv0641/Dolla/pull/59) · merged to develop as `a8ce250`; CI passed; reviewer passed
 - **TASK-053 Production board, scenes and assets** — DONE · Frontend Engineer · 16h · deps: TASK-052 · Issue: [#61](https://github.com/dhruv0641/Dolla/issues/61) · PR: [#62](https://github.com/dhruv0641/Dolla/pull/62) · merged to develop as `e970369`; CI passed; reviewer passed
-- **TASK-054 Flow control, ledger and jobs** — IN_REVIEW · Frontend Engineer · 4h · deps: TASK-021, TASK-022, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64) · draft PR: [#87](https://github.com/dhruv0641/Dolla/pull/87) · local typecheck/build and independent review pass; CI pending
-- **TASK-055 QA, voice, calendar and publishing screens** — BACKLOG · Frontend Engineer · 6h · deps: TASK-054
+- **TASK-054 Flow control, ledger and jobs** — DONE · Frontend Engineer · 4h · deps: TASK-021, TASK-022, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64) · PR: [#87](https://github.com/dhruv0641/Dolla/pull/87) merged to `develop` as `6476cbd`; CI/review passed; no live Flow data claimed
+- **TASK-055 QA, voice, calendar and publishing screens** — IN_PROGRESS · Frontend Engineer · 6h · deps: TASK-054 · Issue: [#88](https://github.com/dhruv0641/Dolla/issues/88) · branch `feature/TASK-055-qa-voice-calendar-and-publishing`
 - **TASK-056 Agent, analytics, community and settings screens** — BACKLOG · Frontend Engineer · 8h · deps: TASK-055
 
 ## EPIC-12: Social Publishing
@@ -129,12 +129,12 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 30 (TASK-001 through TASK-022, TASK-051 through TASK-053, and TASK-072 through TASK-076).
-- IN_REVIEW: 2 (TASK-023; live identity evidence outstanding. TASK-054; PR/CI pending).
-- IN_PROGRESS: 0.
+- DONE: 31 (TASK-001 through TASK-022, TASK-051 through TASK-054, and TASK-072 through TASK-076).
+- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
+- IN_PROGRESS: 1 (TASK-055).
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 44.
+- BACKLOG: 43.
 
 ## GitHub delivery references
 
@@ -207,6 +207,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-053 issue [#61](https://github.com/dhruv0641/Dolla/issues/61) closed by PR [#62](https://github.com/dhruv0641/Dolla/pull/62), merged to develop as 970369; both CI checks and independent review passed. Scene/assets APIs and authenticated content data remain unavailable, so corresponding panels show no loaded records.
 
 - TASK-054 issue [#64](https://github.com/dhruv0641/Dolla/issues/64) opened; marked blocked on missing authorized Flow MCP server/manifest (TASK-021). No simulated generation, jobs, balances, or alternate provider controls will be presented.
+- TASK-054 issue [#64](https://github.com/dhruv0641/Dolla/issues/64) closed by PR [#87](https://github.com/dhruv0641/Dolla/pull/87), merged to `develop` as `6476cbd`; PR and post-merge plan CI passed, independent review found no blocker. The merge satisfies TASK-055's dependency.
+- TASK-055 issue [#88](https://github.com/dhruv0641/Dolla/issues/88) opened; selected as the next dependency-ready P1 task. Started `feature/TASK-055-qa-voice-calendar-and-publishing` against `develop`; QA, voice, publishing and calendar panels are in progress with external data/actions gated.
 
 - TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) opened; selected as the next eligible P2 task because no P1 tasks have fully satisfied dependencies while TASK-021/054 remain blocked.
 
