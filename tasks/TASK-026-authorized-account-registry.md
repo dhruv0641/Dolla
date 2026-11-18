@@ -5,7 +5,8 @@
 - **Priority:** P0
 - **Dependencies:** TASK-006, TASK-021
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#94](https://github.com/dhruv0641/Dolla/issues/94); draft PR [#95](https://github.com/dhruv0641/Dolla/pull/95) targets `develop` at `b60dce1`; CI is running.
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,9 +27,9 @@ Deliver authorized account registry as an independently verifiable capability wi
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -37,3 +38,12 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation checkpoint — 2026-11-19
+- Started after TASK-006 and TASK-021 were confirmed DONE; TASK-056 is fully merged and closed out.
+- Reviewed `SCHEMA.sql`, `FLOW_MCP_ADAPTER_CONTRACT.json`, the repository's initial migration, account-health adapter boundary, and capability matrix. The registry will store opaque account references and secret references only; verified identity, pause and authorization gates remain distinct.
+- Issue [#94](https://github.com/dhruv0641/Dolla/issues/94) opened; implementation and verification are in progress. No account connection, account switch, remote operation, generation or paid action was performed.
+- Added an owner-scoped PostgreSQL repository and authenticated create/list/pause API. New records are explicitly unverified and paused; response models omit owner and credential references. Raw credential values are rejected, duplicate aliases and storage failures use sanitized errors. Pause is owner-scoped, idempotent and one-way; no caller can unpause or self-assert verification.
+- A focused security test initially found FastAPI validation errors echoing submitted raw credentials. Added a global validation response handler that retains field-level error metadata while removing submitted input and context values; the regression test now passes.
+- Follow-up independent review identified that global alias uniqueness could expose cross-owner alias existence, and that reference syntax validation did not prove a reference existed. Added migration `0002_flow_account_owner_alias.sql` for owner-scoped uniqueness, changed the repository conflict target, and clarified that reference validation is syntax-only. The issue description and operator docs now distinguish syntax from approval/verification.
+- Operator boundaries are in [`docs/FLOW_ACCOUNT_REGISTRY.md`](../docs/FLOW_ACCOUNT_REGISTRY.md). Focused registry tests (11), migration tests (3), and the full suite (193 tests) pass. Project-plan validation reports 15 epics/76 task specs/no cycles and `git diff --check` is clean. Independent reviewer found no blockers after the alias/reference corrections. Live PostgreSQL/provider integration is not configured or claimed; PR/CI remains pending.
