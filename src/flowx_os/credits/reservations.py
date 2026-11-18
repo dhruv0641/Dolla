@@ -87,6 +87,10 @@ class CreditQuoteProvider(Protocol):
 
 
 class CreditReservationStore(Protocol):
+    async def assert_account_owned(
+        self, *, account_id: UUID, owner_user_id: str
+    ) -> None: ...
+
     async def reserve(
         self,
         *,
@@ -162,6 +166,13 @@ class CreditReservationService:
             request_id=request_id,
             model_name=model_name,
             duration_seconds=duration_seconds,
+        )
+        # Prove tenant ownership before disclosing an account reference to any
+        # injected quote or approval provider. The repository repeats the check
+        # while locking the wallet before inserting the reservation.
+        await self._store.assert_account_owned(
+            account_id=account_id,
+            owner_user_id=owner_user_id,
         )
         try:
             evidence = await self._quote_provider.get_quote(request)

@@ -114,9 +114,16 @@ class FakeApprover:
 
 
 class FakeStore:
-    def __init__(self, result=None):
+    def __init__(self, result=None, owned_error=None):
         self.result = result or record()
+        self.owned_error = owned_error
+        self.ownership_calls = []
         self.calls = []
+
+    async def assert_account_owned(self, **kwargs):
+        self.ownership_calls.append(kwargs)
+        if self.owned_error:
+            raise self.owned_error
 
     async def reserve(self, **kwargs):
         self.calls.append(kwargs)
@@ -161,7 +168,23 @@ class CreditReservationServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, record())
         self.assertEqual(provider.requests[0].account_ref, str(ACCOUNT_ID))
         self.assertEqual(approver.calls[0]["max_allowed_credits"], 7)
+        self.assertEqual(store.ownership_calls[0], {"account_id": ACCOUNT_ID, "owner_user_id": "owner-1"})
         self.assertEqual(store.calls[0]["quote"], QUOTE)
+
+    async def test_foreign_account_is_rejected_before_quote_or_approval_provider(self):
+        from flowx_os.db.flow_accounts import OwnedFlowAccountNotFound
+
+        provider, approver, store = FakeQuoteProvider(), FakeApprover(), FakeStore(
+            owned_error=OwnedFlowAccountNotFound("Flow account not found")
+        )
+        with self.assertRaises(OwnedFlowAccountNotFound):
+            await make_service(provider, approver, store).reserve(
+                account_id=ACCOUNT_ID, owner_user_id="owner-2", request_id=REQUEST_ID,
+                model_name="veo-model", duration_seconds=8, approval_ref="approval-1",
+            )
+        self.assertEqual(provider.requests, [])
+        self.assertEqual(approver.calls, [])
+        self.assertEqual(store.calls, [])
 
     async def test_missing_quote_provider_fails_closed_without_store_call(self):
         store = FakeStore()
@@ -240,6 +263,19 @@ class CreditReservationRepositoryTests(unittest.IsolatedAsyncioTestCase):
     def repository(self, responses, *, now=None, on_execute=None):
         connection = FakeConnection(responses, on_execute=on_execute)
         return FlowCreditReservationRepository(FakePool(connection), now=now or (lambda: NOW)), connection
+
+    async def test_owner_preflight_scopes_account_before_external_quote(self):
+        repository, connection = self.repository([FakeCursor(one=(1,))])
+        await repository.assert_account_owned(account_id=ACCOUNT_ID, owner_user_id="owner-1")
+        self.assertEqual(connection.queries[0][1], (ACCOUNT_ID, "owner-1"))
+        self.assertIn("owner_user_id = %s", connection.queries[0][0])
+
+    async def test_owner_preflight_hides_foreign_account(self):
+        from flowx_os.db.flow_accounts import OwnedFlowAccountNotFound
+
+        repository, _ = self.repository([FakeCursor(one=None)])
+        with self.assertRaises(OwnedFlowAccountNotFound):
+            await repository.assert_account_owned(account_id=ACCOUNT_ID, owner_user_id="owner-2")
 
     async def test_reserve_locks_account_and_checks_limits_before_insert(self):
         repository, connection = self.repository([
@@ -430,6 +466,34 @@ class CreditReservationApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.json()["state"], "RESERVED")
         self.assertNotIn("owner_user_id", response.json())
         self.assertNotIn("credentials_ref", response.json())
+
+    async def test_foreign_account_returns_generic_404_before_quote_provider(self):
+        from flowx_os.db.flow_accounts import OwnedFlowAccountNotFound
+
+        verifier, token = make_auth()
+        provider, approver = FakeQuoteProvider(), FakeApprover()
+        service = make_service(
+            provider,
+            approver,
+            FakeStore(owned_error=OwnedFlowAccountNotFound("Flow account not found")),
+        )
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(
+                token_verifier=verifier,
+                database_pool=FakePool(FakeConnection([])),
+                credit_reservation_service=service,
+            )),
+            base_url="http://testserver", headers={"Authorization": f"Bearer {token}"},
+        )
+        async with client:
+            response = await client.post(
+                f"/api/v1/flow-accounts/{ACCOUNT_ID}/credit-reservations",
+                json={"request_id": str(REQUEST_ID), "model_name": "veo-model", "duration_seconds": 8, "approval_ref": "approval-1"},
+            )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "flow_account_not_found")
+        self.assertEqual(provider.requests, [])
+        self.assertEqual(approver.calls, [])
 
 
 def make_auth():

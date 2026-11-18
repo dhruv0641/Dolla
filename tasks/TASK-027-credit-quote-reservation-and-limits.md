@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-026
 - **Estimated complexity:** 12 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
-- **GitHub:** Issue [#97](https://github.com/dhruv0641/Dolla/issues/97); branch `feature/TASK-027-credit-quote-reservation-limits` targets `develop`.
+- **GitHub:** Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) reopened for owner-preflight hardening; initial PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged as `8c4849e`; follow-up PR [#99](https://github.com/dhruv0641/Dolla/pull/99) targets `develop`.
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -28,8 +28,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Acceptance Criteria
 - [x] Capability is implemented behind documented interfaces and explicit injected dependencies; it remains disabled without quote, approval, and limit configuration.
-- [x] Errors, reservation states, idempotency, balance freshness, row locking, and security boundaries are explicit and observable.
-- [x] Acceptance evidence and operator documentation are recorded; live external integration is not claimed without verification.
+- [x] Owner authorization is checked before account references reach quote or approval providers; reservation storage repeats owner scoping under lock.
+- [x] Acceptance evidence and operator documentation are recorded for the owner-preflight hardening; live external integration is not claimed without verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -49,3 +49,8 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Hardened the final insert path to recheck quote expiry and observed-balance freshness after database waits while the account row remains locked. Provider quote references and requested model/duration are bounded and reject malformed values.
 - Added operator documentation in `docs/CREDIT_QUOTE_RESERVATIONS.md`. No live Flow quote/balance endpoint is available in the discovered capability matrix, so no provider, rate, or balance is fabricated and the API remains unavailable by default.
 - Focused reservation tests: 18 passed. Full Python suite: 212 passed. All SQL migrations parse with `pglast`; the project-plan validator reports 15 epics/76 tasks/76 dependency nodes/no cycles; `git diff --check` passes. Independent Technical Reviewer found no blockers. GitHub CI, live PostgreSQL execution, and provider integration remain outstanding.
+
+## Security follow-up checkpoint — 2026-11-19
+- During final tracker review, identified that the quote provider could receive an account ID before the repository confirmed that the caller owned that account. The initial reservation still enforced ownership before inserting, but the ordering could disclose a foreign account reference to an injected provider.
+- Reopened issue [#97](https://github.com/dhruv0641/Dolla/issues/97) and started `feature/TASK-027-owner-scoped-quote-preflight` from the merged `develop` state.
+- Added a tenant-scoped owner preflight before quote/approval providers, retained the locked owner check before insertion, documented the boundary, and added service/API/repository tests proving foreign accounts fail before provider invocation with a generic 404. Follow-up focused tests (22), full suite (216), migration tests (4), project-plan validation, and diff check pass. Independent Technical Reviewer found no blockers; PR #99 is open and GitHub CI is pending.
