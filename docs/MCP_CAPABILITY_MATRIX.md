@@ -1,6 +1,6 @@
 # Google Flow MCP Capability Matrix
 
-**Checked 2026-11-18 22:40 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. A screenshot of the active Flow page showed no email; the requested account `dobariyadhruvv@gmail.com` is therefore not verified. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
+**Checked 2026-11-19 02:40 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. The Flow account details panel now exposes a signed-in identity that does not match the requested account `dobariyadhruvv@gmail.com`; intended-account verification remains incomplete. The actual signed-in address is intentionally not recorded here. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
 
 The connected runtime manifest includes the following tools. These are the actual exposed tool names, not names derived from `FLOW_MCP_ADAPTER_CONTRACT.json`:
 
@@ -15,15 +15,15 @@ The connected runtime manifest includes the following tools. These are the actua
 | `flow_scene_add` | Add a project media item to a scene and return scene URL/timeline summary. | Described as no-credit; schema inspected only. |
 | `flow_scene_status` | Read scene clips, total duration and whether an extension is generating. | Schema inspected only. |
 | `flow_scene_extend` | Extend the last scene clip by 7 seconds; `auto_confirm=false` prepares and cancels; `true` spends credits. Supports resume/job ID. | Schema inspected only; no extension invoked. |
-| `flow_screenshot` | Capture the Flow tab to a local PNG. | Read-only screenshot used for account-page inspection; email was not visible. |
+| `flow_screenshot` | Capture the Flow tab to a local PNG. | Read-only account details inspection exposed an identity mismatch; the actual signed-in address is not stored here. |
 
 ## Capability decisions
 
 | Capability | Status | Evidence / remaining check |
 |---|---|---|
 | MCP server/tool identity | RUNTIME IDENTITY VERIFIED; HOST DETAILS UNKNOWN | Runtime exposes `mcp__google_flow` and the actual tools above. Host deployment identity/version and transport are not available in metadata. |
-| Connection/login | VERIFIED AT SESSION LEVEL | `flow_connect` and `flow_status` succeeded and returned `logged_in: true`. This does not establish which Google identity is signed in. |
-| Intended account authorization | UNVERIFIED; TRACKED IN TASK-023 | Must verify the account email is `dobariyadhruvv@gmail.com` in the correct Flow Chrome profile. Connector status `logged_in: true` and account path `/u/1/` are not identity evidence. |
+| Connection/login | SESSION CONNECTED; INTENDED IDENTITY MISMATCHED | `flow_connect` and `flow_status` returned connected/logged-in. The account details panel displays an identity that differs from the requested account. |
+| Intended account authorization | MISMATCH OBSERVED; TASK-023 OPEN | Flow account details show a signed-in identity different from `dobariyadhruvv@gmail.com`. Do not use the current session to claim authorization; the user must switch to the intended account and provide direct identity confirmation. |
 | Video generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. Paid use requires explicit user authorization. |
 | Image generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. |
 | Media retrieval | PARTIALLY VERIFIED | Video generation result schema returns downloaded paths; separate download tool accepts media UUIDs, documented for media where UUID exists. No real asset was retrieved. |
@@ -33,7 +33,7 @@ The connected runtime manifest includes the following tools. These are the actua
 
 ## Outstanding external state
 
-`flow_status` on 2026-11-18 still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. Reconcile this job under TASK-024 before any retry or new generation.
+`flow_status` on 2026-11-19 still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. Reconcile this job under TASK-024 before any retry or new generation.
 
 ## Guardrails
 

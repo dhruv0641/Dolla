@@ -8,8 +8,8 @@
 - **Status:** IN_REVIEW
 - **GitHub:** Issue [#85](https://github.com/dhruv0641/Dolla/issues/85) remains open; PR [#86](https://github.com/dhruv0641/Dolla/pull/86) merged to `develop` as `3520bed` with pre-merge and post-merge CI success; branch `feature/TASK-023-auth-and-account-health`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
-- **External prerequisite:** Verify the Google account shown in the authorized Flow browser matches the intended account `dobariyadhruvv@gmail.com`. The current connector status reports `logged_in: true` but does not expose the email; do not treat that as account verification.
-- **Blockers:** The live connector does not expose the signed-in email. The latest `flow_status` reports connected/logged-in, while the Flow page screenshot shows no account email. Do not claim intended-account verification until direct identity evidence is available. App-side health state and fail-closed verification can proceed independently.
+- **External prerequisite:** The user must switch the authorized Flow browser to the intended account `dobariyadhruvv@gmail.com`, then provide direct identity evidence.
+- **Blockers:** On 2026-11-19, `flow_connect` and `flow_status` returned connected/logged-in, but the Flow account details panel displayed an identity different from the intended account. The actual signed-in address is intentionally omitted from repository docs. Do not use this session as identity evidence. The latest status also reports an old image job in `sent` state; its final outcome remains unknown. App-side health state and fail-closed verification can proceed independently.
 
 ## User Story
 As a FLOW AI Content OS operator, I want auth and account health, so the platform can progress safely through a traceable production lifecycle.
@@ -39,7 +39,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - No email, cookie, token or browser storage is accepted in health snapshots or status payloads.
 - Authorization is short-lived and rechecked immediately before the adapter transport call, after asynchronous manifest/approval gates complete.
 - Verification so far: `python -m unittest tests.test_flow_account_health tests.test_flow_mcp_adapter -v` — 24 passed; full suite — 181 passed; project-plan validation — 15 epics/76 tasks/no cycles; `git diff --check` — clean.
-- Independent Technical Reviewer re-review passed with no remaining code blockers. PR #86 is merged, and post-merge GitHub CI passed. The live connector still does not expose an email, so the explicit external prerequisite to verify `dobariyadhruvv@gmail.com` remains incomplete; keep this task IN_REVIEW until direct identity evidence is available.
+- Independent Technical Reviewer re-review passed with no remaining code blockers. PR #86 is merged, and post-merge GitHub CI passed. On 2026-11-19, the Flow account details panel displayed an identity different from `dobariyadhruvv@gmail.com`; the intended-account prerequisite remains incomplete. Keep this task IN_REVIEW until the user switches to the intended account and direct identity evidence is available.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
