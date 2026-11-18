@@ -5,10 +5,10 @@
 - **Priority:** P0
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BLOCKED
-- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`; issue #52 remains open until an authorized server/manifest is available.
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`. Live runtime discovery is on `feature/TASK-021-live-flow-capability-discovery`, [PR #82](https://github.com/dhruv0641/Dolla/pull/82) is being prepared for review.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
-- **Blockers:** No authorized Google Flow MCP server or manifest is available to this Codex session. The actual server tool schema cannot be inspected until the server is configured/exposed. The proposed contract and unrelated video providers are not substitutes.
+- **Blockers:** Runtime transport/deployment identity is not reported and is documented as unknown. Exact signed-in account verification is assigned to TASK-023; reconciliation of the old `sent` image job is assigned to TASK-024. The repository has no Flow adapter yet; this task verifies that unconfigured or unavailable Flow operations remain inaccessible in the current API shell. The proposed contract is not server documentation.
 
 ## User Story
 As a FLOW AI Content OS operator, I want discover actual mcp manifest, so the platform can progress safely through a traceable production lifecycle.
@@ -24,17 +24,18 @@ Deliver discover actual mcp manifest as an independently verifiable capability w
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MATRIX.md`, this task specification and the timestamped project log. No adapter/tool names are inferred and no external calls or credentials are used.
+Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MATRIX.md`, this task specification and the timestamped project log. Tool names/schemas were read from the actual runtime manifest; no generation, credentials, or paid operation were used.
 
 ## Acceptance Criteria
-- [ ] Actual authorized server identity and manifest have been inspected and recorded.
-- [x] Current tool/resource inventories were inspected; absence of an authorized Flow MCP server and actual manifest is documented without claiming support.
-- [ ] Unsupported or unverified server capabilities are confirmed to fail closed by the implementation.
+- [x] Actual runtime tool identity (`mcp__google_flow`) and exposed schemas have been inspected and recorded; transport/deployment identity limitations are explicit.
+- [x] The prior tool/resource inventory absence finding and this later live Flow MCP tool exposure are recorded as separate dated observations.
+- [x] Current application behavior fails closed: no Flow operation route is exposed, and readiness returns unavailable when the Flow probe is absent or false; verified by focused API tests. A real adapter remains a follow-on task.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Focused verification: `python -m unittest tests.test_api.ApiShellTests.test_readiness_reports_configured_probe_results tests.test_api.ApiShellTests.test_readiness_is_not_ready_when_dependencies_are_unconfigured tests.test_api.ApiShellTests.test_openapi_exposes_service_auth_and_content_routes -v` — 3 tests passed. Project-plan validator: 15 epics, 76 task specs, 76 dependency nodes, no cycles.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

@@ -3,11 +3,11 @@
 - **Parent epic:** EPIC-11 — Frontend Dashboard
 - **Assigned agent:** Frontend Engineer
 - **Priority:** P1
-- **Dependencies:** TASK-021, TASK-053
+- **Dependencies:** TASK-021, TASK-022, TASK-053
 - **Estimated complexity:** 4 engineering hours (planning estimate)
 - **Status:** BLOCKED
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
-- **Blockers:** No authorized Google Flow MCP server or actual manifest is exposed (see [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md)). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks unblocking; no alternative video provider or simulated controls are permitted.
+- **Blockers:** TASK-021 is in review and TASK-022 has not implemented the backend capability boundary yet; TASK-053 is complete. Account verification and old job reconciliation are tracked in TASK-023/TASK-024. See [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks unblocking; no alternative video provider or simulated controls are permitted.
 
 ## User Story
 As a FLOW AI Content OS operator, I want flow control, ledger and jobs, so the platform can progress safely through a traceable production lifecycle.
