@@ -39,7 +39,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-021 Discover actual MCP manifest** — DONE · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · PR: [#82](https://github.com/dhruv0641/Dolla/pull/82) · merged to develop as `36864b1`; CI and independent review passed
 - **TASK-022 Capability-gated adapter interface** — DONE · Flow MCP Integration Engineer · 8h · deps: TASK-021 · Issue: [#83](https://github.com/dhruv0641/Dolla/issues/83) · PR: [#84](https://github.com/dhruv0641/Dolla/pull/84) · merged to develop as `8d429b9`; pre-merge and post-merge CI/independent review passed
-- **TASK-023 Auth and account health** — IN_REVIEW · Flow MCP Integration Engineer · 12h · deps: TASK-022 · Issue: [#85](https://github.com/dhruv0641/Dolla/issues/85) · branch: `feature/TASK-023-auth-and-account-health` · code review passed; live identity verification remains external/unverified
+- **TASK-023 Auth and account health** — IN_REVIEW · Flow MCP Integration Engineer · 12h · deps: TASK-022 · Issue: [#85](https://github.com/dhruv0641/Dolla/issues/85) · draft PR: [#86](https://github.com/dhruv0641/Dolla/pull/86) · code review passed; live identity verification remains external/unverified
 - **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
 - **TASK-025 Media retrieval and metadata** — BACKLOG · Flow MCP Integration Engineer · 4h · deps: TASK-024
 
