@@ -18,6 +18,8 @@ The API has no quote provider, spend verifier, or credit ceiling wired by defaul
 
 The repository serializes reservations by locking the owner-scoped account row, then counts active reservations before enforcing the `max_inflight` limit. Account pause uses an owner-scoped update on the same row: a reservation that already holds the lock commits before the pause, and subsequent reservations observe the paused state. Pause never silently releases active reservations. The repository rechecks quote age, expiry, observed-balance freshness, and daily reset eligibility immediately before insertion while holding the account lock. Unknown or uncertain spend remains allocated as `RECONCILE_PENDING` until an explicit reconciliation path resolves it. This task does not add automatic expiry, release, settlement, balance refresh, or generation calls; those require later ledger/reconciliation work and verified provider evidence.
 
+TASK-030 adds a durable owner-visible `UNKNOWN_SPEND` alarm and a transaction that changes a reservation to `RECONCILE_PENDING`, pauses the account, and writes an audit event. The held reservation continues to count against both wallet limits and concurrency. No alarm delivery integration or automated resolution is configured. See `docs/CREDIT_RISK_ALARMS.md`.
+
 ## Data and security handling
 
 Approval references are accepted as `SecretStr` request fields and are never included in the response. Responses omit owner identifiers and credential references. Provider exceptions and database failures are mapped to stable API error codes. Quote references are bounded and reject control characters. No Flow cookies, credentials, or tokens are accepted by this API.

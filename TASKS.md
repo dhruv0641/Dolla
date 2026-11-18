@@ -49,7 +49,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-027 Credit quote, reservation and limits** — DONE · Credit and Account Engineer · 12h · deps: TASK-026 · Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) closed by PR [#99](https://github.com/dhruv0641/Dolla/pull/99), merged as `73eb39f`; PR and post-merge checks and independent review passed
 - **TASK-028 Observed credit ledger and reconciliation** — DONE · Credit and Account Engineer · 16h · deps: TASK-027 · Issue [#101](https://github.com/dhruv0641/Dolla/issues/101) closed by PR [#102](https://github.com/dhruv0641/Dolla/pull/102), merged to `develop` as `707310f`; 227 tests, independent review, PR and post-merge checks passed
 - **TASK-029 Concurrency, pause and reset tracking** — DONE · Credit and Account Engineer · 4h · deps: TASK-028 · Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) closed by PR [#105](https://github.com/dhruv0641/Dolla/pull/105), merged to `develop` as `d91e400`; 229 tests, independent review, PR and post-merge checks passed
-- **TASK-030 Unknown-spend alarms and fail-closed controls** — BACKLOG · Credit and Account Engineer · 6h · deps: TASK-029
+- **TASK-030 Unknown-spend alarms and fail-closed controls** — IN_REVIEW · Credit and Account Engineer · 6h · deps: TASK-029 · Issue [#107](https://github.com/dhruv0641/Dolla/issues/107) · Branch `feature/TASK-030-unknown-spend-alarms-fail-closed-controls` · 241 tests and independent review pass; PR/CI pending
 
 ## EPIC-07: Scene and Media Management
 
@@ -130,11 +130,11 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 37 (TASK-001 through TASK-022, TASK-026 through TASK-029, TASK-051 through TASK-056, and TASK-072 through TASK-076).
-- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
+- IN_REVIEW: 2 (TASK-023 live identity evidence outstanding; TASK-030 independent review passed, PR/CI pending).
 - IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 38.
+- BACKLOG: 37.
 
 ## GitHub delivery references
 
