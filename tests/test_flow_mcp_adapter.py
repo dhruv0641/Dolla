@@ -1,0 +1,229 @@
+from datetime import datetime, timedelta, timezone
+import unittest
+
+from flowx_os.flow_mcp import (
+    AdapterConfig,
+    AdapterErrorCode,
+    CapabilityBinding,
+    CapabilityGatedFlowAdapter,
+    FlowAccountAuthorization,
+    FlowAdapterError,
+    FlowMcpManifest,
+    FlowOperation,
+    McpTool,
+    SpendAuthorization,
+)
+
+
+NOW = datetime(2026, 11, 18, 12, 0, tzinfo=timezone.utc)
+
+
+class FakeManifestProvider:
+    def __init__(self, manifest):
+        self.manifest = manifest
+        self.calls = 0
+
+    async def get_manifest(self):
+        self.calls += 1
+        return self.manifest
+
+
+class FakeTransport:
+    def __init__(self, result=None, error=None):
+        self.result = {"status": "ok"} if result is None else result
+        self.error = error
+        self.calls = []
+
+    async def call_tool(self, *, name, arguments):
+        self.calls.append((name, arguments))
+        if self.error:
+            raise self.error
+        return self.result
+
+
+class FakeSpendAuthorizer:
+    def __init__(self, approved=True):
+        self.approved = approved
+        self.calls = []
+
+    async def is_authorized(self, **request):
+        self.calls.append(request)
+        return self.approved
+
+
+def manifest(*, observed_at=NOW, spend=False):
+    tool = McpTool("observed_status_tool", {
+        "type": "object",
+        "properties": {"project_url": {"type": "string"}},
+        "required": ["project_url"],
+    })
+    binding = CapabilityBinding(
+        FlowOperation.SESSION_STATUS,
+        tool.name,
+        required_inputs=frozenset({"project_url"}),
+    )
+    tools = {tool.name: tool}
+    bindings = {FlowOperation.SESSION_STATUS: binding}
+    if spend:
+        gen_tool = McpTool("observed_generation_tool", {
+            "type": "object",
+            "properties": {"prompt": {"type": "string"}},
+            "required": ["prompt"],
+        })
+        tools[gen_tool.name] = gen_tool
+        bindings[FlowOperation.VIDEO_GENERATE] = CapabilityBinding(
+            FlowOperation.VIDEO_GENERATE, gen_tool.name,
+            required_inputs=frozenset({"prompt"}), requires_spend_authorization=True,
+        )
+    return FlowMcpManifest("runtime-server-1", observed_at, tools, bindings)
+
+
+class CapabilityGatedFlowAdapterTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.provider = FakeManifestProvider(manifest())
+        self.transport = FakeTransport()
+        self.account = FlowAccountAuthorization("acct-primary", True)
+        self.config = AdapterConfig(True, "runtime-server-1", "acct-primary")
+
+    def adapter(self, config=None, provider=None, transport=None, spend_authorizer=None):
+        return CapabilityGatedFlowAdapter(
+            config or self.config, provider or self.provider, transport or self.transport,
+            now=lambda: NOW, spend_authorizer=spend_authorizer,
+        )
+
+    async def test_disabled_by_default_does_not_read_manifest_or_call_transport(self):
+        adapter = self.adapter(AdapterConfig())
+        with self.assertRaises(FlowAdapterError) as caught:
+            await adapter.invoke(FlowOperation.SESSION_STATUS, {}, account=self.account)
+        self.assertEqual(caught.exception.code, AdapterErrorCode.DISABLED)
+        self.assertEqual(self.provider.calls, 0)
+        self.assertEqual(self.transport.calls, [])
+
+    async def test_fresh_verified_read_only_call_uses_observed_tool(self):
+        result = await self.adapter().invoke(
+            FlowOperation.SESSION_STATUS, {"project_url": "https://labs.google/fx/tools/flow"}, account=self.account
+        )
+        self.assertEqual(result, {"status": "ok"})
+        self.assertEqual(self.transport.calls[0][0], "observed_status_tool")
+
+    async def test_unverified_or_mismatched_account_fails_before_manifest(self):
+        for account, expected in [
+            (FlowAccountAuthorization("acct-primary", False), AdapterErrorCode.ACCOUNT_UNVERIFIED),
+            (FlowAccountAuthorization("acct-other", True), AdapterErrorCode.ACCOUNT_MISMATCH),
+        ]:
+            with self.subTest(expected=expected):
+                with self.assertRaises(FlowAdapterError) as caught:
+                    await self.adapter().invoke(FlowOperation.SESSION_STATUS, {}, account=account)
+                self.assertEqual(caught.exception.code, expected)
+        self.assertEqual(self.provider.calls, 0)
+
+    async def test_stale_manifest_fails_closed(self):
+        provider = FakeManifestProvider(manifest(observed_at=NOW - timedelta(minutes=16)))
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter(provider=provider).invoke(
+                FlowOperation.SESSION_STATUS, {"project_url": "x"}, account=self.account
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.MANIFEST_STALE)
+        self.assertEqual(self.transport.calls, [])
+
+    async def test_unknown_capability_and_bad_arguments_fail_closed(self):
+        for operation, args, expected in [
+            (FlowOperation.MEDIA_DOWNLOAD, {}, AdapterErrorCode.CAPABILITY_UNKNOWN),
+            (FlowOperation.SESSION_STATUS, {"unknown": "x"}, AdapterErrorCode.ARGUMENTS_INVALID),
+            (FlowOperation.SESSION_STATUS, {}, AdapterErrorCode.ARGUMENTS_INVALID),
+        ]:
+            with self.subTest(expected=expected):
+                with self.assertRaises(FlowAdapterError) as caught:
+                    await self.adapter().invoke(operation, args, account=self.account)
+                self.assertEqual(caught.exception.code, expected)
+        self.assertEqual(self.transport.calls, [])
+
+    async def test_argument_values_must_match_discovered_json_schema(self):
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter().invoke(
+                FlowOperation.SESSION_STATUS, {"project_url": 123}, account=self.account
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.ARGUMENTS_INVALID)
+        self.assertEqual(self.transport.calls, [])
+
+    def test_nested_manifest_schema_is_an_immutable_validated_snapshot(self):
+        original = {
+            "type": "object",
+            "properties": {"mode": {"type": "string", "enum": ["safe", "fast"]}},
+            "required": ["mode"],
+        }
+        tool = McpTool("schema_tool", original)
+        original["properties"]["mode"]["enum"].append("unsafe")
+        self.assertEqual(tool.input_schema["properties"]["mode"]["enum"], ("safe", "fast"))
+        with self.assertRaises(TypeError):
+            tool.input_schema["properties"]["mode"]["enum"] = ("unsafe",)
+
+    def test_unsupported_manifest_schema_constraints_fail_closed_at_discovery(self):
+        with self.assertRaises(ValueError):
+            McpTool("unsupported", {
+                "type": "object",
+                "properties": {"payload": {"type": "string", "pattern": ".*"}},
+            })
+
+    def test_malformed_manifest_constraint_is_rejected_at_discovery(self):
+        with self.assertRaises(ValueError):
+            McpTool("malformed", {
+                "type": "object",
+                "properties": {"payload": {"type": "string", "minLength": "many"}},
+            })
+
+    async def test_spend_requires_operation_and_account_bound_approval(self):
+        provider = FakeManifestProvider(manifest(spend=True))
+        adapter = self.adapter(provider=provider)
+        with self.assertRaises(FlowAdapterError) as caught:
+            await adapter.invoke(FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account)
+        self.assertEqual(caught.exception.code, AdapterErrorCode.SPEND_AUTHORIZATION_REQUIRED)
+
+        wrong_scope = SpendAuthorization("approval-1", "acct-other", FlowOperation.VIDEO_GENERATE, 2)
+        with self.assertRaises(FlowAdapterError) as caught:
+            await adapter.invoke(
+                FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account, spend=wrong_scope
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.SPEND_AUTHORIZATION_INVALID)
+        self.assertEqual(self.transport.calls, [])
+
+        authorizer = FakeSpendAuthorizer()
+        transport = FakeTransport()
+        spend = SpendAuthorization("approval-1", "acct-primary", FlowOperation.VIDEO_GENERATE, 2)
+        await self.adapter(provider=provider, transport=transport, spend_authorizer=authorizer).invoke(
+            FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account, spend=spend
+        )
+        self.assertEqual(authorizer.calls[0]["max_allowed_credits"], 2)
+        self.assertEqual(transport.calls[0][0], "observed_generation_tool")
+
+    async def test_spend_is_denied_when_approval_store_rejects_reference(self):
+        provider = FakeManifestProvider(manifest(spend=True))
+        transport = FakeTransport()
+        spend = SpendAuthorization("unknown-approval", "acct-primary", FlowOperation.VIDEO_GENERATE, 1)
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter(
+                provider=provider, transport=transport, spend_authorizer=FakeSpendAuthorizer(False)
+            ).invoke(FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account, spend=spend)
+        self.assertEqual(caught.exception.code, AdapterErrorCode.SPEND_AUTHORIZATION_INVALID)
+        self.assertEqual(transport.calls, [])
+
+    async def test_transport_error_is_sanitized(self):
+        transport = FakeTransport(error=RuntimeError("secret payload and cookie"))
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter(transport=transport).invoke(
+                FlowOperation.SESSION_STATUS, {"project_url": "x"}, account=self.account
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.TOOL_CALL_FAILED)
+        self.assertNotIn("cookie", str(caught.exception))
+        self.assertNotIn("secret payload", str(caught.exception))
+
+    async def test_non_mapping_result_is_rejected(self):
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter(transport=FakeTransport(result=[])).invoke(
+                FlowOperation.SESSION_STATUS, {"project_url": "x"}, account=self.account
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.TOOL_RESULT_INVALID)
+
+
+if __name__ == "__main__":
+    unittest.main()

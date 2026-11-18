@@ -5,8 +5,8 @@
 - **Priority:** P0
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`. Live runtime discovery is on `feature/TASK-021-live-flow-capability-discovery`, [PR #82](https://github.com/dhruv0641/Dolla/pull/82) is being prepared for review.
+- **Status:** DONE
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) closed by PR [#82](https://github.com/dhruv0641/Dolla/pull/82), merged to `develop` as `36864b1`. Both required CI checks passed; independent technical review passed.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** Runtime transport/deployment identity is not reported and is documented as unknown. Exact signed-in account verification is assigned to TASK-023; reconciliation of the old `sent` image job is assigned to TASK-024. The repository has no Flow adapter yet; this task verifies that unconfigured or unavailable Flow operations remain inaccessible in the current API shell. The proposed contract is not server documentation.
 

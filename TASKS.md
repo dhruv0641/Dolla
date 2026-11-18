@@ -37,8 +37,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-05: Google Flow MCP Integration
 
-- **TASK-021 Discover actual MCP manifest** — IN_REVIEW · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · prior discovery PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) · checkpoint PR: [#82](https://github.com/dhruv0641/Dolla/pull/82) · runtime manifest recorded; account verification and old job recovery are tracked in TASK-023/TASK-024
-- **TASK-022 Capability-gated adapter interface** — BACKLOG · Flow MCP Integration Engineer · 8h · deps: TASK-021
+- **TASK-021 Discover actual MCP manifest** — DONE · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · PR: [#82](https://github.com/dhruv0641/Dolla/pull/82) · merged to develop as `36864b1`; CI and independent review passed
+- **TASK-022 Capability-gated adapter interface** — DONE · Flow MCP Integration Engineer · 8h · deps: TASK-021 · Issue: [#83](https://github.com/dhruv0641/Dolla/issues/83) · branch: `feature/TASK-022-capability-gated-adapter-interface` · 13 focused/170 full tests pass; independent review passed; live transport unconfigured
 - **TASK-023 Auth and account health** — BACKLOG · Flow MCP Integration Engineer · 12h · deps: TASK-022
 - **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
 - **TASK-025 Media retrieval and metadata** — BACKLOG · Flow MCP Integration Engineer · 4h · deps: TASK-024
@@ -129,10 +129,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 28 (TASK-001 through TASK-020, TASK-051 through TASK-053, and TASK-072 through TASK-076).
-- IN_REVIEW: 1 (TASK-021; live MCP manifest discovered and current API fail-closed behavior verified).
+- DONE: 30 (TASK-001 through TASK-022, TASK-051 through TASK-053, and TASK-072 through TASK-076).
+- IN_PROGRESS: 0.
 - BLOCKED: 1 (TASK-054; depends on TASK-021, TASK-022 and TASK-053).
-- BACKLOG: 46; remaining tasks have unfinished prerequisites. TASK-022 becomes dependency-ready after TASK-021 merges; TASK-054 also depends on TASK-022.
+- BACKLOG: 45; remaining tasks have unfinished prerequisites. TASK-054 is unblocked by TASK-022 and TASK-021/TASK-053; TASK-023 is the next dependency-ready Flow task.
 
 ## GitHub delivery references
 
@@ -184,7 +184,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
 
-- TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) is open and in review: the live tool manifest is recorded and current API fail-closed behavior passed focused tests. Account verification moves to TASK-023; old job reconciliation moves to TASK-024. See `docs/MCP_CAPABILITY_MATRIX.md`.
+- TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) closed by PR [#82](https://github.com/dhruv0641/Dolla/pull/82), merged to develop as `36864b1`; live manifest discovery, current API fail-closed tests, CI and independent review passed. Account verification is assigned to TASK-023; old job reconciliation to TASK-024.
+- TASK-022 issue [#83](https://github.com/dhruv0641/Dolla/issues/83) opened; capability-gated Flow MCP adapter interface is now in progress on `feature/TASK-022-capability-gated-adapter-interface`.
 - TASK-021 live discovery checkpoint PR [#82](https://github.com/dhruv0641/Dolla/pull/82) is open as draft from `feature/TASK-021-live-flow-capability-discovery`; project-plan CI passes on the branch.
 - TASK-051 issue [#55](https://github.com/dhruv0641/Dolla/issues/55) opened; selected as the next unblocked P1 task because dependencies TASK-003 and TASK-012 are done. Branch `feature/TASK-051-responsive-design-system-and-shell` targets `develop`.
 
