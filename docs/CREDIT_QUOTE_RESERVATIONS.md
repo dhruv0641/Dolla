@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-The reservation service is an injected application capability. It requires all of the following before it writes a reservation:
+The reservation service is an injected application capability. It first verifies that the requested account belongs to the authenticated owner, before disclosing its reference to a quote or approval provider. It requires all of the following before it writes a reservation:
 
 1. A typed quote provider returns a quote bound to the requested account, request ID, model, and duration.
 2. The quote is positive, current, not expired, and under the configured per-request credit ceiling.
@@ -14,7 +14,7 @@ The API has no quote provider, spend verifier, or credit ceiling wired by defaul
 
 ## Transaction and idempotency behavior
 
-`POST /api/v1/flow-accounts/{account_id}/credit-reservations` accepts an idempotency `request_id`, model, duration, and secret-wrapped approval reference. Persistence locks the owner-scoped account row, counts `RESERVED` and `RECONCILE_PENDING` allocations, subtracts those allocations from both observed limits, and inserts at most one row per `(flow_account_id, request_id)`. A repeated ID returns the same active reservation only when its quote fingerprint matches; changed quotes and closed reservations conflict.
+`POST /api/v1/flow-accounts/{account_id}/credit-reservations` accepts an idempotency `request_id`, model, duration, and secret-wrapped approval reference. After owner preflight, persistence locks the owner-scoped account row and repeats the ownership check, counts `RESERVED` and `RECONCILE_PENDING` allocations, subtracts those allocations from both observed limits, and inserts at most one row per `(flow_account_id, request_id)`. A repeated ID returns the same active reservation only when its quote fingerprint matches; changed quotes and closed reservations conflict.
 
 The repository rechecks quote age, expiry, and observed-balance freshness immediately before insertion while holding the account lock. Unknown or uncertain spend remains allocated as `RECONCILE_PENDING` until an explicit reconciliation path resolves it. This task does not add automatic expiry, release, settlement, balance refresh, or generation calls; those require later ledger/reconciliation work and verified provider evidence.
 

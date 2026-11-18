@@ -48,6 +48,20 @@ class FlowCreditReservationRepository:
         self._pool = pool
         self._now = now or (lambda: datetime.now(timezone.utc))
 
+    async def assert_account_owned(self, *, account_id: UUID, owner_user_id: str) -> None:
+        """Reject foreign account IDs before service calls external quote providers."""
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    "SELECT 1 FROM flow_accounts WHERE id = %s AND owner_user_id = %s",
+                    (account_id, owner_user_id),
+                )
+                row = await cursor.fetchone()
+        except Exception as exc:
+            raise RepositoryUnavailable("Flow account storage is unavailable") from exc
+        if row is None:
+            raise OwnedFlowAccountNotFound("Flow account not found")
+
     async def reserve(
         self,
         *,
