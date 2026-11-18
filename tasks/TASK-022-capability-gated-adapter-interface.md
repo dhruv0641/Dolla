@@ -5,7 +5,9 @@
 - **Priority:** P0
 - **Dependencies:** TASK-021
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **Completion scope:** Adapter-boundary implementation only; no live transport or generation is configured.
+- **GitHub:** Issue [#83](https://github.com/dhruv0641/Dolla/issues/83); draft PR [#84](https://github.com/dhruv0641/Dolla/pull/84) targets `develop`; implementation branch `feature/TASK-022-capability-gated-adapter-interface`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,10 +28,20 @@ Deliver capability-gated adapter interface as an independently verifiable capabi
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
-- [ ] Unsupported or unverified server capabilities fail closed.
+- [x] Capability is implemented behind documented interfaces and disabled-by-default configuration.
+- [x] Errors, account/operation authorization, freshness gates and supported schema validation are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Unsupported or unverified server capabilities fail closed.
+
+## Implementation and review evidence — 2026-11-18
+- Added `src/flowx_os/flow_mcp/` capability models and transport-injected adapter. No Codex host MCP endpoint is assumed or wired into the application.
+- Adapter defaults to disabled and checks configured server/account identity, explicit verification, manifest age, observed tool bindings, input schema values, and sanitized transport/result failures.
+- Recursively immutable schemas accept only the supported JSON Schema subset; unsupported or malformed schema constraints fail closed.
+- Spending operations require an account- and operation-scoped approval plus an injected trusted `SpendAuthorizationVerifier`. There is no verifier or transport configured in the running app; actual credit cost enforcement remains unverified, so no production generation claim is made.
+- Operator limits: [`docs/FLOW_MCP_ADAPTER.md`](../docs/FLOW_MCP_ADAPTER.md); runtime capability evidence: [`docs/MCP_CAPABILITY_MATRIX.md`](../docs/MCP_CAPABILITY_MATRIX.md).
+- Local verification: `python -m unittest tests.test_flow_mcp_adapter -v` — 13 passed; `python -m unittest discover -s tests` — 170 passed; `python scripts/validate_project_plan.py` — 15 epics/76 tasks/76 dependency nodes/no cycles; `git diff --check` — clean.
+- Independent Technical Reviewer re-review: no remaining blocker for this adapter-boundary scope. Reviewer confirmed schema immutability/validation and trusted, scoped spend approval checks. Live Flow transport and generation were not tested or invoked.
+- GitHub CI: PR #84 is open as draft; `validate-project-plan` is still running for head `62b9a2bb642500c1a29e15891416271def7ad38a`. Keep IN_REVIEW until required CI completes and PR is merged.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
