@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProductionBoard } from "./production-board";
+import { FlowControl } from "./flow-control";
 
 type DashboardStatus =
   | { state: "connected"; checkedAt: string; readiness: { status: "ready" | "not_ready"; checks: Record<string, { status: string }> } | null }
@@ -278,6 +279,8 @@ export function DashboardShell() {
             </>
           ) : activeSection === "pipeline" ? (
             <ProductionBoard />
+          ) : activeSection === "flow" ? (
+            <FlowControl />
           ) : (
             <section className="surface-card section-placeholder" aria-labelledby={`${activeSection}-heading`}>
               <div className="section-placeholder-mark" aria-hidden="true">{section.icon}</div>

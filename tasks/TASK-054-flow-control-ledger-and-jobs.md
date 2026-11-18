@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-021, TASK-022, TASK-053
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#64](https://github.com/dhruv0641/Dolla/issues/64); branch `feature/TASK-054-flow-control-ledger-and-jobs` targets `develop`.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** No task dependency remains: TASK-021, TASK-022 and TASK-053 are complete. TASK-023 account verification and TASK-024 old-job reconciliation remain external Flow integration limits; dashboard controls must present these as unavailable until verified backend evidence exists. See [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks this task; no alternative video provider or simulated controls are permitted.
 
@@ -30,6 +31,13 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [ ] Errors, state transitions and security boundaries are explicit and observable.
 - [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 - [ ] Operational figures use backend data; absent data is shown unavailable, never fabricated.
+
+## Implementation checkpoint — 2026-11-18
+- Added a dedicated Flow control view with disabled generate/retry/cancel actions, explicit server/account/job/spend gates, unavailable credit ledger values, and a job table with no placeholder records.
+- Dashboard documentation: [`docs/FLOW_CONTROL_DASHBOARD.md`](../docs/FLOW_CONTROL_DASHBOARD.md).
+- `npm run typecheck` and `npm run build` pass under Next.js 16.4.6. Independent reviewer found no blocking issue; copy now avoids stale job-state claims and the disabled action group is labeled for assistive technology.
+- GitHub PR/CI evidence is pending.
+- No Flow API, account status, balance, or external job row is fabricated or connected. TASK-023 direct account verification and TASK-024 old-job reconciliation remain separate integration gates.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
