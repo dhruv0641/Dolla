@@ -5,9 +5,12 @@
 - **Priority:** P0
 - **Dependencies:** TASK-027
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+
+## Readiness checkpoint — 2026-11-19
+- TASK-027 is DONE through merged implementation and owner-preflight PRs; this task's sole dependency is satisfied. No issue or implementation branch has been started yet.
 
 ## User Story
 As a FLOW AI Content OS operator, I want observed credit ledger and reconciliation, so the platform can progress safely through a traceable production lifecycle.
