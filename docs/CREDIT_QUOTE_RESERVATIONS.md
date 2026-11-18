@@ -25,3 +25,5 @@ Approval references are accepted as `SecretStr` request fields and are never inc
 ## Operational verification limits
 
 Unit tests use in-memory provider, verifier, and database fakes. Migration syntax checks do not prove execution against PostgreSQL. No live Flow quote/balance, database migration, account activation, paid generation, or production integration is claimed. Configure a provider only after its capability and response semantics are independently verified; retain manual approval and fail-closed behavior until then.
+
+TASK-028 now provides the injected observed-balance reconciliation boundary and owner-scoped ledger persistence. Without a verified provider, reservation balances remain unrefreshed and the reconciliation endpoint returns unavailable. Reconciliation records observed wallet deltas only; it does not resolve unknown job spend or release reservations. See `docs/CREDIT_LEDGER_RECONCILIATION.md`.

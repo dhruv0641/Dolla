@@ -26,6 +26,13 @@ from flowx_os.credits.reservations import (
     CreditReservationService,
     InvalidCreditQuote,
 )
+from flowx_os.credits.ledger import (
+    CreditLedgerEntry,
+    CreditObservationUnavailable,
+    CreditReconciliationConflict,
+    CreditReconciliationService,
+    InvalidCreditObservation,
+)
 from flowx_os.db.content import (
     BrandRecord,
     ContentRecord,
@@ -48,6 +55,7 @@ from flowx_os.db.credit_reservations import (
     CreditLimitExceeded,
     CreditReservationConflict,
 )
+from flowx_os.db.credit_ledger import FlowCreditLedgerRepository
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.api.observability import RequestMetrics
 
@@ -233,6 +241,22 @@ class CreditReservationResponse(BaseModel):
     created_at: datetime
 
 
+class CreditLedgerEntryResponse(BaseModel):
+    id: UUID
+    flow_account_id: UUID
+    generation_job_id: UUID | None
+    wallet_type: str
+    action: str
+    credit_delta: int
+    source: str
+    details: dict[str, object]
+    created_at: datetime
+
+
+class CreditReconciliationRequest(BaseModel):
+    request_id: UUID
+
+
 def _flow_account_response(record: FlowAccountRecord) -> FlowAccountResponse:
     return FlowAccountResponse(
         id=record.id,
@@ -271,11 +295,42 @@ def _credit_reservation_response(record: CreditReservationRecord) -> CreditReser
     )
 
 
+def _credit_ledger_entry_response(record: CreditLedgerEntry) -> CreditLedgerEntryResponse:
+    allowed_detail_keys = {
+        "available_after", "available_before", "observation_fingerprint",
+        "observed_at", "baseline", "delta_semantics",
+        "previous_daily_reset_at", "next_daily_reset_at",
+        "previous_monthly_cycle_starts_at", "monthly_cycle_starts_at",
+    }
+    details = {
+        key: value
+        for key, value in record.details.items()
+        if key in allowed_detail_keys
+        and (
+            value is None
+            or isinstance(value, (int, bool, str))
+        )
+        and (not isinstance(value, str) or len(value) <= 256)
+    }
+    return CreditLedgerEntryResponse(
+        id=record.id,
+        flow_account_id=record.flow_account_id,
+        generation_job_id=record.generation_job_id,
+        wallet_type=record.wallet_type,
+        action=record.action,
+        credit_delta=record.credit_delta,
+        source=record.source,
+        details=details,
+        created_at=record.created_at,
+    )
+
+
 def create_app(
     readiness_checks: dict[str, Callable[[], bool]] | None = None,
     token_verifier: TokenVerifier | None = None,
     database_pool: ConnectionPool | None = None,
     credit_reservation_service: CreditReservationService | None = None,
+    credit_reconciliation_service: CreditReconciliationService | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -305,6 +360,11 @@ def create_app(
 
     app.state.token_verifier = token_verifier
     app.state.database_pool = database_pool
+    configured_credit_ledger_service = credit_reconciliation_service
+    if configured_credit_ledger_service is None and database_pool is not None:
+        configured_credit_ledger_service = CreditReconciliationService(
+            FlowCreditLedgerRepository(database_pool), None
+        )
     request_metrics = RequestMetrics()
     app.state.request_metrics = request_metrics
 
@@ -538,6 +598,64 @@ def create_app(
         except RepositoryUnavailable as exc:
             raise HTTPException(status_code=503, detail="database_unavailable") from exc
         return _credit_reservation_response(record)
+
+    @app.post(
+        "/api/v1/flow-accounts/{account_id}/credit-reconciliations",
+        response_model=list[CreditLedgerEntryResponse],
+        tags=["flow-accounts"],
+    )
+    async def reconcile_flow_credits(
+        account_id: UUID,
+        body: CreditReconciliationRequest,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> list[CreditLedgerEntryResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if configured_credit_ledger_service is None:
+            raise HTTPException(status_code=503, detail="credit_observation_unavailable")
+        try:
+            entries = await configured_credit_ledger_service.reconcile(
+                account_id=account_id,
+                owner_user_id=principal.subject,
+                request_id=body.request_id,
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except CreditReconciliationConflict as exc:
+            raise HTTPException(status_code=409, detail="credit_reconciliation_conflict") from exc
+        except InvalidCreditObservation as exc:
+            raise HTTPException(status_code=502, detail="credit_observation_invalid") from exc
+        except CreditObservationUnavailable as exc:
+            raise HTTPException(status_code=503, detail="credit_observation_unavailable") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [_credit_ledger_entry_response(entry) for entry in entries]
+
+    @app.get(
+        "/api/v1/flow-accounts/{account_id}/credit-entries",
+        response_model=list[CreditLedgerEntryResponse],
+        tags=["flow-accounts"],
+    )
+    async def list_flow_credit_entries(
+        account_id: UUID,
+        limit: int = 100,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> list[CreditLedgerEntryResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if configured_credit_ledger_service is None:
+            raise HTTPException(status_code=503, detail="credit_ledger_unavailable")
+        try:
+            entries = await configured_credit_ledger_service.list_entries(
+                account_id=account_id, owner_user_id=principal.subject, limit=limit
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="invalid_credit_ledger_page_size") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [_credit_ledger_entry_response(entry) for entry in entries]
 
     @app.post(
         "/api/v1/brands/{brand_id}/content",
