@@ -7,7 +7,7 @@
 - **Estimated complexity:** 4 engineering hours (planning estimate)
 - **Status:** BLOCKED
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
-- **Blockers:** No authorized Google Flow MCP server or actual manifest is exposed (see [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md)). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks unblocking; no alternative video provider or simulated controls are permitted.
+- **Blockers:** TASK-021 is still incomplete: intended Google account authorization and the old `sent` job are unresolved, and the application currently has no Flow adapter/capability boundary. See [capability matrix](../docs/MCP_CAPABILITY_MATRIX.md). Issue [#64](https://github.com/dhruv0641/Dolla/issues/64) tracks unblocking; no alternative video provider or simulated controls are permitted.
 
 ## User Story
 As a FLOW AI Content OS operator, I want flow control, ledger and jobs, so the platform can progress safely through a traceable production lifecycle.

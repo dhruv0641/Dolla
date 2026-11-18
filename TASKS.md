@@ -37,7 +37,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-05: Google Flow MCP Integration
 
-- **TASK-021 Discover actual MCP manifest** — BLOCKED · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · discovery record PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to develop as `a964583` · issue stays open until server/manifest access is available
+- **TASK-021 Discover actual MCP manifest** — IN_PROGRESS · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · prior discovery PR: [#53](https://github.com/dhruv0641/Dolla/pull/53) · live manifest recorded; account authorization, old job reconciliation and app fail-closed evidence remain open
 - **TASK-022 Capability-gated adapter interface** — BACKLOG · Flow MCP Integration Engineer · 8h · deps: TASK-021
 - **TASK-023 Auth and account health** — BACKLOG · Flow MCP Integration Engineer · 12h · deps: TASK-022
 - **TASK-024 Safe submit, polling and recovery** — BACKLOG · Flow MCP Integration Engineer · 16h · deps: TASK-023
@@ -88,7 +88,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-051 Responsive design system and shell** — DONE · Frontend Engineer · 8h · deps: TASK-003, TASK-012 · Issue: [#55](https://github.com/dhruv0641/Dolla/issues/55) · PR: [#56](https://github.com/dhruv0641/Dolla/pull/56) · merged to develop as `2f74e90`; CI passed; reviewer passed
 - **TASK-052 Live executive command center** — DONE · Frontend Engineer · 12h · deps: TASK-051 · Issue: [#58](https://github.com/dhruv0641/Dolla/issues/58) · PR: [#59](https://github.com/dhruv0641/Dolla/pull/59) · merged to develop as `a8ce250`; CI passed; reviewer passed
 - **TASK-053 Production board, scenes and assets** — DONE · Frontend Engineer · 16h · deps: TASK-052 · Issue: [#61](https://github.com/dhruv0641/Dolla/issues/61) · PR: [#62](https://github.com/dhruv0641/Dolla/pull/62) · merged to develop as `e970369`; CI passed; reviewer passed
-- **TASK-054 Flow control, ledger and jobs** — BLOCKED · Frontend Engineer · 4h · deps: TASK-021, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64)
+- **TASK-054 Flow control, ledger and jobs** — BLOCKED · Frontend Engineer · 4h · deps: TASK-021, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64) · waiting for TASK-021 acceptance and backend capability boundary
 - **TASK-055 QA, voice, calendar and publishing screens** — BACKLOG · Frontend Engineer · 6h · deps: TASK-054
 - **TASK-056 Agent, analytics, community and settings screens** — BACKLOG · Frontend Engineer · 8h · deps: TASK-055
 
@@ -130,8 +130,9 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 28 (TASK-001 through TASK-020, TASK-051 through TASK-053, and TASK-072 through TASK-076).
-- BLOCKED: 2 (TASK-021 and TASK-054; both await an authorized Google Flow MCP server/manifest).
-- BACKLOG: 46; no remaining backlog task currently has all dependencies DONE. Downstream work is gated by the blocked Flow MCP capability chain.
+- IN_PROGRESS: 1 (TASK-021; live MCP manifest discovered, authorization and app-boundary verification continue).
+- BLOCKED: 1 (TASK-054; depends on TASK-021 and TASK-053).
+- BACKLOG: 46; no other backlog task currently has all dependencies DONE. Downstream work is gated by completion of TASK-021.
 
 ## GitHub delivery references
 
@@ -183,10 +184,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
 
-- TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) is open and blocked: no authorized Google Flow MCP server/manifest is exposed to the current session.
+- TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) is open and in progress: the live tool manifest is now exposed; account identity, stale job state and app fail-closed boundary remain unverified. See `docs/MCP_CAPABILITY_MATRIX.md`.
 - TASK-051 issue [#55](https://github.com/dhruv0641/Dolla/issues/55) opened; selected as the next unblocked P1 task because dependencies TASK-003 and TASK-012 are done. Branch `feature/TASK-051-responsive-design-system-and-shell` targets `develop`.
 
-- TASK-021 discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`; issue #52 remains open and task remains blocked.
+- TASK-021 discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`; issue #52 remains open. The prior absence finding was superseded by live MCP tool exposure on 2026-11-18; account and app-boundary verification continue.
 
 - TASK-051 issue [#55](https://github.com/dhruv0641/Dolla/issues/55) closed by implementation PR [#56](https://github.com/dhruv0641/Dolla/pull/56), merged to develop as 2f74e90; both CI checks and independent review passed. Visual browser preview was unavailable; backend/Flow data remains unconnected.
 

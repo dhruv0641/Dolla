@@ -5,10 +5,10 @@
 - **Priority:** P0
 - **Dependencies:** TASK-002
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BLOCKED
-- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`; issue #52 remains open until an authorized server/manifest is available.
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#52](https://github.com/dhruv0641/Dolla/issues/52) remains open; discovery record PR [#53](https://github.com/dhruv0641/Dolla/pull/53) merged to `develop` as `a964583`. Live runtime discovery is being recorded on `feature/TASK-021-live-flow-capability-discovery`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
-- **Blockers:** No authorized Google Flow MCP server or manifest is available to this Codex session. The actual server tool schema cannot be inspected until the server is configured/exposed. The proposed contract and unrelated video providers are not substitutes.
+- **Blockers:** The signed-in Google account email cannot be verified from connector status; the intended `dobariyadhruvv@gmail.com` identity is unconfirmed. An old image job remains `sent` with unknown completion. The runtime does not report transport/deployment identity, and this repository has no Flow adapter whose fail-closed behavior can be verified. The proposed contract is not server documentation.
 
 ## User Story
 As a FLOW AI Content OS operator, I want discover actual mcp manifest, so the platform can progress safely through a traceable production lifecycle.
@@ -24,12 +24,13 @@ Deliver discover actual mcp manifest as an independently verifiable capability w
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MATRIX.md`, this task specification and the timestamped project log. No adapter/tool names are inferred and no external calls or credentials are used.
+Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MATRIX.md`, this task specification and the timestamped project log. Tool names/schemas were read from the actual runtime manifest; no generation, credentials, or paid operation were used.
 
 ## Acceptance Criteria
-- [ ] Actual authorized server identity and manifest have been inspected and recorded.
-- [x] Current tool/resource inventories were inspected; absence of an authorized Flow MCP server and actual manifest is documented without claiming support.
-- [ ] Unsupported or unverified server capabilities are confirmed to fail closed by the implementation.
+- [x] Actual runtime tool manifest and exposed schemas have been inspected and recorded; transport/deployment identity limitations are explicit.
+- [ ] The signed-in Google identity and its authorization for the intended account have been verified.
+- [x] Current tool/resource inventories were rechecked; the former absence finding and the later Flow MCP exposure are both recorded accurately.
+- [ ] Unsupported or unverified server capabilities are confirmed to fail closed by the implementation; no Flow adapter or generation route currently exists in the repository.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
