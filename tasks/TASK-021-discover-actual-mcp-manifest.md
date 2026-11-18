@@ -29,7 +29,7 @@ Discovery evidence and capability status are recorded in `docs/MCP_CAPABILITY_MA
 ## Acceptance Criteria
 - [x] Actual runtime tool manifest and exposed schemas have been inspected and recorded; transport/deployment identity limitations are explicit.
 - [ ] The signed-in Google identity and its authorization for the intended account have been verified.
-- [x] Current tool/resource inventories were rechecked; the former absence finding and the later Flow MCP exposure are both recorded accurately.
+- [x] The prior tool/resource inventory absence finding and this later live Flow MCP tool exposure are recorded as separate dated observations.
 - [ ] Unsupported or unverified server capabilities are confirmed to fail closed by the implementation; no Flow adapter or generation route currently exists in the repository.
 
 ## Tests and Verification
