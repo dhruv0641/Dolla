@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-054
 - **Estimated complexity:** 6 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88) closed; PR [#89](https://github.com/dhruv0641/Dolla/pull/89) merged to `develop` as `fd134c7`; PR and post-merge CI passed.
+- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88) closed; implementation PR [#89](https://github.com/dhruv0641/Dolla/pull/89) merged to `develop` as `fd134c7`; documentation closeout PR [#90](https://github.com/dhruv0641/Dolla/pull/90) is open for tracker synchronization.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
