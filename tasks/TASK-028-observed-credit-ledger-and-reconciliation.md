@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-027
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -34,13 +34,13 @@ Relevant application service, tests, migration (if needed), configuration and do
 ## Acceptance Criteria
 - [x] Capability is implemented behind documented interfaces and configuration; the provider is injected and absent by default.
 - [x] Errors, state transitions and security boundaries are explicit; owner checks precede provider calls and database writes lock the account.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Focused credit-ledger and migration suite: 15 tests pass, including provider fail-closed behavior, owner-preflight ordering, invalid/stale evidence, transaction queries, replay handling, API redaction and SQL parsing.
 - Full Python suite: 227 tests pass. Project-plan validator reports 15 epics/76 tasks/no cycles; compileall and `git diff --check` pass.
 - Independent Technical Reviewer found no remaining code blocker after verifying the under-lock freshness check and 11-minute wait regression test.
-- CI and post-merge checks remain pending.
+- PR [#102](https://github.com/dhruv0641/Dolla/pull/102) targets `develop`; both required GitHub `validate-project-plan` checks pass. Post-merge validation remains pending.
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
