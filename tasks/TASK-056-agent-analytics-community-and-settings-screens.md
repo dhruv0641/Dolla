@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-055
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#91](https://github.com/dhruv0641/Dolla/issues/91); draft PR [#92](https://github.com/dhruv0641/Dolla/pull/92) targets `develop` at `be512f5`; required CI is pending.
+- **Status:** DONE
+- **GitHub:** Issue [#91](https://github.com/dhruv0641/Dolla/issues/91) closed by PR [#92](https://github.com/dhruv0641/Dolla/pull/92), merged to `develop` as `a2d8d85`; PR and post-merge project-plan checks passed.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -49,3 +49,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - The in-app browser preview returned a stale localhost connection-refused page even though a direct local HTTP check returned 200; visual inspection is inconclusive and no screenshot is claimed.
 - Review follow-up: expanded the catalog to all 12 virtual ownership roles from `AGENTS.md` and changed settings defaults to be read from the versioned JSON on the server rather than duplicated in UI code. Typecheck/build pass again; independent re-review is pending.
 - Independent review completed: confirmed the 12 catalog names match `AGENTS.md` exactly and policy defaults are read from `config/prompt_registry.json`; no acceptance blocker found. `npm run typecheck`, `npm run build`, `python scripts/validate_project_plan.py`, and `git diff --check` pass. Visual browser inspection remains inconclusive, and no screenshot is claimed. PR/CI and merge evidence remain pending.
+- PR [#92](https://github.com/dhruv0641/Dolla/pull/92) merged to `develop` as `a2d8d85`; both required PR checks and post-merge `validate-project-plan` passed, and issue #91 closed. Code-review and project-plan evidence are complete; no live agent, analytics, community, or settings data is claimed.
