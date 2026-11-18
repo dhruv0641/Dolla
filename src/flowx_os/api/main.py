@@ -5,14 +5,16 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 import json
 import logging
+import re
 from time import perf_counter
 from uuid import UUID
 from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from flowx_os.auth.dependencies import current_principal, require_roles
 from flowx_os.auth.tokens import Principal, Role, TokenVerifier
@@ -26,6 +28,12 @@ from flowx_os.db.content import (
     RepositoryUnavailable,
 )
 from flowx_os.db.transaction import ConnectionPool
+from flowx_os.db.flow_accounts import (
+    FlowAccountAliasConflict,
+    FlowAccountRecord,
+    FlowAccountRepository,
+    OwnedFlowAccountNotFound,
+)
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.api.observability import RequestMetrics
 
@@ -124,6 +132,77 @@ class ContentTransition(BaseModel):
     target_status: ContentStatus
 
 
+class FlowAccountCreate(BaseModel):
+    alias: str = Field(min_length=1, max_length=64)
+    credentials_ref: SecretStr
+    mcp_adapter: str = Field(default="google_flow_via_user_authorized_mcp", min_length=1, max_length=100)
+
+    @field_validator("alias")
+    @classmethod
+    def valid_alias(cls, value: str) -> str:
+        value = value.strip()
+        if not value or len(value) > 64:
+            raise ValueError("account alias must contain 1 to 64 characters")
+        if not value[0].isalnum() or any(not (char.isalnum() or char in " ._-") for char in value):
+            raise ValueError("account alias contains unsupported characters")
+        return value
+
+    @field_validator("credentials_ref")
+    @classmethod
+    def secret_reference_only(cls, value: SecretStr) -> SecretStr:
+        if not re.fullmatch(r"secretref://[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+", value.get_secret_value()):
+            raise ValueError("credentials_ref must be a secret reference; raw credentials are not accepted")
+        return value
+
+    @field_validator("mcp_adapter")
+    @classmethod
+    def known_adapter(cls, value: str) -> str:
+        value = value.strip()
+        if value != "google_flow_via_user_authorized_mcp":
+            raise ValueError("unsupported Flow adapter identifier")
+        return value
+
+
+class FlowAccountResponse(BaseModel):
+    id: UUID
+    alias: str
+    mcp_adapter: str
+    plan_name: str | None
+    monthly_allowance_estimate: int | None
+    daily_allowance_estimate: int | None
+    observed_monthly_available: int | None
+    observed_daily_available: int | None
+    monthly_cycle_starts_at: datetime | None
+    next_daily_reset_at: datetime | None
+    last_reconciled_at: datetime | None
+    session_health: str
+    paused: bool
+    compliance_approved: bool
+    max_inflight: int
+    created_at: datetime
+
+
+def _flow_account_response(record: FlowAccountRecord) -> FlowAccountResponse:
+    return FlowAccountResponse(
+        id=record.id,
+        alias=record.alias,
+        mcp_adapter=record.mcp_adapter,
+        plan_name=record.plan_name,
+        monthly_allowance_estimate=record.monthly_allowance_estimate,
+        daily_allowance_estimate=record.daily_allowance_estimate,
+        observed_monthly_available=record.observed_monthly_available,
+        observed_daily_available=record.observed_daily_available,
+        monthly_cycle_starts_at=record.monthly_cycle_starts_at,
+        next_daily_reset_at=record.next_daily_reset_at,
+        last_reconciled_at=record.last_reconciled_at,
+        session_health=record.session_health,
+        paused=record.paused,
+        compliance_approved=record.compliance_approved,
+        max_inflight=record.max_inflight,
+        created_at=record.created_at,
+    )
+
+
 def create_app(
     readiness_checks: dict[str, Callable[[], bool]] | None = None,
     token_verifier: TokenVerifier | None = None,
@@ -141,6 +220,20 @@ def create_app(
         version="0.1.0",
         description="Backend shell for FLOW AI Content OS. Integration readiness is reported separately.",
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def redact_validation_inputs(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        """Return field-level errors without echoing submitted credentials or payload values."""
+        details = [
+            {
+                "type": error.get("type", "value_error"),
+                "loc": list(error.get("loc", ())),
+                "msg": error.get("msg", "invalid request field"),
+            }
+            for error in exc.errors()
+        ]
+        return JSONResponse(status_code=422, content={"detail": details})
+
     app.state.token_verifier = token_verifier
     app.state.database_pool = database_pool
     request_metrics = RequestMetrics()
@@ -273,6 +366,68 @@ def create_app(
             id=row.id, name=row.name, timezone=row.timezone, niche=row.niche, audience=row.audience,
             created_at=row.created_at, updated_at=row.updated_at,
         ) for row in records]
+
+    @app.post(
+        "/api/v1/flow-accounts",
+        response_model=FlowAccountResponse,
+        status_code=201,
+        tags=["flow-accounts"],
+    )
+    async def register_flow_account(
+        body: FlowAccountCreate,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> FlowAccountResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            record = await FlowAccountRepository(database_pool).register(
+                owner_user_id=principal.subject,
+                alias=body.alias,
+                credentials_ref=body.credentials_ref.get_secret_value(),
+                mcp_adapter=body.mcp_adapter,
+            )
+        except FlowAccountAliasConflict as exc:
+            raise HTTPException(status_code=409, detail="flow_account_alias_unavailable") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return _flow_account_response(record)
+
+    @app.get(
+        "/api/v1/flow-accounts",
+        response_model=list[FlowAccountResponse],
+        tags=["flow-accounts"],
+    )
+    async def list_flow_accounts(
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> list[FlowAccountResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            records = await FlowAccountRepository(database_pool).list_for_owner(owner_user_id=principal.subject)
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [_flow_account_response(record) for record in records]
+
+    @app.post(
+        "/api/v1/flow-accounts/{account_id}/pause",
+        response_model=FlowAccountResponse,
+        tags=["flow-accounts"],
+    )
+    async def pause_flow_account(
+        account_id: UUID,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> FlowAccountResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            record = await FlowAccountRepository(database_pool).pause(
+                account_id=account_id, owner_user_id=principal.subject
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return _flow_account_response(record)
 
     @app.post(
         "/api/v1/brands/{brand_id}/content",
