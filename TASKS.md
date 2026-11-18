@@ -47,7 +47,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-026 Authorized account registry** — DONE · Credit and Account Engineer · 8h · deps: TASK-006, TASK-021 · Issue: [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged to `develop` as `dd64b96`; required checks and post-merge validation passed
 - **TASK-027 Credit quote, reservation and limits** — DONE · Credit and Account Engineer · 12h · deps: TASK-026 · Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) closed by PR [#99](https://github.com/dhruv0641/Dolla/pull/99), merged as `73eb39f`; PR and post-merge checks and independent review passed
-- **TASK-028 Observed credit ledger and reconciliation** — READY · Credit and Account Engineer · 16h · deps: TASK-027
+- **TASK-028 Observed credit ledger and reconciliation** — IN_PROGRESS · Credit and Account Engineer · 16h · deps: TASK-027 · Issue: [#101](https://github.com/dhruv0641/Dolla/issues/101) · Branch: `feature/TASK-028-observed-credit-ledger-reconciliation`
 - **TASK-029 Concurrency, pause and reset tracking** — BACKLOG · Credit and Account Engineer · 4h · deps: TASK-028
 - **TASK-030 Unknown-spend alarms and fail-closed controls** — BACKLOG · Credit and Account Engineer · 6h · deps: TASK-029
 
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 35 (TASK-001 through TASK-022, TASK-026, TASK-027, TASK-051 through TASK-056, and TASK-072 through TASK-076).
 - IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
-- IN_PROGRESS: 0.
-- READY: 1 (TASK-028; TASK-027 is DONE).
+- IN_PROGRESS: 1 (TASK-028; implementation underway).
+- READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 39.
 

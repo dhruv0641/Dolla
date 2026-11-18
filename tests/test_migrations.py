@@ -32,6 +32,14 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("'RECONCILE_PENDING'", sql)
         self.assertIn("'RESERVED','RECONCILE_PENDING'", sql)
 
+    def test_observed_credit_ledger_keys_entries_for_replay_safe_reconciliation(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0004_observed_credit_ledger.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("UPDATE flow_credit_entries", sql)
+        self.assertIn("'legacy:' || id::text", sql)
+        self.assertIn("UNIQUE INDEX idx_credit_entry_account_idempotency", sql)
+        self.assertIn("flow_account_id, idempotency_key", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
