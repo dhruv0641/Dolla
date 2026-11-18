@@ -25,6 +25,13 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("DROP CONSTRAINT flow_accounts_alias_key", sql)
         self.assertIn("UNIQUE (owner_user_id, alias)", sql)
 
+    def test_credit_reservations_are_idempotent_and_hold_unknown_spend(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0003_flow_credit_reservations.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("UNIQUE (flow_account_id, request_id)", sql)
+        self.assertIn("'RECONCILE_PENDING'", sql)
+        self.assertIn("'RESERVED','RECONCILE_PENDING'", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
