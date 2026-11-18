@@ -5,8 +5,8 @@
 - **Priority:** P0
 - **Dependencies:** TASK-026
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) reopened for owner-preflight hardening; initial PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged as `8c4849e`; follow-up PR [#99](https://github.com/dhruv0641/Dolla/pull/99) targets `develop`.
+- **Status:** DONE
+- **GitHub:** Issue [#97](https://github.com/dhruv0641/Dolla/issues/97) closed by follow-up PR [#99](https://github.com/dhruv0641/Dolla/pull/99), merged to `develop` as `73eb39f`; initial implementation PR [#98](https://github.com/dhruv0641/Dolla/pull/98) merged as `8c4849e`; required and post-merge checks passed.
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -34,7 +34,12 @@ Relevant application service, tests, migration (if needed), configuration and do
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- `python -m unittest discover -s tests -v` — 216 passed.
+- `python -m unittest discover -s tests -p 'test_credit_reservations.py' -v` — 22 passed.
+- `python -m unittest discover -s tests -p 'test_migrations.py' -v` — 4 passed; migrations parse with `pglast`.
+- `python scripts/validate_project_plan.py` — 15 epics, 76 tasks, no dependency cycles; `git diff --check` passed.
+- Independent Technical Reviewer found no blockers. PR #99 required checks and post-merge `validate-project-plan` passed.
+- Live PostgreSQL migration and Flow quote/balance provider integration remain unverified; production readiness is not claimed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
@@ -54,3 +59,8 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - During final tracker review, identified that the quote provider could receive an account ID before the repository confirmed that the caller owned that account. The initial reservation still enforced ownership before inserting, but the ordering could disclose a foreign account reference to an injected provider.
 - Reopened issue [#97](https://github.com/dhruv0641/Dolla/issues/97) and started `feature/TASK-027-owner-scoped-quote-preflight` from the merged `develop` state.
 - Added a tenant-scoped owner preflight before quote/approval providers, retained the locked owner check before insertion, documented the boundary, and added service/API/repository tests proving foreign accounts fail before provider invocation with a generic 404. Follow-up focused tests (22), full suite (216), migration tests (4), project-plan validation, and diff check pass. Independent Technical Reviewer found no blockers; PR #99 is open and GitHub CI is pending.
+
+## Completion checkpoint — 2026-11-19
+- PR [#99](https://github.com/dhruv0641/Dolla/pull/99) merged the owner-preflight correction to `develop` as `73eb39f`; PR and post-merge checks passed, and issue [#97](https://github.com/dhruv0641/Dolla/issues/97) closed.
+- Technical Reviewer confirmed no blockers, including that foreign account IDs cannot reach either quote/approval provider and the API returns a generic 404.
+- TASK-027 is DONE. The API remains disabled by default without verified quote/balance capability, explicit spend verification, and a credit ceiling. No live Flow or PostgreSQL integration is claimed.
