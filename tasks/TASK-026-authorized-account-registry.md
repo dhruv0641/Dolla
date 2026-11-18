@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-006, TASK-021
 - **Estimated complexity:** 8 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Issue [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged to `develop` as `dd64b96`; PR and post-merge project-plan checks passed.
+- **GitHub:** Issue [#94](https://github.com/dhruv0641/Dolla/issues/94) closed by implementation PR [#95](https://github.com/dhruv0641/Dolla/pull/95), merged as `dd64b96`; tracker closeout PR [#96](https://github.com/dhruv0641/Dolla/pull/96) merged as `eefbbfc`. Required and post-merge project-plan checks passed.
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 

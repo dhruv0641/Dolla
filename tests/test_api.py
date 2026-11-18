@@ -101,6 +101,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
                 "/api/v1/brands", "/api/v1/brands/{brand_id}/content",
                 "/api/v1/flow-accounts",
                 "/api/v1/flow-accounts/{account_id}/pause",
+                "/api/v1/flow-accounts/{account_id}/credit-reservations",
                 "/api/v1/brands/{brand_id}/content/{content_id}/transition",
             },
         )

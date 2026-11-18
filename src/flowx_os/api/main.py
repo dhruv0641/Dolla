@@ -18,6 +18,14 @@ from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from flowx_os.auth.dependencies import current_principal, require_roles
 from flowx_os.auth.tokens import Principal, Role, TokenVerifier
+from flowx_os.credits.reservations import (
+    CreditApprovalRequired,
+    CreditApprovalUnavailable,
+    CreditQuoteUnavailable,
+    CreditReservationRecord,
+    CreditReservationService,
+    InvalidCreditQuote,
+)
 from flowx_os.db.content import (
     BrandRecord,
     ContentRecord,
@@ -33,6 +41,12 @@ from flowx_os.db.flow_accounts import (
     FlowAccountRecord,
     FlowAccountRepository,
     OwnedFlowAccountNotFound,
+)
+from flowx_os.db.credit_reservations import (
+    CreditAccountIneligible,
+    CreditBalanceUnknown,
+    CreditLimitExceeded,
+    CreditReservationConflict,
 )
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.api.observability import RequestMetrics
@@ -182,6 +196,43 @@ class FlowAccountResponse(BaseModel):
     created_at: datetime
 
 
+class CreditReservationCreate(BaseModel):
+    request_id: UUID
+    model_name: str = Field(min_length=1, max_length=100)
+    duration_seconds: int = Field(ge=4, le=180)
+    approval_ref: SecretStr
+
+    @field_validator("model_name")
+    @classmethod
+    def non_blank_model(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("model name must not be blank")
+        return value
+
+    @field_validator("approval_ref")
+    @classmethod
+    def non_blank_approval_ref(cls, value: SecretStr) -> SecretStr:
+        if not value.get_secret_value().strip():
+            raise ValueError("approval reference must not be blank")
+        return value
+
+
+class CreditReservationResponse(BaseModel):
+    id: UUID
+    flow_account_id: UUID
+    request_id: UUID
+    model_name: str
+    duration_seconds: int
+    quote_ref: str
+    quoted_credits: int
+    quote_source: str
+    quoted_at: datetime
+    quote_expires_at: datetime
+    state: str
+    created_at: datetime
+
+
 def _flow_account_response(record: FlowAccountRecord) -> FlowAccountResponse:
     return FlowAccountResponse(
         id=record.id,
@@ -203,10 +254,28 @@ def _flow_account_response(record: FlowAccountRecord) -> FlowAccountResponse:
     )
 
 
+def _credit_reservation_response(record: CreditReservationRecord) -> CreditReservationResponse:
+    return CreditReservationResponse(
+        id=record.id,
+        flow_account_id=record.flow_account_id,
+        request_id=record.request_id,
+        model_name=record.model_name,
+        duration_seconds=record.duration_seconds,
+        quote_ref=record.quote_ref,
+        quoted_credits=record.quoted_credits,
+        quote_source=record.quote_source.value,
+        quoted_at=record.quoted_at,
+        quote_expires_at=record.quote_expires_at,
+        state=record.state.value,
+        created_at=record.created_at,
+    )
+
+
 def create_app(
     readiness_checks: dict[str, Callable[[], bool]] | None = None,
     token_verifier: TokenVerifier | None = None,
     database_pool: ConnectionPool | None = None,
+    credit_reservation_service: CreditReservationService | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -428,6 +497,47 @@ def create_app(
         except RepositoryUnavailable as exc:
             raise HTTPException(status_code=503, detail="database_unavailable") from exc
         return _flow_account_response(record)
+
+    @app.post(
+        "/api/v1/flow-accounts/{account_id}/credit-reservations",
+        response_model=CreditReservationResponse,
+        tags=["flow-accounts"],
+    )
+    async def reserve_flow_credits(
+        account_id: UUID,
+        body: CreditReservationCreate,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> CreditReservationResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if credit_reservation_service is None:
+            raise HTTPException(status_code=503, detail="credit_quote_unavailable")
+        try:
+            record = await credit_reservation_service.reserve(
+                account_id=account_id,
+                owner_user_id=principal.subject,
+                request_id=body.request_id,
+                model_name=body.model_name,
+                duration_seconds=body.duration_seconds,
+                approval_ref=body.approval_ref.get_secret_value(),
+            )
+        except OwnedFlowAccountNotFound as exc:
+            raise HTTPException(status_code=404, detail="flow_account_not_found") from exc
+        except CreditApprovalRequired as exc:
+            raise HTTPException(status_code=403, detail="spend_approval_required") from exc
+        except (CreditQuoteUnavailable, CreditApprovalUnavailable, InvalidCreditQuote) as exc:
+            raise HTTPException(status_code=503, detail="credit_quote_unavailable") from exc
+        except CreditAccountIneligible as exc:
+            raise HTTPException(status_code=409, detail="flow_account_not_eligible") from exc
+        except CreditBalanceUnknown as exc:
+            raise HTTPException(status_code=409, detail="credit_balance_unknown") from exc
+        except CreditLimitExceeded as exc:
+            raise HTTPException(status_code=409, detail="credit_limit_exceeded") from exc
+        except CreditReservationConflict as exc:
+            raise HTTPException(status_code=409, detail="credit_reservation_conflict") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return _credit_reservation_response(record)
 
     @app.post(
         "/api/v1/brands/{brand_id}/content",
