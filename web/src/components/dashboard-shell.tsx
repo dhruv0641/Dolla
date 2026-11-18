@@ -5,6 +5,8 @@ import { ProductionBoard } from "./production-board";
 import { FlowControl } from "./flow-control";
 import { QaVoiceWorkspace } from "./qa-voice";
 import { PublishingCalendar } from "./publishing-calendar";
+import { AgentWorkspace, AnalyticsWorkspace, CommunityWorkspace, SettingsWorkspace } from "./operations-views";
+import type { PolicyDefaults } from "./operations-views";
 
 type DashboardStatus =
   | { state: "connected"; checkedAt: string; readiness: { status: "ready" | "not_ready"; checks: Record<string, { status: string }> } | null }
@@ -59,6 +61,12 @@ const sections = [
     title: "Community inbox",
     description: "Comments and response drafts will appear only after an authorized source is connected.",
   },
+  {
+    id: "settings",
+    icon: "⚙",
+    title: "System settings",
+    description: "Policy defaults and integration readiness; secrets and live account configuration remain outside this screen.",
+  },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -93,7 +101,7 @@ function EmptyPanel({
   );
 }
 
-export function DashboardShell({ initialMonth }: { initialMonth: string }) {
+export function DashboardShell({ initialMonth, policyDefaults }: { initialMonth: string; policyDefaults: PolicyDefaults }) {
   const [activeSection, setActiveSection] = useState<SectionId>("overview");
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>({ state: "unavailable", reason: "not_checked" });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -287,6 +295,14 @@ export function DashboardShell({ initialMonth }: { initialMonth: string }) {
             <QaVoiceWorkspace />
           ) : activeSection === "publishing" ? (
             <PublishingCalendar initialMonth={initialMonth} />
+          ) : activeSection === "agents" ? (
+            <AgentWorkspace />
+          ) : activeSection === "analytics" ? (
+            <AnalyticsWorkspace />
+          ) : activeSection === "community" ? (
+            <CommunityWorkspace />
+          ) : activeSection === "settings" ? (
+            <SettingsWorkspace policyDefaults={policyDefaults} />
           ) : (
             <section className="surface-card section-placeholder" aria-labelledby={`${activeSection}-heading`}>
               <div className="section-placeholder-mark" aria-hidden="true">{section.icon}</div>

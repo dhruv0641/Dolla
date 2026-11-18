@@ -255,6 +255,37 @@ h1 { margin: 0; font-size: clamp(26px, 3vw, 34px); font-weight: 720; letter-spac
 .calendar-day--outside { color: #71819a; background: #0e1727; }
 .calendar-day small { color: #71819a; font-size: 8px; }
 .calendar-create-button { margin-top: 13px; }
+.ops-workspace { display: grid; gap: 14px; }
+.ops-empty-panel { display: flex; align-items: flex-start; gap: 11px; margin-top: 14px; border: 1px dashed #354762; border-radius: 10px; background: #121d30; padding: 13px; }
+.ops-empty-panel strong { color: #dfe8f6; font-size: 11px; }
+.ops-empty-panel p { margin: 3px 0 0; color: var(--color-muted); font-size: 10px; }
+.agent-role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.agent-role-card { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; gap: 8px; min-width: 0; border: 1px solid #2c3d58; border-radius: 9px; background: var(--color-panel); padding: 11px; }
+.agent-role-mark { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #38547a; border-radius: 7px; color: var(--color-accent); font-size: 11px; }
+.agent-role-card strong { color: #dfe8f6; font-size: 11px; }
+.agent-role-card p { margin: 3px 0 0; color: var(--color-muted); font-size: 10px; }
+.agent-role-card .status-pill { grid-column: 2; justify-self: start; margin-top: 2px; }
+.analytics-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.analytics-rules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+.analytics-rule-card { min-width: 0; border: 1px solid #2c3d58; border-radius: 9px; background: var(--color-panel); padding: 11px 12px; }
+.analytics-rule-card strong { color: #dfe8f6; font-size: 11px; }
+.analytics-rule-card p { margin: 4px 0 0; color: var(--color-muted); font-size: 10px; }
+.ops-gate-message { margin-top: 16px; border: 1px solid #6c5531; border-radius: 10px; background: #251f17; padding: 13px 14px; }
+.ops-gate-message strong { color: #f2cf8f; font-size: 12px; }
+.ops-gate-message p { margin: 4px 0 0; color: #c2b69e; font-size: 11px; }
+.community-action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.ops-safeguard-list { display: grid; gap: 8px; margin: 14px 0 0; padding-left: 18px; color: #b6c5da; font-size: 10px; }
+.settings-default-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+.settings-default-card { display: flex; min-height: 112px; flex-direction: column; border: 1px solid #2c3d58; border-radius: 9px; background: var(--color-panel); padding: 11px 12px; }
+.settings-default-card span { color: #b9c7dc; font-size: 10px; }
+.settings-default-card strong { margin-top: 9px; color: #dfe8f6; font-size: 15px; }
+.settings-default-card small { margin-top: auto; padding-top: 8px; color: var(--color-faint); font-size: 9px; }
+.ops-connection-list { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+.ops-connection-list li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border: 1px solid #2c3d58; border-radius: 9px; background: var(--color-panel); padding: 11px 12px; }
+.ops-connection-list li > div { min-width: 0; }
+.ops-connection-list strong { color: #dfe8f6; font-size: 11px; }
+.ops-connection-list p { margin: 3px 0 0; color: var(--color-muted); font-size: 10px; }
+.settings-security-card { border-color: #3d526f; }
 .page-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 9px 20px; margin-top: 23px; border-top: 1px solid var(--color-line); padding-top: 14px; color: var(--color-faint); font-size: 9px; }
 .page-footer span:first-child { color: #98a9c3; font-weight: 750; letter-spacing: .12em; }
 
@@ -263,6 +294,7 @@ h1 { margin: 0; font-size: clamp(26px, 3vw, 34px); font-weight: 720; letter-spac
   .main-shell { margin-left: 230px; }
   .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .overview-grid { grid-template-columns: minmax(0, 1.1fr) minmax(270px, .9fr); }
+  .analytics-rules-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 820px) {
@@ -273,6 +305,8 @@ h1 { margin: 0; font-size: clamp(26px, 3vw, 34px); font-weight: 720; letter-spac
   .qa-check-grid { grid-template-columns: 1fr; }
   .platform-readiness-grid { grid-template-columns: 1fr; }
   .flow-prerequisite-list { grid-template-columns: 1fr; }
+  .agent-role-grid { grid-template-columns: 1fr; }
+  .settings-default-grid { grid-template-columns: 1fr; }
   .flow-ledger-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pipeline-card, .activity-card, .flow-card, .approval-card { grid-column: 1; grid-row: auto; }
   .activity-card { min-height: 160px; }

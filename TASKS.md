@@ -90,7 +90,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-053 Production board, scenes and assets** — DONE · Frontend Engineer · 16h · deps: TASK-052 · Issue: [#61](https://github.com/dhruv0641/Dolla/issues/61) · PR: [#62](https://github.com/dhruv0641/Dolla/pull/62) · merged to develop as `e970369`; CI passed; reviewer passed
 - **TASK-054 Flow control, ledger and jobs** — DONE · Frontend Engineer · 4h · deps: TASK-021, TASK-022, TASK-053 · Issue: [#64](https://github.com/dhruv0641/Dolla/issues/64) · PR: [#87](https://github.com/dhruv0641/Dolla/pull/87) merged to `develop` as `6476cbd`; CI/review passed; no live Flow data claimed
 - **TASK-055 QA, voice, calendar and publishing screens** — DONE · Frontend Engineer · 6h · deps: TASK-054 · Issue: [#88](https://github.com/dhruv0641/Dolla/issues/88) · PR: [#89](https://github.com/dhruv0641/Dolla/pull/89) merged to `develop` as `fd134c7`; CI, independent review and post-merge validation passed
-- **TASK-056 Agent, analytics, community and settings screens** — BACKLOG · Frontend Engineer · 8h · deps: TASK-055
+- **TASK-056 Agent, analytics, community and settings screens** — IN_REVIEW · Frontend Engineer · 8h · deps: TASK-055 · Issue: [#91](https://github.com/dhruv0641/Dolla/issues/91) · branch `feature/TASK-056-agent-analytics-community-settings`; local acceptance and independent review pass, PR/CI pending
 
 ## EPIC-12: Social Publishing
 
@@ -130,11 +130,11 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 32 (TASK-001 through TASK-022, TASK-051 through TASK-055, and TASK-072 through TASK-076).
-- IN_REVIEW: 1 (TASK-023; live identity evidence outstanding).
+- IN_REVIEW: 2 (TASK-023; live identity evidence outstanding; TASK-056 implementation and independent review pass, PR/CI pending).
 - IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 43.
+- BACKLOG: 42.
 
 ## GitHub delivery references
 
@@ -210,6 +210,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-054 issue [#64](https://github.com/dhruv0641/Dolla/issues/64) closed by PR [#87](https://github.com/dhruv0641/Dolla/pull/87), merged to `develop` as `6476cbd`; PR and post-merge plan CI passed, independent review found no blocker. The merge satisfies TASK-055's dependency.
 - TASK-055 issue [#88](https://github.com/dhruv0641/Dolla/issues/88) opened; selected as the next dependency-ready P1 task. Started `feature/TASK-055-qa-voice-calendar-and-publishing` against `develop`; QA, voice, publishing and calendar panels keep external data/actions gated. Draft PR [#89](https://github.com/dhruv0641/Dolla/pull/89) opened against `develop`; CI pending.
 - TASK-055 PR [#89](https://github.com/dhruv0641/Dolla/pull/89) merged to `develop` as `fd134c7`; both PR checks, independent review and post-merge plan validation passed. Issue #88 closed. Documentation and completion records are in follow-up PR [#90](https://github.com/dhruv0641/Dolla/pull/90); its CI is pending.
+- TASK-055 documentation closeout PR [#90](https://github.com/dhruv0641/Dolla/pull/90) merged to `develop` as `b6bd00d`; independent review and post-merge plan validation passed. TASK-056 issue [#91](https://github.com/dhruv0641/Dolla/issues/91) opened and its only dependency, TASK-055, is now DONE.
+- TASK-056 selected as the next dependency-ready P1 task; branch `feature/TASK-056-agent-analytics-community-settings` started from `develop`.
 
 - TASK-072 issue [#66](https://github.com/dhruv0641/Dolla/issues/66) opened; selected as the next eligible P2 task because no P1 tasks have fully satisfied dependencies while TASK-021/054 remain blocked.
 
