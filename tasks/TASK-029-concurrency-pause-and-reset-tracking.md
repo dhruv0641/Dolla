@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-028
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -14,8 +14,8 @@ As a FLOW AI Content OS operator, I want concurrency, pause and reset tracking, 
 
 ## Execution checkpoint — 2026-11-19
 - TASK-028 is DONE through PR [#102](https://github.com/dhruv0641/Dolla/pull/102), merged to `develop` as `707310f`; tracker closeout PR #103 and post-merge validation also passed.
-- Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) is open; branch is `feature/TASK-029-concurrency-pause-reset-tracking`, based on `develop` at `fc679ba`.
-- PR [#105](https://github.com/dhruv0641/Dolla/pull/105) is open as a draft against `develop`.
+- Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) closed through PR [#105](https://github.com/dhruv0641/Dolla/pull/105), merged to `develop` as `d91e400`; required PR checks and post-merge `validate-project-plan` passed.
+- Branch `feature/TASK-029-concurrency-pause-reset-tracking` was based on `develop` at `fc679ba`.
 - Existing account-row locking, active-reservation counting, monotonic pause, and reset-window checks were inspected. This task adds fail-closed behavior for missing reset/cycle evidence and a regression for a daily reset crossed during a database wait.
 
 ## Objective
@@ -40,7 +40,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Focused reservation suite: 24 tests pass, including missing reset/cycle evidence and a reset crossed during the active-reservation query wait.
 - Full Python suite: 229 tests pass. Project-plan validation reports 15 epics/76 tasks/no cycles; compileall and `git diff --check` pass.
 - Independent Technical Reviewer found no blockers in reset checks, account row locking, active reservation counting, or owner-scoped monotonic pause behavior.
-- Independent review passed. PR/CI and post-merge checks remain pending.
+- Independent Technical Reviewer found no blockers. PR [#105](https://github.com/dhruv0641/Dolla/pull/105) and post-merge checks passed.
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
