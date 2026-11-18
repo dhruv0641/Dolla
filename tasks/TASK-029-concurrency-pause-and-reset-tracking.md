@@ -5,12 +5,18 @@
 - **Priority:** P0
 - **Dependencies:** TASK-028
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** SCHEMA.sql; FLOW_MCP_ADAPTER_CONTRACT.json
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
 ## User Story
 As a FLOW AI Content OS operator, I want concurrency, pause and reset tracking, so the platform can progress safely through a traceable production lifecycle.
+
+## Execution checkpoint — 2026-11-19
+- TASK-028 is DONE through PR [#102](https://github.com/dhruv0641/Dolla/pull/102), merged to `develop` as `707310f`; tracker closeout PR #103 and post-merge validation also passed.
+- Issue [#104](https://github.com/dhruv0641/Dolla/issues/104) is open; branch is `feature/TASK-029-concurrency-pause-reset-tracking`, based on `develop` at `fc679ba`.
+- PR [#105](https://github.com/dhruv0641/Dolla/pull/105) is open as a draft against `develop`.
+- Existing account-row locking, active-reservation counting, monotonic pause, and reset-window checks were inspected. This task adds fail-closed behavior for missing reset/cycle evidence and a regression for a daily reset crossed during a database wait.
 
 ## Objective
 Deliver concurrency, pause and reset tracking as an independently verifiable capability within credit and account management.
@@ -26,11 +32,15 @@ Deliver concurrency, pause and reset tracking as an independently verifiable cap
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit; missing or crossed reset windows prevent new reservations.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
+- Focused reservation suite: 24 tests pass, including missing reset/cycle evidence and a reset crossed during the active-reservation query wait.
+- Full Python suite: 229 tests pass. Project-plan validation reports 15 epics/76 tasks/no cycles; compileall and `git diff --check` pass.
+- Independent Technical Reviewer found no blockers in reset checks, account row locking, active reservation counting, or owner-scoped monotonic pause behavior.
+- Independent review passed. PR/CI and post-merge checks remain pending.
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
