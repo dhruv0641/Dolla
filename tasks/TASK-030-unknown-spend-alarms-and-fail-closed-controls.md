@@ -14,7 +14,7 @@ As a FLOW AI Content OS operator, I want unknown-spend alarms and fail-closed co
 
 ## Execution checkpoint — 2026-11-19
 - TASK-029 is DONE through PR [#105](https://github.com/dhruv0641/Dolla/pull/105), merged as `d91e400`; tracker closeout PR #106 and its post-merge validation passed.
-- Issue [#107](https://github.com/dhruv0641/Dolla/issues/107) is open; implementation branch is `feature/TASK-030-unknown-spend-alarms-fail-closed-controls`, based on `develop` at `20b9d94`.
+- Issue [#107](https://github.com/dhruv0641/Dolla/issues/107) is linked to draft PR [#108](https://github.com/dhruv0641/Dolla/pull/108); commit `894452e` is pushed on implementation branch `feature/TASK-030-unknown-spend-alarms-fail-closed-controls`, based on `develop` at `20b9d94`.
 - Inspection found reservations can enter `RECONCILE_PENDING` in the schema and remain capacity-held, but no service transition, durable alarm record, or operator alarm read route exists. External alert delivery is not configured.
 - Implemented typed unknown-spend reason/state contracts, transactional reservation hold + account pause + durable alarm + workflow event, owner-scoped open-alarm listing, migration `0005`, and operator documentation. No alarm resolve/unpause or external delivery route is included.
 
