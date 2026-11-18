@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-054
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
-- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88); branch `feature/TASK-055-qa-voice-calendar-and-publishing` targets `develop`.
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#88](https://github.com/dhruv0641/Dolla/issues/88); draft PR [#89](https://github.com/dhruv0641/Dolla/pull/89) targets `develop`; branch `feature/TASK-055-qa-voice-calendar-and-publishing`.
 - **Related source documents:** DASHBOARD_DEMO.html; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
