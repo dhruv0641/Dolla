@@ -48,7 +48,7 @@ class FlowAdapter(Protocol):
         operation: FlowOperation,
         arguments: Mapping[str, object],
         *,
-        account: FlowAccountAuthorization,
+        account: FlowAccountAuthorization | None,
         spend: SpendAuthorization | None = None,
     ) -> Mapping[str, object]:
         """Invoke a normalized operation only after all capability gates pass."""
@@ -77,15 +77,16 @@ class CapabilityGatedFlowAdapter:
         operation: FlowOperation,
         arguments: Mapping[str, object],
         *,
-        account: FlowAccountAuthorization,
+        account: FlowAccountAuthorization | None,
         spend: SpendAuthorization | None = None,
     ) -> Mapping[str, object]:
         if not self._config.enabled:
             raise FlowAdapterError(AdapterErrorCode.DISABLED)
         if not self._config.expected_server_id or not self._config.expected_account_ref:
             raise FlowAdapterError(AdapterErrorCode.CONFIGURATION_MISSING)
-        if not account.verified:
+        if account is None:
             raise FlowAdapterError(AdapterErrorCode.ACCOUNT_UNVERIFIED)
+        self._require_fresh_account_authorization(account)
         if account.account_ref != self._config.expected_account_ref:
             raise FlowAdapterError(AdapterErrorCode.ACCOUNT_MISMATCH)
 
@@ -133,6 +134,9 @@ class CapabilityGatedFlowAdapter:
         if not binding.required_inputs.issubset(arguments) or not schema_accepts(tool.input_schema, arguments):
             raise FlowAdapterError(AdapterErrorCode.ARGUMENTS_INVALID)
 
+        # Manifest and approval providers are async; the short-lived account proof
+        # must still be valid at the moment the transport call begins.
+        self._require_fresh_account_authorization(account)
         try:
             result = await self._transport.call_tool(name=binding.tool_name, arguments=dict(arguments))
         except Exception as exc:
@@ -141,3 +145,8 @@ class CapabilityGatedFlowAdapter:
             raise FlowAdapterError(AdapterErrorCode.TOOL_RESULT_INVALID)
         # MCP result contents are untrusted; callers must validate operation-specific output.
         return dict(result)
+
+    def _require_fresh_account_authorization(self, account: FlowAccountAuthorization) -> None:
+        authorization_time = self._now()
+        if account.checked_at > authorization_time or authorization_time >= account.valid_until:
+            raise FlowAdapterError(AdapterErrorCode.ACCOUNT_HEALTH_STALE)

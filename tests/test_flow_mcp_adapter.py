@@ -13,6 +13,7 @@ from flowx_os.flow_mcp import (
     McpTool,
     SpendAuthorization,
 )
+from flowx_os.flow_mcp.capabilities import _issue_flow_account_authorization
 
 
 NOW = datetime(2026, 11, 18, 12, 0, tzinfo=timezone.utc)
@@ -82,13 +83,15 @@ class CapabilityGatedFlowAdapterTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.provider = FakeManifestProvider(manifest())
         self.transport = FakeTransport()
-        self.account = FlowAccountAuthorization("acct-primary", True)
+        self.account = _issue_flow_account_authorization(
+            "acct-primary", checked_at=NOW, valid_until=NOW + timedelta(minutes=5)
+        )
         self.config = AdapterConfig(True, "runtime-server-1", "acct-primary")
 
-    def adapter(self, config=None, provider=None, transport=None, spend_authorizer=None):
+    def adapter(self, config=None, provider=None, transport=None, spend_authorizer=None, now=None):
         return CapabilityGatedFlowAdapter(
             config or self.config, provider or self.provider, transport or self.transport,
-            now=lambda: NOW, spend_authorizer=spend_authorizer,
+            now=now or (lambda: NOW), spend_authorizer=spend_authorizer,
         )
 
     async def test_disabled_by_default_does_not_read_manifest_or_call_transport(self):
@@ -108,14 +111,45 @@ class CapabilityGatedFlowAdapterTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_unverified_or_mismatched_account_fails_before_manifest(self):
         for account, expected in [
-            (FlowAccountAuthorization("acct-primary", False), AdapterErrorCode.ACCOUNT_UNVERIFIED),
-            (FlowAccountAuthorization("acct-other", True), AdapterErrorCode.ACCOUNT_MISMATCH),
+            (None, AdapterErrorCode.ACCOUNT_UNVERIFIED),
+            (_issue_flow_account_authorization("acct-other", checked_at=NOW, valid_until=NOW + timedelta(minutes=5)), AdapterErrorCode.ACCOUNT_MISMATCH),
         ]:
             with self.subTest(expected=expected):
                 with self.assertRaises(FlowAdapterError) as caught:
                     await self.adapter().invoke(FlowOperation.SESSION_STATUS, {}, account=account)
                 self.assertEqual(caught.exception.code, expected)
         self.assertEqual(self.provider.calls, 0)
+
+    async def test_expired_account_authorization_is_rejected_before_manifest(self):
+        expired = _issue_flow_account_authorization(
+            "acct-primary", checked_at=NOW - timedelta(minutes=6), valid_until=NOW - timedelta(minutes=1)
+        )
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter().invoke(FlowOperation.SESSION_STATUS, {}, account=expired)
+        self.assertEqual(caught.exception.code, AdapterErrorCode.ACCOUNT_HEALTH_STALE)
+        self.assertEqual(self.provider.calls, 0)
+
+    async def test_account_authorization_expiry_during_async_gates_blocks_transport(self):
+        calls = 0
+
+        def advancing_clock():
+            nonlocal calls
+            calls += 1
+            return NOW if calls < 3 else NOW + timedelta(minutes=6)
+
+        transport = FakeTransport()
+        with self.assertRaises(FlowAdapterError) as caught:
+            await self.adapter(transport=transport, now=advancing_clock).invoke(
+                FlowOperation.SESSION_STATUS, {"project_url": "x"}, account=self.account
+            )
+        self.assertEqual(caught.exception.code, AdapterErrorCode.ACCOUNT_HEALTH_STALE)
+        self.assertEqual(transport.calls, [])
+
+    def test_account_authorization_cannot_be_constructed_without_internal_issuer(self):
+        with self.assertRaises(ValueError):
+            FlowAccountAuthorization(
+                "acct-primary", NOW, NOW + timedelta(minutes=5), object()
+            )
 
     async def test_stale_manifest_fails_closed(self):
         provider = FakeManifestProvider(manifest(observed_at=NOW - timedelta(minutes=16)))

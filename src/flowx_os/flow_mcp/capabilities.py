@@ -31,6 +31,10 @@ class AdapterErrorCode(StrEnum):
     TOOL_SCHEMA_INVALID = "tool_schema_invalid"
     ACCOUNT_UNVERIFIED = "account_unverified"
     ACCOUNT_MISMATCH = "account_mismatch"
+    ACCOUNT_DISCONNECTED = "account_disconnected"
+    ACCOUNT_NOT_LOGGED_IN = "account_not_logged_in"
+    ACCOUNT_HEALTH_STALE = "account_health_stale"
+    ACCOUNT_HEALTH_UNAVAILABLE = "account_health_unavailable"
     SPEND_AUTHORIZATION_REQUIRED = "spend_authorization_required"
     SPEND_AUTHORIZATION_INVALID = "spend_authorization_invalid"
     ARGUMENTS_INVALID = "arguments_invalid"
@@ -49,6 +53,10 @@ _ERROR_MESSAGES = {
     AdapterErrorCode.TOOL_SCHEMA_INVALID: "The configured Flow MCP tool binding does not match its manifest schema.",
     AdapterErrorCode.ACCOUNT_UNVERIFIED: "The Flow account has not been verified.",
     AdapterErrorCode.ACCOUNT_MISMATCH: "The verified Flow account does not match configuration.",
+    AdapterErrorCode.ACCOUNT_DISCONNECTED: "The Flow MCP session is disconnected.",
+    AdapterErrorCode.ACCOUNT_NOT_LOGGED_IN: "The Flow MCP session is not logged in.",
+    AdapterErrorCode.ACCOUNT_HEALTH_STALE: "The Flow account health evidence is stale.",
+    AdapterErrorCode.ACCOUNT_HEALTH_UNAVAILABLE: "Flow account health evidence is unavailable.",
     AdapterErrorCode.SPEND_AUTHORIZATION_REQUIRED: "An explicit spend authorization is required for this operation.",
     AdapterErrorCode.SPEND_AUTHORIZATION_INVALID: "The spend authorization is invalid for this account or operation.",
     AdapterErrorCode.ARGUMENTS_INVALID: "The operation arguments do not match the discovered tool schema.",
@@ -192,14 +200,39 @@ class AdapterConfig:
 
 @dataclass(frozen=True, slots=True)
 class FlowAccountAuthorization:
-    """A trusted verifier's account reference and result, never an email or credential."""
+    """Short-lived proof minted by the account-health service, not user input."""
 
     account_ref: str
-    verified: bool
+    checked_at: datetime
+    valid_until: datetime
+    _issuer: object
 
     def __post_init__(self) -> None:
+        if self._issuer is not _ACCOUNT_AUTHORIZATION_ISSUER:
+            raise ValueError("account authorization must be issued by trusted account-health service")
         if not validate_account_ref(self.account_ref):
             raise ValueError("account_ref must be an opaque local reference")
+        if self.checked_at.tzinfo is None or self.valid_until.tzinfo is None:
+            raise ValueError("account authorization timestamps must be timezone-aware")
+        if self.valid_until <= self.checked_at:
+            raise ValueError("account authorization must have a positive validity window")
+
+    @property
+    def verified(self) -> bool:
+        return True
+
+
+_ACCOUNT_AUTHORIZATION_ISSUER = object()
+
+
+def _issue_flow_account_authorization(
+    account_ref: str,
+    *,
+    checked_at: datetime,
+    valid_until: datetime,
+) -> FlowAccountAuthorization:
+    """Internal constructor reserved for the account-health verification flow."""
+    return FlowAccountAuthorization(account_ref, checked_at, valid_until, _ACCOUNT_AUTHORIZATION_ISSUER)
 
 
 @dataclass(frozen=True, slots=True)

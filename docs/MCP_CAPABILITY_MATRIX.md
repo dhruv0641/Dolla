@@ -1,6 +1,6 @@
 # Google Flow MCP Capability Matrix
 
-**Checked 2026-11-18 22:07 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. This confirms an authenticated Flow browser session but does **not** expose the signed-in email; the requested account `dobariyadhruvv@gmail.com` is therefore not verified. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
+**Checked 2026-11-18 22:40 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. A screenshot of the active Flow page showed no email; the requested account `dobariyadhruvv@gmail.com` is therefore not verified. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
 
 The connected runtime manifest includes the following tools. These are the actual exposed tool names, not names derived from `FLOW_MCP_ADAPTER_CONTRACT.json`:
 
@@ -29,11 +29,11 @@ The connected runtime manifest includes the following tools. These are the actua
 | Media retrieval | PARTIALLY VERIFIED | Video generation result schema returns downloaded paths; separate download tool accepts media UUIDs, documented for media where UUID exists. No real asset was retrieved. |
 | Job completion/state | PARTIALLY VERIFIED | `flow_status` reports in-flight job records; generation tools accept `resume=true`. No standalone job polling/cancel operation appears in this manifest. |
 | Credit quote/balance/reconciliation | UNVERIFIED | No balance or quote tool is exposed. Generation approval text may contain a cost, but this is not a stable balance/ledger API. |
-| Current application fail-closed boundary | VERIFIED; ADAPTER NOT IMPLEMENTED | OpenAPI exposes no Flow operation route; readiness is unavailable if the Flow probe is absent/false. Three focused API tests passed. The actual adapter gate is TASK-022 and is not claimed implemented. |
+| Current application fail-closed boundary | ADAPTER AND ACCOUNT-HEALTH GATES IMPLEMENTED; LIVE TRANSPORT NOT CONFIGURED | The adapter is disabled by default and accepts only an injected transport/manifest provider; account health requires fresh, explicit identity verification. OpenAPI exposes no Flow operation route. Focused tests cover both gates. No application-backed Flow call is possible with current configuration. |
 
 ## Outstanding external state
 
-`flow_status` still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. Reconcile this job under TASK-024 before any retry or new generation.
+`flow_status` on 2026-11-18 still reports image job `muvi26hx-46e6c8` (`Nano Banana Pro`), phase `sent`, created `2026-10-05T17:04:26.469Z`; final status is unknown. The local MCP job record agrees and was last updated at `2026-10-05T17:05:01.635Z`, but contains no final result or output path. Reconcile this job under TASK-024 before any retry or new generation.
 
 ## Guardrails
 
