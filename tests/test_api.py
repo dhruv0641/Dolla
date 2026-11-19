@@ -114,6 +114,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
                 "/api/v1/brands/{brand_id}/content/{content_id}/transition",
                 "/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
                 "/api/v1/brands/{brand_id}/content/{content_id}/storyboard/versions",
+                "/api/v1/brands/{brand_id}/content/{content_id}/assets",
             },
         )
 
@@ -196,6 +197,36 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["detail"], "database_not_configured")
 
+    async def test_asset_listing_returns_owner_scoped_metadata_only(self) -> None:
+        key = b"test-key-that-is-long-enough-for-hmac"
+        verifier = TokenVerifier(key, issuer="flowx-test", audience="flowx-api", clock_skew_seconds=0)
+        now = int(time.time())
+        content_id = UUID("64135a38-e28b-4e22-bebf-c1906761b681")
+        brand_id = UUID("b6bb37b4-a27f-4de4-9277-45a6449aef01")
+        asset_id = UUID("f2c13904-9b62-4a5d-9459-617b87946132")
+        created_at = datetime.now(timezone.utc)
+        pool = _FakePool([
+            _FakeCursor((1,)),
+            _FakeCursor(many=[(
+                asset_id, content_id, None, "THUMBNAIL",
+                f"managed://assets/{asset_id.hex}/payload", "a" * 64,
+                "image/png", 24, {"width": 1080}, None, created_at,
+            )]),
+        ])
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(token_verifier=verifier, database_pool=pool)),
+            base_url="http://testserver",
+        )
+        async with client:
+            response = await client.get(
+                f"/api/v1/brands/{brand_id}/content/{content_id}/assets",
+                headers={"Authorization": f"Bearer {_signed_token(key, roles=['reviewer'], now=now)}"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()[0]["asset_id"], str(asset_id))
+        self.assertEqual(response.json()[0]["sha256_hex"], "a" * 64)
+        self.assertNotIn("storage_path", response.json()[0])
+
     async def test_authenticated_identity_route_fails_closed_when_not_configured(self) -> None:
         response = await self.client.get("/api/v1/me")
         self.assertEqual(response.status_code, 503)
@@ -260,11 +291,15 @@ def _signed_token(key: bytes, *, roles: list[str], now: int) -> str:
 
 
 class _FakeCursor:
-    def __init__(self, one=None):
+    def __init__(self, one=None, many=None):
         self.one = one
+        self.many = list(many or [])
 
     async def fetchone(self):
         return self.one
+
+    async def fetchall(self):
+        return self.many
 
 
 class _FakeConnection:

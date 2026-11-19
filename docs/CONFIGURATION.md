@@ -4,6 +4,8 @@ Copy `.env.example` to `.env` for local development. `.env` is ignored by Git. T
 
 `flowx_os.config.Settings.from_env_file()` reads `.env` when explicitly called, then applies process environment values as overrides. `Settings.from_env()` reads only the supplied mapping or process environment. Neither method runs at import time. They validate `FLOWX_ENVIRONMENT` (`development`, `test`, or `production`), `FLOWX_LOG_LEVEL`, and `FLOWX_STORAGE_ROOT`, and accept secret references only in the form `secretref://provider/path`. The module does not resolve secret values or connect to a secret store. A later integration must resolve references using OS-protected storage and must never log the returned values.
 
+`FLOWX_STORAGE_ROOT` defaults to `./data`; `AssetIngestService` stores files below its `assets/` directory. Mount a persistent volume at that root and restrict filesystem permissions to the service identity before enabling worker ingestion. The current Compose shell does not yet wire a database pool or asset worker, so setting the root alone does not enable ingestion.
+
 Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google AI Pro entitlements, Flow account credentials, YouTube OAuth, and Meta OAuth use separate references. Leave optional references unset until the corresponding integration is authorized. No credentials are required to run planning validation or the configuration unit tests.
 
 Example local check:

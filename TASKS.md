@@ -54,7 +54,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-07: Scene and Media Management
 
 - **TASK-031 Versioned storyboard and scene timeline** — DONE · Media Pipeline Engineer · 12h · deps: TASK-006, TASK-019, TASK-025, TASK-030 · Issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); implementation PR [#120](https://github.com/dhruv0641/Dolla/pull/120) merged as `6b6aa07`; 281 tests and required CI passed; independent review passed; live PostgreSQL unverified
-- **TASK-032 Asset storage, hashes and lineage** — IN_PROGRESS · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) · Branch: `feature/TASK-032-asset-storage-hashes-and-lineage`
+- **TASK-032 Asset storage, hashes and lineage** — IN_REVIEW · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) · Branch: `feature/TASK-032-asset-storage-hashes-and-lineage`; 297 tests and independent review passed; live PostgreSQL unverified
 - **TASK-033 Scene jobs and bounded retries** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-032
 - **TASK-034 Media probing and validation** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-033
 - **TASK-035 Asset search and retention** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-034
@@ -130,9 +130,9 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 42 (TASK-001 through TASK-025, TASK-026 through TASK-031, TASK-051 through TASK-056, and TASK-072 through TASK-076).
-- IN_REVIEW: 0.
+- IN_REVIEW: 1 (TASK-032; implementation/review complete, PR/CI pending).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-032; dependencies satisfied, implementation starting).
+- IN_PROGRESS: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 33.
