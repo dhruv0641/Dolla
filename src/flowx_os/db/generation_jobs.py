@@ -12,22 +12,34 @@ from flowx_os.db.content import RepositoryUnavailable
 from flowx_os.db.transaction import ConnectionPool, unit_of_work
 from flowx_os.db.credit_reservations import FlowCreditReservationRepository
 from flowx_os.flow_mcp.jobs import JobSubmissionClaim, JobSubmissionRequest, PersistedJobResumeContext
+from flowx_os.domain.scene_jobs import (
+    SceneAttemptLimitExceeded,
+    SceneAttemptStateConflict,
+    SceneJobState,
+    SceneRetryDecision,
+    SceneRetryPolicy,
+)
 
 
 _FINGERPRINT = re.compile(r"^[0-9a-f]{64}$")
+_SAFE_FAILURE_CODE = re.compile(r"^[A-Z][A-Z0-9_]{0,63}$")
 
 
 class FlowGenerationJobRepository:
     """Persist one credit-reserved submission claim per canonical fingerprint."""
 
     def __init__(self, pool: ConnectionPool, *, max_quote_age: timedelta = timedelta(minutes=5),
-                 max_balance_age: timedelta = timedelta(minutes=15), now=None):
+                 max_balance_age: timedelta = timedelta(minutes=15), now=None,
+                 retry_policy: SceneRetryPolicy | None = None):
         self._pool = pool
         if max_quote_age <= timedelta(0) or max_balance_age <= timedelta(0):
             raise ValueError("quote and balance freshness windows must be positive")
         self._max_quote_age = max_quote_age
         self._max_balance_age = max_balance_age
         self._now = now or (lambda: datetime.now(timezone.utc))
+        self._retry_policy = retry_policy or SceneRetryPolicy()
+        if not isinstance(self._retry_policy, SceneRetryPolicy):
+            raise ValueError("retry_policy must be a SceneRetryPolicy")
 
     async def claim_or_get(
         self, *, account_ref: str, request: JobSubmissionRequest, fingerprint: str,
@@ -36,10 +48,13 @@ class FlowGenerationJobRepository:
             not isinstance(account_ref, str) or not account_ref.strip()
             or not isinstance(request, JobSubmissionRequest)
             or not isinstance(fingerprint, str) or not _FINGERPRINT.fullmatch(fingerprint)
+            or isinstance(request.attempt_index, bool)
+            or not isinstance(request.attempt_index, int) or request.attempt_index < 1
             or isinstance(request.quoted_credits, bool)
             or not isinstance(request.quoted_credits, int) or request.quoted_credits <= 0
         ):
             raise ValueError("generation job claim is invalid")
+        self._retry_policy.require_index(request.attempt_index)
         try:
             request_json = json.dumps({
                 "model": request.model,
@@ -60,7 +75,8 @@ class FlowGenerationJobRepository:
                               account.session_health, account.paused, account.compliance_approved,
                               account.observed_daily_available, account.observed_monthly_available,
                               account.last_reconciled_at, account.next_daily_reset_at,
-                              account.monthly_cycle_starts_at, account.max_inflight
+                              account.monthly_cycle_starts_at, account.max_inflight,
+                              scene.state, scene.retry_count
                        FROM flow_accounts AS account
                        JOIN flow_credit_reservations AS reservation
                          ON reservation.flow_account_id = account.id
@@ -83,7 +99,9 @@ class FlowGenerationJobRepository:
                     raise RepositoryUnavailable("matching owner-scoped credit reservation is unavailable")
                 (reservation_id, account_id, quoted_credits, quoted_at, quote_expires_at,
                  health, paused, compliant, daily, monthly, reconciled, daily_reset,
-                 cycle_start, max_inflight) = eligible
+                 cycle_start, max_inflight, scene_state, scene_retry_count) = eligible
+                if request.attempt_index > self._retry_policy.max_attempts:
+                    raise RepositoryUnavailable("scene regeneration limit is exhausted")
                 decision_now = self._now()
                 if (not isinstance(decision_now, datetime) or decision_now.tzinfo is None
                         or quoted_at is None or quoted_at.tzinfo is None
@@ -127,6 +145,15 @@ class FlowGenerationJobRepository:
                         raise RepositoryUnavailable("generation idempotency fingerprint conflict")
                     return JobSubmissionClaim(job_id, str(status), external_id, False)
 
+                try:
+                    self._retry_policy.require_attempt(
+                        attempt_index=request.attempt_index,
+                        state=scene_state,
+                        retry_count=scene_retry_count,
+                    )
+                except (ValueError, TypeError) as exc:
+                    raise RepositoryUnavailable("scene state does not permit this generation attempt") from exc
+
                 cursor = await connection.execute(
                     """INSERT INTO generation_jobs
                          (scene_id, flow_account_id, credit_reservation_id, attempt_index,
@@ -162,6 +189,16 @@ class FlowGenerationJobRepository:
         except Exception as exc:
             raise RepositoryUnavailable("generation job storage is unavailable") from exc
 
+    async def _lock_attempt(self, connection, job_id: UUID):
+        cursor = await connection.execute(
+            """SELECT j.status, j.attempt_index, s.id, s.state, s.retry_count,
+                      j.retry_scheduled
+               FROM generation_jobs AS j JOIN scenes AS s ON s.id = j.scene_id
+               WHERE j.id = %s FOR UPDATE OF j, s""",
+            (job_id,),
+        )
+        return await cursor.fetchone()
+
     async def mark_submitted(self, *, job_id: UUID, external_job_id: str) -> None:
         if (not isinstance(job_id, UUID) or not isinstance(external_job_id, str)
                 or not external_job_id.strip() or len(external_job_id) > 300
@@ -169,6 +206,18 @@ class FlowGenerationJobRepository:
             raise ValueError("external Flow job identity is invalid")
         try:
             async with unit_of_work(self._pool) as connection:
+                attempt = await self._lock_attempt(connection, job_id)
+                if attempt is None:
+                    raise RepositoryUnavailable("generation job is unavailable")
+                status, attempt_index, scene_id, scene_state, retry_count, retry_scheduled = attempt
+                if status != "RESERVED" or retry_scheduled:
+                    raise RepositoryUnavailable("generation job is not in a claimable state")
+                try:
+                    self._retry_policy.require_attempt(
+                        attempt_index=attempt_index, state=scene_state, retry_count=retry_count,
+                    )
+                except ValueError as exc:
+                    raise RepositoryUnavailable("scene state does not permit submission") from exc
                 cursor = await connection.execute(
                     """UPDATE generation_jobs SET external_job_id = %s, status = 'SUBMITTED',
                               submitted_at = now()
@@ -177,6 +226,13 @@ class FlowGenerationJobRepository:
                 )
                 if cursor.rowcount != 1:
                     raise RepositoryUnavailable("generation job is not in a claimable state")
+                cursor = await connection.execute(
+                    """UPDATE scenes SET state = 'SUBMITTED', updated_at = now()
+                       WHERE id = %s AND state = %s AND retry_count = %s""",
+                    (scene_id, scene_state, retry_count),
+                )
+                if cursor.rowcount != 1:
+                    raise RepositoryUnavailable("scene changed before submission was recorded")
         except RepositoryUnavailable:
             raise
         except Exception as exc:
@@ -187,6 +243,18 @@ class FlowGenerationJobRepository:
             raise ValueError("job_id must be a UUID")
         try:
             async with unit_of_work(self._pool) as connection:
+                attempt = await self._lock_attempt(connection, job_id)
+                if attempt is None:
+                    raise RepositoryUnavailable("generation job is unavailable")
+                status, attempt_index, scene_id, scene_state, retry_count, retry_scheduled = attempt
+                if status != "RESERVED" or retry_scheduled:
+                    raise RepositoryUnavailable("generation job is not in an unknownable state")
+                try:
+                    self._retry_policy.require_attempt(
+                        attempt_index=attempt_index, state=scene_state, retry_count=retry_count,
+                    )
+                except ValueError as exc:
+                    raise RepositoryUnavailable("scene state does not permit unknown submission") from exc
                 cursor = await connection.execute(
                     """UPDATE generation_jobs SET status = 'REMOTE_SUBMISSION_UNKNOWN',
                               error_code = 'SUBMISSION_OUTCOME_UNKNOWN'
@@ -195,6 +263,81 @@ class FlowGenerationJobRepository:
                 )
                 if cursor.rowcount != 1:
                     raise RepositoryUnavailable("generation job is not in an unknownable state")
+                cursor = await connection.execute(
+                    """UPDATE scenes SET state = 'BLOCKED', updated_at = now()
+                       WHERE id = %s AND state = %s AND retry_count = %s""",
+                    (scene_id, scene_state, retry_count),
+                )
+                if cursor.rowcount != 1:
+                    raise RepositoryUnavailable("scene changed while submission outcome was unknown")
+        except RepositoryUnavailable:
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("generation job storage is unavailable") from exc
+
+    async def mark_attempt_failure(
+        self, *, job_id: UUID, retryable: bool, failure_code: str = "GENERATION_FAILED",
+    ) -> SceneRetryDecision:
+        """Record a definitive failure and atomically schedule or exhaust a retry.
+
+        Call only after a terminal failure has been authoritatively observed.
+        Unknown remote submission outcomes must use ``mark_remote_submission_unknown``.
+        """
+        if (not isinstance(job_id, UUID) or not isinstance(retryable, bool)
+                or not isinstance(failure_code, str) or not _SAFE_FAILURE_CODE.fullmatch(failure_code)):
+            raise ValueError("generation failure record is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                attempt = await self._lock_attempt(connection, job_id)
+                if attempt is None:
+                    raise RepositoryUnavailable("generation job is unavailable")
+                status, attempt_index, scene_id, scene_state, retry_count, retry_scheduled = attempt
+                try:
+                    typed_scene_state = SceneJobState(scene_state)
+                except (ValueError, TypeError) as exc:
+                    raise RepositoryUnavailable("stored scene state is invalid") from exc
+                if status == "FAILED":
+                    # The scene may already have advanced through a later attempt.
+                    # Reconstruct this immutable decision from its attempt index,
+                    # not from the scene's current lifecycle state.
+                    decision_state = (
+                        SceneJobState.RETRY_WAIT if retry_scheduled else SceneJobState.FAILED
+                    )
+                    decision_retry_count = attempt_index if retry_scheduled else attempt_index - 1
+                    return SceneRetryDecision(
+                        scene_id, job_id, attempt_index, decision_retry_count,
+                        decision_state, bool(retry_scheduled),
+                    )
+                if status not in {"SUBMITTED", "RUNNING", "DOWNLOADED", "QA_FAILED"}:
+                    raise RepositoryUnavailable("generation job is not in a definitive failure state")
+                if (typed_scene_state not in {
+                        SceneJobState.SUBMITTED, SceneJobState.RUNNING,
+                        SceneJobState.DOWNLOADED, SceneJobState.QA_FAILED,
+                    } or retry_count != attempt_index - 1):
+                    raise RepositoryUnavailable("scene state does not match the failed attempt")
+                should_retry = self._retry_policy.should_schedule_retry(
+                    attempt_index=attempt_index, retryable=retryable,
+                )
+                next_state = SceneJobState.RETRY_WAIT if should_retry else SceneJobState.FAILED
+                next_retry_count = retry_count + 1 if should_retry else retry_count
+                cursor = await connection.execute(
+                    """UPDATE generation_jobs SET status = 'FAILED', error_code = %s,
+                              retry_scheduled = %s, completed_at = now()
+                       WHERE id = %s AND status = %s AND retry_scheduled = false""",
+                    (failure_code, should_retry, job_id, status),
+                )
+                if cursor.rowcount != 1:
+                    raise RepositoryUnavailable("generation job changed while failure was recorded")
+                cursor = await connection.execute(
+                    """UPDATE scenes SET state = %s, retry_count = %s, updated_at = now()
+                       WHERE id = %s AND state = %s AND retry_count = %s""",
+                    (next_state.value, next_retry_count, scene_id, typed_scene_state.value, retry_count),
+                )
+                if cursor.rowcount != 1:
+                    raise RepositoryUnavailable("scene changed while retry decision was recorded")
+                return SceneRetryDecision(
+                    scene_id, job_id, attempt_index, next_retry_count, next_state, should_retry,
+                )
         except RepositoryUnavailable:
             raise
         except Exception as exc:

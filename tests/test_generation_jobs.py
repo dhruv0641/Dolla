@@ -7,6 +7,7 @@ from flowx_os.db.content import RepositoryUnavailable
 from flowx_os.db.generation_jobs import FlowGenerationJobRepository
 from flowx_os.flow_mcp import JobSubmissionRequest
 from flowx_os.flow_mcp import PersistedJobResumeContext
+from flowx_os.domain.scene_jobs import SceneJobState, SceneRetryPolicy
 
 
 class FakeCursor:
@@ -45,9 +46,9 @@ class FakePool:
         yield self._connection
 
 
-def request():
+def request(attempt_index=1):
     return JobSubmissionRequest(
-        scene_id=uuid4(), request_id=uuid4(), owner_user_id="owner-1", attempt_index=1,
+        scene_id=uuid4(), request_id=uuid4(), owner_user_id="owner-1", attempt_index=attempt_index,
         model="veo-3.1-lite", prompt="A scene", duration_seconds=8, quoted_credits=2,
         arguments={"auto_confirm": True, "prompt": "A scene", "model": "veo-3.1-lite", "duration": 8,
                    "ratio": "9:16",
@@ -74,7 +75,8 @@ class FlowGenerationJobRepositoryTests(unittest.IsolatedAsyncioTestCase):
         return (reservation_id, account_id, credits, values["quoted_at"], values["quote_expires_at"],
                 values["health"], values["paused"], values["compliant"], values["daily"],
                 values["monthly"], values["reconciled"], values["daily_reset"],
-                values["cycle_start"], values["max_inflight"])
+                values["cycle_start"], values["max_inflight"],
+                values.get("scene_state", "PENDING"), values.get("scene_retry_count", 0))
 
     async def test_atomic_claim_checks_owner_reservation_and_inserts_before_send(self):
         reservation_id, account_id, job_id = uuid4(), uuid4(), uuid4()
@@ -113,13 +115,18 @@ class FlowGenerationJobRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(connection.calls), 1)
 
     async def test_status_updates_only_transition_reserved_claims(self):
-        connection = FakeConnection()
+        first_scene, second_scene = uuid4(), uuid4()
+        connection = FakeConnection([
+            ("RESERVED", 1, first_scene, "PENDING", 0, False), ("updated",), ("updated",),
+            ("RESERVED", 1, second_scene, "PENDING", 0, False), ("updated",), ("updated",),
+        ])
         repository = FlowGenerationJobRepository(FakePool(connection))
         job_id = uuid4()
         await repository.mark_submitted(job_id=job_id, external_job_id="remote-1")
         await repository.mark_remote_submission_unknown(job_id=job_id)
-        self.assertIn("status = 'SUBMITTED'", connection.calls[0][0])
-        self.assertIn("status = 'REMOTE_SUBMISSION_UNKNOWN'", connection.calls[1][0])
+        self.assertIn("status = 'SUBMITTED'", connection.calls[1][0])
+        self.assertIn("status = 'REMOTE_SUBMISSION_UNKNOWN'", connection.calls[4][0])
+        self.assertIn("state = 'BLOCKED'", connection.calls[5][0])
 
     async def test_resume_context_is_loaded_only_from_persisted_job_request(self):
         job_id = uuid4()
@@ -156,6 +163,95 @@ class FlowGenerationJobRepositoryTests(unittest.IsolatedAsyncioTestCase):
                     account_ref="flow-account", request=request(), fingerprint="d" * 64,
                 )
             self.assertEqual(len(connection.calls), 1)
+
+    async def test_attempt_index_is_bounded_before_database_access(self):
+        task_request = request(attempt_index=4)
+        connection = FakeConnection()
+        with self.assertRaises(ValueError):
+            await FlowGenerationJobRepository(FakePool(connection)).claim_or_get(
+                account_ref="flow-account", request=task_request, fingerprint="e" * 64,
+            )
+        self.assertEqual(connection.calls, [])
+
+    async def test_retry_claim_requires_matching_retry_wait_state_and_retry_counter(self):
+        reservation_id, account_id, job_id = uuid4(), uuid4(), uuid4()
+        task_request = request(attempt_index=2)
+        connection = FakeConnection([
+            self.eligible_row(
+                reservation_id, account_id, scene_state=SceneJobState.RETRY_WAIT.value,
+                scene_retry_count=1,
+            ),
+            (1, 2), None, (job_id, "RESERVED", None),
+        ])
+        result = await FlowGenerationJobRepository(FakePool(connection), now=lambda: self.NOW).claim_or_get(
+            account_ref="flow-account", request=task_request, fingerprint="f" * 64,
+        )
+        self.assertTrue(result.created)
+        self.assertEqual(result.job_id, job_id)
+
+        stale = request(attempt_index=2)
+        connection = FakeConnection([
+            self.eligible_row(
+                reservation_id, account_id, scene_state=SceneJobState.RETRY_WAIT.value,
+                scene_retry_count=0,
+            ),
+            (1, 2), None,
+        ])
+        with self.assertRaises(RepositoryUnavailable):
+            await FlowGenerationJobRepository(FakePool(connection), now=lambda: self.NOW).claim_or_get(
+                account_ref="flow-account", request=stale, fingerprint="9" * 64,
+            )
+
+    async def test_mark_failure_schedules_only_configured_definitive_retries(self):
+        for attempt_index, retry_count, expected_state, expected_count, expected_retry in [
+            (1, 0, "RETRY_WAIT", 1, True),
+            (2, 1, "RETRY_WAIT", 2, True),
+            (3, 2, "FAILED", 2, False),
+        ]:
+            job_id, scene_id = uuid4(), uuid4()
+            connection = FakeConnection([
+                ("RUNNING", attempt_index, scene_id, "RUNNING", retry_count, False),
+                ("updated",), ("updated",),
+            ])
+            decision = await FlowGenerationJobRepository(
+                FakePool(connection), retry_policy=SceneRetryPolicy(2),
+            ).mark_attempt_failure(job_id=job_id, retryable=True, failure_code="REMOTE_FAILED")
+            self.assertEqual(decision.scene_state.value, expected_state)
+            self.assertEqual(decision.retry_count, expected_count)
+            self.assertEqual(decision.retry_scheduled, expected_retry)
+            self.assertIn("retry_scheduled = %s", connection.calls[1][0])
+
+    async def test_non_retryable_and_ambiguous_outcomes_never_schedule(self):
+        job_id, scene_id = uuid4(), uuid4()
+        connection = FakeConnection([
+            ("SUBMITTED", 1, scene_id, "SUBMITTED", 0, False), ("updated",), ("updated",),
+        ])
+        decision = await FlowGenerationJobRepository(FakePool(connection)).mark_attempt_failure(
+            job_id=job_id, retryable=False, failure_code="POLICY_BLOCKED",
+        )
+        self.assertEqual(decision.scene_state, SceneJobState.FAILED)
+        self.assertFalse(decision.retry_scheduled)
+
+        unknown = FakeConnection([("REMOTE_SUBMISSION_UNKNOWN", 1, scene_id, "BLOCKED", 0, False)])
+        with self.assertRaises(RepositoryUnavailable):
+            await FlowGenerationJobRepository(FakePool(unknown)).mark_attempt_failure(
+                job_id=job_id, retryable=True,
+            )
+
+    async def test_retry_decision_is_idempotent_after_job_failure(self):
+        job_id, scene_id = uuid4(), uuid4()
+        connection = FakeConnection([
+            # Scene has since advanced and exhausted attempt 3; replaying the
+            # attempt-1 failure must return its original scheduled decision.
+            ("FAILED", 1, scene_id, "FAILED", 2, True),
+        ])
+        decision = await FlowGenerationJobRepository(FakePool(connection)).mark_attempt_failure(
+            job_id=job_id, retryable=True,
+        )
+        self.assertTrue(decision.retry_scheduled)
+        self.assertEqual(decision.scene_state, SceneJobState.RETRY_WAIT)
+        self.assertEqual(decision.retry_count, 1)
+        self.assertEqual(len(connection.calls), 1)
 
 
 if __name__ == "__main__":

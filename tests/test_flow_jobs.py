@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
@@ -7,6 +8,7 @@ from flowx_os.flow_mcp import (
     JobSubmissionClaim, JobSubmissionRequest, PersistedJobResumeContext, SpendAuthorization,
 )
 from flowx_os.flow_mcp.capabilities import _issue_flow_account_authorization
+from flowx_os.domain.scene_jobs import SceneAttemptLimitExceeded
 
 from flowx_os.flow_mcp import (
     FlowJobState,
@@ -201,6 +203,17 @@ class FlowJobSubmissionServiceTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await FlowJobSubmissionService(adapter, store).submit(
                 account=self.account, request=self.request, spend=low_spend,
+            )
+        self.assertEqual(store.claims, [])
+        self.assertEqual(adapter.calls, [])
+
+    async def test_submission_rejects_attempt_beyond_retry_policy_before_store_or_provider(self):
+        store = FakeSubmissionStore()
+        adapter = FakeSubmitAdapter({"job_id": "unused"})
+        over_limit = replace(self.request, attempt_index=4)
+        with self.assertRaises(SceneAttemptLimitExceeded):
+            await FlowJobSubmissionService(adapter, store).submit(
+                account=self.account, request=over_limit, spend=self.spend,
             )
         self.assertEqual(store.claims, [])
         self.assertEqual(adapter.calls, [])

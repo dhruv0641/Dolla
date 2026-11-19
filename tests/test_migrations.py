@@ -71,6 +71,12 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("assets_scene_requires_content", sql)
         self.assertIn("assets_sha256_hex_format", sql)
 
+    def test_generation_attempts_persist_retry_decisions(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0009_scene_retry_decisions.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("retry_scheduled boolean NOT NULL DEFAULT false", sql)
+        self.assertIn("CHECK (NOT retry_scheduled OR status = 'FAILED')", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
