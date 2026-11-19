@@ -62,7 +62,7 @@ class AssetIngestService:
             )
             await self._repository.assert_lineage(
                 brand_id=brand_id, content_id=content_id, owner_user_id=owner_user_id,
-                scene_id=scene_id, source_job_id=source_job_id,
+                scene_id=scene_id, source_job_id=source_job_id, asset_id=asset_id,
             )
             stored = await asyncio.to_thread(
                 self._store.store, asset_id=asset_id, source_path=source_path, mime_type=mime_type,

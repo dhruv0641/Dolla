@@ -57,7 +57,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
 - **TASK-033 Scene jobs and bounded retries** — DONE · Media Pipeline Engineer · 4h · deps: TASK-032 · Issue [#125](https://github.com/dhruv0641/Dolla/issues/125) · implementation PR [#126](https://github.com/dhruv0641/Dolla/pull/126) merged to `develop` as `c034303`; tracker PR [#127](https://github.com/dhruv0641/Dolla/pull/127) merged as `ab9f400` and closed issue #125; 307 tests, independent review, required checks and post-merge validations passed
 - **TASK-034 Media probing and validation** — DONE · Media Pipeline Engineer · 6h · deps: TASK-033 · Issue [#129](https://github.com/dhruv0641/Dolla/issues/129), implementation PR [#130](https://github.com/dhruv0641/Dolla/pull/130); tracker closeout [#131](https://github.com/dhruv0641/Dolla/pull/131)
-- **TASK-035 Asset search and retention** — IN_PROGRESS · Media Pipeline Engineer · 8h · deps: TASK-034 · Issue [#132](https://github.com/dhruv0641/Dolla/issues/132)
+- **TASK-035 Asset search and retention** — IN_REVIEW · Media Pipeline Engineer · 8h · deps: TASK-034 · Issue [#132](https://github.com/dhruv0641/Dolla/issues/132)
 
 ## EPIC-08: Local Audio and Voiceover
 
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 45 (TASK-001 through TASK-025, TASK-026 through TASK-034, TASK-051 through TASK-056, and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-035).
-- IN_REVIEW: 0.
+- IN_PROGRESS: 0.
+- IN_REVIEW: 1 (TASK-035).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 30.
