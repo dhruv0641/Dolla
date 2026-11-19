@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-022
 - **Estimated complexity:** 12 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Issue [#85](https://github.com/dhruv0641/Dolla/issues/85) closeout is in progress; implementation PR [#86](https://github.com/dhruv0641/Dolla/pull/86) merged to `develop` as `3520bed` with pre-merge and post-merge CI success; independent review passed.
+- **GitHub:** Issue [#85](https://github.com/dhruv0641/Dolla/issues/85) closed by tracker PR [#112](https://github.com/dhruv0641/Dolla/pull/112), merged to `develop` as `b13cab9`; implementation PR [#86](https://github.com/dhruv0641/Dolla/pull/86) merged as `3520bed` with pre-merge and post-merge CI success; independent Technical Reviewer review passed.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **External prerequisite:** Satisfied for this task by direct Flow account-panel inspection and the user's explicit confirmation that the identity shown in Flow is acceptable. The address itself is intentionally omitted from repository docs.
 - **Remaining external state:** The old image job remains in `sent` with unknown final outcome. TASK-024 owns safe reconciliation; no retry or new generation is authorized by this identity confirmation.

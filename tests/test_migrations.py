@@ -49,6 +49,12 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("created_by text NOT NULL", sql)
         self.assertIn("'OPEN'", sql)
 
+    def test_generation_attempt_is_uniquely_bound_to_credit_reservation(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0006_generation_job_credit_reservation.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("REFERENCES flow_credit_reservations(id)", sql)
+        self.assertIn("CREATE UNIQUE INDEX idx_generation_job_credit_reservation", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
