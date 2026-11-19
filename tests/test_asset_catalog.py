@@ -85,7 +85,8 @@ class CatalogTests(unittest.IsolatedAsyncioTestCase):
     async def test_retention_requires_explicit_past_cutoff(self):
         with self.assertRaises(ValueError):
             await AssetCatalogRepository(FakePool([])).tombstone(
-                asset_id=uuid4(), owner_user_id="owner", created_before=datetime.now(timezone.utc),
+                asset_id=uuid4(), owner_user_id="owner",
+                created_before=datetime.now(timezone.utc) + timedelta(minutes=1),
                 reason="operator archive",
             )
 
