@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-033
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **GitHub:** Issue [#129](https://github.com/dhruv0641/Dolla/issues/129), PR [#130](https://github.com/dhruv0641/Dolla/pull/130); branch `feature/TASK-034-media-probing-and-validation`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
@@ -43,4 +43,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Implemented managed snapshot/hash checks, ffprobe metadata, configurable duration/aspect/codec/stream policies, bounded FFmpeg full decode, and decoded-duration reconciliation in `assets/probing.py`. Metadata reports integrate with the existing ingestion field.
 - Full backend suite: 314 passed; focused probing suite: 7 passed including actual local MP4/WAV fixtures and corrupt-file refusal.
 - Project-plan validation, compileall and diff checks pass. Independent Technical Reviewer approved after duration reconciliation regression correction.
-- CI and container install FFmpeg. Container execution, worker scheduling, live Flow retrieval and PostgreSQL persistence remain unverified. Required PR CI pending.
+- CI and container install FFmpeg. Container execution, worker scheduling, live Flow retrieval and PostgreSQL persistence remain unverified. PR #130 merged as `b45e711` after both required CI checks passed.
