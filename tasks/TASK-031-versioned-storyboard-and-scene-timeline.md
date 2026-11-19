@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-006, TASK-019, TASK-025, TASK-030
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **GitHub:** Issue [#119](https://github.com/dhruv0641/Dolla/issues/119); branch `feature/TASK-031-versioned-storyboard-and-scene-timeline`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
@@ -27,14 +27,16 @@ Deliver versioned storyboard and scene timeline as an independently verifiable c
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
+- Evidence: `python -m unittest discover -s tests -q` — 281 tests passed; focused storyboard/migration/API suite — 30 tests passed; `python scripts/validate_project_plan.py` — 15 epics/76 tasks/no dependency cycles; `python -m compileall -q src tests`; `git diff --check`.
+- Independent Technical Reviewer reviewed ownership scoping, optimistic concurrency, state transitions, append-only version writes, and preservation of prior scene IDs; no blockers. Live PostgreSQL migration/locking remains unverified.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

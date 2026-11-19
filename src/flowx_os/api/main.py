@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, SecretStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 from flowx_os.auth.dependencies import current_principal, require_roles
 from flowx_os.auth.tokens import Principal, Role, TokenVerifier
@@ -50,6 +50,12 @@ from flowx_os.db.content import (
     OwnedContentNotFound,
     RepositoryUnavailable,
 )
+from flowx_os.db.storyboards import (
+    InvalidStoryboardTimeline,
+    StoryboardRepository,
+    StoryboardVersionConflict,
+    StoryboardVersionRecord,
+)
 from flowx_os.db.transaction import ConnectionPool
 from flowx_os.db.flow_accounts import (
     FlowAccountAliasConflict,
@@ -66,6 +72,7 @@ from flowx_os.db.credit_reservations import (
 from flowx_os.db.credit_ledger import FlowCreditLedgerRepository
 from flowx_os.db.credit_alarms import FlowCreditRiskAlarmRepository
 from flowx_os.domain.content_state import ContentStatus
+from flowx_os.domain.storyboard import StoryboardTimeline
 from flowx_os.api.observability import RequestMetrics
 
 
@@ -161,6 +168,22 @@ class ContentResponse(BaseModel):
 
 class ContentTransition(BaseModel):
     target_status: ContentStatus
+
+
+class StoryboardSaveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    expected_version: int = Field(ge=0, le=100_000)
+    storyboard: StoryboardTimeline
+
+
+class StoryboardVersionResponse(BaseModel):
+    content_id: UUID
+    version: int
+    title: str
+    total_duration_ms: int
+    storyboard: StoryboardTimeline
+    created_at: datetime
 
 
 class FlowAccountCreate(BaseModel):
@@ -853,6 +876,110 @@ def create_app(
             target_duration_seconds=row.target_duration_seconds, priority=row.priority,
             status=row.typed_status, created_at=row.created_at,
         )
+
+    @app.put(
+        "/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+        response_model=StoryboardVersionResponse,
+        tags=["content"],
+    )
+    async def save_storyboard(
+        brand_id: UUID,
+        content_id: UUID,
+        body: StoryboardSaveRequest,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> StoryboardVersionResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            record: StoryboardVersionRecord = await StoryboardRepository(database_pool).save_version(
+                brand_id=brand_id,
+                content_id=content_id,
+                owner_user_id=principal.subject,
+                expected_version=body.expected_version,
+                storyboard=body.storyboard,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except StoryboardVersionConflict as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "storyboard_version_conflict", "current_version": exc.current_version},
+            ) from exc
+        except InvalidContentTransition as exc:
+            raise HTTPException(status_code=409, detail="storyboard_not_allowed_in_current_content_state") from exc
+        except InvalidStoryboardTimeline as exc:
+            raise HTTPException(status_code=422, detail="storyboard_duration_mismatch") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return StoryboardVersionResponse(
+            content_id=record.content_id,
+            version=record.version,
+            title=record.title,
+            total_duration_ms=record.total_duration_ms,
+            storyboard=record.storyboard,
+            created_at=record.created_at,
+        )
+
+    @app.get(
+        "/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+        response_model=StoryboardVersionResponse,
+        tags=["content"],
+    )
+    async def get_current_storyboard(
+        brand_id: UUID,
+        content_id: UUID,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> StoryboardVersionResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            versions = await StoryboardRepository(database_pool).list_versions(
+                brand_id=brand_id, content_id=content_id, owner_user_id=principal.subject,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        if not versions:
+            raise HTTPException(status_code=404, detail="storyboard_not_found")
+        record = versions[-1]
+        return StoryboardVersionResponse(
+            content_id=record.content_id,
+            version=record.version,
+            title=record.title,
+            total_duration_ms=record.total_duration_ms,
+            storyboard=record.storyboard,
+            created_at=record.created_at,
+        )
+
+    @app.get(
+        "/api/v1/brands/{brand_id}/content/{content_id}/storyboard/versions",
+        response_model=list[StoryboardVersionResponse],
+        tags=["content"],
+    )
+    async def list_storyboard_versions(
+        brand_id: UUID,
+        content_id: UUID,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> list[StoryboardVersionResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            versions = await StoryboardRepository(database_pool).list_versions(
+                brand_id=brand_id, content_id=content_id, owner_user_id=principal.subject,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [StoryboardVersionResponse(
+            content_id=record.content_id,
+            version=record.version,
+            title=record.title,
+            total_duration_ms=record.total_duration_ms,
+            storyboard=record.storyboard,
+            created_at=record.created_at,
+        ) for record in versions]
 
     return app
 
