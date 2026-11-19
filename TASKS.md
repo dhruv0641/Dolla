@@ -40,8 +40,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-021 Discover actual MCP manifest** — DONE · Flow MCP Integration Engineer · 6h · deps: TASK-002 · Issue: [#52](https://github.com/dhruv0641/Dolla/issues/52) · PR: [#82](https://github.com/dhruv0641/Dolla/pull/82) · merged to develop as `36864b1`; CI and independent review passed
 - **TASK-022 Capability-gated adapter interface** — DONE · Flow MCP Integration Engineer · 8h · deps: TASK-021 · Issue: [#83](https://github.com/dhruv0641/Dolla/issues/83) · PR: [#84](https://github.com/dhruv0641/Dolla/pull/84) · merged to develop as `8d429b9`; pre-merge and post-merge CI/independent review passed
 - **TASK-023 Auth and account health** — DONE · Flow MCP Integration Engineer · 12h · deps: TASK-022 · Issue [#85](https://github.com/dhruv0641/Dolla/issues/85) closed by tracker PR [#112](https://github.com/dhruv0641/Dolla/pull/112) (`b13cab9`) · code PR [#86](https://github.com/dhruv0641/Dolla/pull/86) merged as `3520bed`; CI and independent review passed; Flow identity directly inspected and explicitly accepted by user
-- **TASK-024 Safe submit, polling and recovery** — DONE · Flow MCP Integration Engineer · 16h · deps: TASK-023 · Issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closeout pending · PR [#114](https://github.com/dhruv0641/Dolla/pull/114) merged to `develop` as `cd2c70f`; 262 tests, independent review, PR/post-merge checks passed; existing external job remains unknown and cannot be retried
-- **TASK-025 Media retrieval and metadata** — READY · Flow MCP Integration Engineer · 4h · deps: TASK-024
+- **TASK-024 Safe submit, polling and recovery** — DONE · Flow MCP Integration Engineer · 16h · deps: TASK-023 · Issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closed by tracker PR [#115](https://github.com/dhruv0641/Dolla/pull/115), merged as `0525b02`; implementation PR [#114](https://github.com/dhruv0641/Dolla/pull/114) merged to `develop` as `cd2c70f`; 262 tests, independent review, PR/post-merge checks passed; existing external job remains unknown and cannot be retried
+- **TASK-025 Media retrieval and metadata** — IN_PROGRESS · Flow MCP Integration Engineer · 4h · deps: TASK-024 · Issue [#116](https://github.com/dhruv0641/Dolla/issues/116) · Branch: `feature/TASK-025-media-retrieval-and-metadata`
 
 ## EPIC-06: Credit and Account Management
 
@@ -130,9 +130,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Tasks: 76
 - Estimated effort: 698 engineering hours
 - DONE: 40 (TASK-001 through TASK-024, TASK-026 through TASK-030, TASK-051 through TASK-056, and TASK-072 through TASK-076).
+- IN_PROGRESS: 1 (TASK-025; implementation and local verification underway).
 - IN_REVIEW: 0.
 - IN_PROGRESS: 0.
-- READY: 1 (TASK-025; all dependencies satisfied).
+- READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 35.
 
@@ -187,6 +188,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
 
 - TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) closed by PR [#82](https://github.com/dhruv0641/Dolla/pull/82), merged to develop as `36864b1`; live manifest discovery, current API fail-closed tests, CI and independent review passed. Account verification is assigned to TASK-023; old job reconciliation to TASK-024.
+- TASK-024 issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closed by PR [#115](https://github.com/dhruv0641/Dolla/pull/115), merged as `0525b02`; TASK-025 issue [#116](https://github.com/dhruv0641/Dolla/issues/116) is open and its implementation branch is active.
 - TASK-022 issue [#83](https://github.com/dhruv0641/Dolla/issues/83) opened; capability-gated Flow MCP adapter interface is now in progress on `feature/TASK-022-capability-gated-adapter-interface`.
 - TASK-022 implementation commit `62b9a2b` and tracker commit `4600339` were pushed to PR [#84](https://github.com/dhruv0641/Dolla/pull/84); local suite 170 passed and independent technical review passed.
 - TASK-022 PR [#84](https://github.com/dhruv0641/Dolla/pull/84) merged to `develop` as `8d429b9`; required PR and post-merge CI passed; issue #83 closed.

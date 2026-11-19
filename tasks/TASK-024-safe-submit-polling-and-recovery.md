@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-023
 - **Estimated complexity:** 16 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Issue [#113](https://github.com/dhruv0641/Dolla/issues/113) tracker closeout pending; PR [#114](https://github.com/dhruv0641/Dolla/pull/114) merged to `develop` as `cd2c70f`; branch `feature/TASK-024-safe-submit-polling-and-recovery`.
+- **GitHub:** Issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closed by tracker PR [#115](https://github.com/dhruv0641/Dolla/pull/115), merged as `0525b02`; implementation PR [#114](https://github.com/dhruv0641/Dolla/pull/114) merged to `develop` as `cd2c70f`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **External prerequisite:** Reconcile existing image job `muvi26hx-46e6c8`, currently `sent` with no final result or output path, before any retry or new generation. Do not infer success/failure or blindly resubmit.
 - **External state:** Live reconciliation remains unavailable because current session status exposes no project URL for the job and there is no standalone job-ID lookup. Keep it unresolved; this does not authorize retry or generation. Application safeguards are implemented; no live Flow integration is claimed.

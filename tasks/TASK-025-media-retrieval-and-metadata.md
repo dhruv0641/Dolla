@@ -5,7 +5,8 @@
 - **Priority:** P0
 - **Dependencies:** TASK-024
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#116](https://github.com/dhruv0641/Dolla/issues/116); branch `feature/TASK-025-media-retrieval-and-metadata`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,10 +27,16 @@ Deliver media retrieval and metadata as an independently verifiable capability w
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
 - [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
-- [ ] Unsupported or unverified server capabilities fail closed.
+- [x] Unsupported or unverified server capabilities fail closed.
+
+## Implementation checkpoint — 2026-11-19
+- Added `flow_mcp.media.FlowMediaService` to read Flow project grid metadata, retain only unique UUID-backed media, and retrieve media under a configured local root. Retrieval requires a previously discovered UUID; it validates the returned path stays within an isolated temporary directory, rejects symlinks/non-regular files, enforces size limits, checks MIME type and file signatures, computes SHA-256, and atomically places an idempotently named asset in the managed root.
+- Added unit tests for malformed/duplicate metadata, URL validation, path escape, MIME/signature mismatch, size limits, unknown IDs and repeat downloads. Focused service/adapter suite: 24 passed; full repository suite: 268 passed; plan validation, compileall and diff check passed.
+- Actual Flow retrieval is not claimed: no media was downloaded from the live account. Flow video UUIDs are not guaranteed in project listings, though generation results already return file paths. Asset database lineage/retention and media probing/QC remain in downstream TASK-032/TASK-034.
+- Account-specific Flow screenshot failed; latest read-only status confirms connected/logged-in but does not expose the signed-in address. User approved the supplied identity if it appears in Flow; no account change was made.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
