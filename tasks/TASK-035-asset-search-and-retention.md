@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#132](https://github.com/dhruv0641/Dolla/issues/132); branch `feature/TASK-035-asset-search-and-retention`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
