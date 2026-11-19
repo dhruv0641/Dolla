@@ -1,6 +1,6 @@
 # Google Flow MCP Capability Matrix
 
-**Checked 2026-11-19 02:40 IST.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. The Flow account details panel now exposes a signed-in identity that does not match the requested account `dobariyadhruvv@gmail.com`; intended-account verification remains incomplete. The actual signed-in address is intentionally not recorded here. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
+**Checked 2026-11-19.** The Codex runtime exposes a connected Google Flow MCP tool server. The latest read-only `flow_status` call returned `connected: true`, `logged_in: true`, and a Flow project URL under account index `/u/1/`. The Flow account details panel identity was directly inspected and the user explicitly confirmed that the identity shown is acceptable. The exact address is intentionally not recorded here. Transport, server deployment/version, and authorization scopes are not reported in the runtime tool metadata.
 
 The connected runtime manifest includes the following tools. These are the actual exposed tool names, not names derived from `FLOW_MCP_ADAPTER_CONTRACT.json`:
 
@@ -22,8 +22,8 @@ The connected runtime manifest includes the following tools. These are the actua
 | Capability | Status | Evidence / remaining check |
 |---|---|---|
 | MCP server/tool identity | RUNTIME IDENTITY VERIFIED; HOST DETAILS UNKNOWN | Runtime exposes `mcp__google_flow` and the actual tools above. Host deployment identity/version and transport are not available in metadata. |
-| Connection/login | SESSION CONNECTED; INTENDED IDENTITY MISMATCHED | `flow_connect` and `flow_status` returned connected/logged-in. The account details panel displays an identity that differs from the requested account. |
-| Intended account authorization | MISMATCH OBSERVED; TASK-023 OPEN | Flow account details show a signed-in identity different from `dobariyadhruvv@gmail.com`. Do not use the current session to claim authorization; the user must switch to the intended account and provide direct identity confirmation. |
+| Connection/login | SESSION CONNECTED; USER ACCEPTED IDENTITY | `flow_connect` and `flow_status` returned connected/logged-in. The account details identity was directly inspected and explicitly accepted by the user. |
+| Intended account authorization | USER CONFIRMED; TASK-023 ACCEPTANCE SATISFIED | The displayed identity differs from the earlier requested address, but the user directly inspected and explicitly accepted the identity shown. Exact address is omitted from repository docs. |
 | Video generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. Paid use requires explicit user authorization. |
 | Image generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. |
 | Media retrieval | PARTIALLY VERIFIED | Video generation result schema returns downloaded paths; separate download tool accepts media UUIDs, documented for media where UUID exists. No real asset was retrieved. |

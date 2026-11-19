@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Dependencies:** TASK-023
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **External prerequisite:** Reconcile existing image job `muvi26hx-46e6c8`, currently `sent` with no final result or output path, before any retry or new generation. Do not infer success/failure or blindly resubmit.
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
