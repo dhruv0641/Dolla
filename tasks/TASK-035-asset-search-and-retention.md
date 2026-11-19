@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **GitHub:** Issue [#132](https://github.com/dhruv0641/Dolla/issues/132); PR [#133](https://github.com/dhruv0641/Dolla/pull/133); branch `feature/TASK-035-asset-search-and-retention`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
@@ -42,4 +42,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 ## Acceptance evidence
 - Owner-scoped bounded search, explicit archived-content retention, durable tombstones and recoverable physical purge are implemented. Migration 0010 locks reference writers, normalizes render input assets and rejects legacy ambiguous render manifests.
 - Full backend suite: 326 passed; focused catalog/retention suites: 18 passed; migration SQL parsed; plan validator and diff check pass. Independent Technical Reviewer found no code blocker after race and recovery corrections.
-- Live PostgreSQL migration/locking, Windows directory-entry crash durability and production cleanup remain unverified. PR CI pending.
+- Live PostgreSQL migration/locking, Windows directory-entry crash durability and production cleanup remain unverified. PR #133 merged as `31ace2c` after both required checks passed.
