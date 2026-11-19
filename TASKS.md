@@ -55,7 +55,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-031 Versioned storyboard and scene timeline** — DONE · Media Pipeline Engineer · 12h · deps: TASK-006, TASK-019, TASK-025, TASK-030 · Issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); implementation PR [#120](https://github.com/dhruv0641/Dolla/pull/120) merged as `6b6aa07`; 281 tests and required CI passed; independent review passed; live PostgreSQL unverified
 - **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
-- **TASK-033 Scene jobs and bounded retries** — IN_REVIEW · Media Pipeline Engineer · 4h · deps: TASK-032 · Issue [#125](https://github.com/dhruv0641/Dolla/issues/125) · Branch: `feature/TASK-033-scene-jobs-and-bounded-retries`; 307 tests and independent review pass; required CI pending
+- **TASK-033 Scene jobs and bounded retries** — IN_REVIEW · Media Pipeline Engineer · 4h · deps: TASK-032 · Issue [#125](https://github.com/dhruv0641/Dolla/issues/125) · Draft PR [#126](https://github.com/dhruv0641/Dolla/pull/126); 307 tests and independent review pass; required CI pending
 - **TASK-034 Media probing and validation** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-033
 - **TASK-035 Asset search and retention** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-034
 
