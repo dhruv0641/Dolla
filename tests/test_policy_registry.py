@@ -92,6 +92,22 @@ class PolicyRegistryTests(unittest.TestCase):
             with self.assertRaisesRegex(RegistryError, "max_scene_regenerations"):
                 load_registry(path)
 
+    def test_rejects_excessive_regeneration_cap(self):
+        data = {
+            "version": 1,
+            "policy": {
+                "max_scene_regenerations": 11,
+                "human_approval_required": True,
+                "autonomous_publishing_enabled": False,
+            },
+            "prompts": [{"id": "p", "version": 1, "purpose": "test", "system": "test", "template": "test", "variables": []}],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "registry.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(RegistryError, "must not exceed 10"):
+                load_registry(path)
+
     def test_rejects_invalid_json_without_echoing_file_contents(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "registry.json"

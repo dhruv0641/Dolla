@@ -12,6 +12,7 @@ from uuid import UUID
 
 from flowx_os.flow_mcp.adapter import FlowAdapter
 from flowx_os.flow_mcp.capabilities import FlowAccountAuthorization, FlowOperation, SpendAuthorization
+from flowx_os.domain.scene_jobs import SceneRetryPolicy
 
 
 class FlowJobState(StrEnum):
@@ -149,9 +150,11 @@ def observe_resume_result(payload: object, *, expected_job_id: str) -> FlowJobOb
 class FlowJobSubmissionService:
     """Persist an idempotent reservation before send; ambiguous sends never retry."""
 
-    def __init__(self, adapter: FlowAdapter, store: FlowGenerationJobStore) -> None:
+    def __init__(self, adapter: FlowAdapter, store: FlowGenerationJobStore, *,
+                 retry_policy: SceneRetryPolicy | None = None) -> None:
         self._adapter = adapter
         self._store = store
+        self._retry_policy = retry_policy or SceneRetryPolicy()
 
     async def submit(self, *, account: FlowAccountAuthorization, request: JobSubmissionRequest,
                      spend: SpendAuthorization) -> JobSubmissionClaim:
@@ -173,6 +176,7 @@ class FlowJobSubmissionService:
             or spend.max_allowed_credits < request.quoted_credits
         ):
             raise ValueError("generation submission requires a matching reserved request and explicit spend approval")
+        self._retry_policy.require_index(request.attempt_index)
         fingerprint = generation_fingerprint(
             account_ref=account.account_ref, scene_id=str(request.scene_id),
             attempt_index=request.attempt_index, model=request.model,

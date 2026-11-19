@@ -197,11 +197,15 @@ def load_registry(path: str | Path) -> PolicyRegistry:
             variables=tuple(variables),
         )
 
+    max_scene_regenerations = _positive_int(
+        policy["max_scene_regenerations"], "max_scene_regenerations", allow_zero=True
+    )
+    if max_scene_regenerations > 10:
+        raise RegistryError("max_scene_regenerations must not exceed 10")
+
     return PolicyRegistry(
         version=_positive_int(raw["version"], "version"),
-        max_scene_regenerations=_positive_int(
-            policy["max_scene_regenerations"], "max_scene_regenerations", allow_zero=True
-        ),
+        max_scene_regenerations=max_scene_regenerations,
         human_approval_required=human_approval,
         autonomous_publishing_enabled=publishing,
         prompts=MappingProxyType(prompts),
