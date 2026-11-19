@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-032
 - **Estimated complexity:** 4 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Issue [#125](https://github.com/dhruv0641/Dolla/issues/125), closed by tracker PR (pending); implementation PR [#126](https://github.com/dhruv0641/Dolla/pull/126) merged to `develop` as `c034303`.
+- **GitHub:** Issue [#125](https://github.com/dhruv0641/Dolla/issues/125), closed by tracker PR [#127](https://github.com/dhruv0641/Dolla/pull/127), merged to `develop` as `ab9f400`; implementation PR [#126](https://github.com/dhruv0641/Dolla/pull/126) merged as `c034303`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
