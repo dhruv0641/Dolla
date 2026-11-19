@@ -13,6 +13,7 @@ from typing import Any, Mapping
 
 class FlowOperation(StrEnum):
     VIDEO_GENERATE = "video_generate"
+    JOB_RESUME = "job_resume"
     SESSION_STATUS = "session_status"
     MEDIA_DOWNLOAD = "media_download"
     PROJECT_OPEN = "project_open"
@@ -40,6 +41,7 @@ class AdapterErrorCode(StrEnum):
     ARGUMENTS_INVALID = "arguments_invalid"
     TOOL_CALL_FAILED = "tool_call_failed"
     TOOL_RESULT_INVALID = "tool_result_invalid"
+    JOB_RESUME_UNSAFE = "job_resume_unsafe"
 
 
 _ERROR_MESSAGES = {
@@ -62,6 +64,7 @@ _ERROR_MESSAGES = {
     AdapterErrorCode.ARGUMENTS_INVALID: "The operation arguments do not match the discovered tool schema.",
     AdapterErrorCode.TOOL_CALL_FAILED: "The Flow MCP tool call failed.",
     AdapterErrorCode.TOOL_RESULT_INVALID: "The Flow MCP tool returned an invalid result.",
+    AdapterErrorCode.JOB_RESUME_UNSAFE: "Flow job resume must use an existing job ID and cannot submit or spend credits.",
 }
 
 

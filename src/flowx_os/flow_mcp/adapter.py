@@ -80,6 +80,17 @@ class CapabilityGatedFlowAdapter:
         account: FlowAccountAuthorization | None,
         spend: SpendAuthorization | None = None,
     ) -> Mapping[str, object]:
+        if operation == FlowOperation.JOB_RESUME and (
+            not isinstance(arguments, Mapping)
+            or arguments.get("resume") is not True
+            or arguments.get("auto_confirm") is not False
+            or not isinstance(arguments.get("job_id"), str)
+            or not arguments.get("job_id", "").strip()
+            or any(not isinstance(arguments.get(key), str) or not arguments[key].strip()
+                   for key in ("project_url", "prompt", "output_dir"))
+            or set(arguments) - {"job_id", "resume", "auto_confirm", "project_url", "prompt", "output_dir"}
+        ):
+            raise FlowAdapterError(AdapterErrorCode.JOB_RESUME_UNSAFE)
         if not self._config.enabled:
             raise FlowAdapterError(AdapterErrorCode.DISABLED)
         if not self._config.expected_server_id or not self._config.expected_account_ref:

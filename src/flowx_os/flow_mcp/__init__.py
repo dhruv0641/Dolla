@@ -25,6 +25,19 @@ from flowx_os.flow_mcp.capabilities import (
     McpTool,
     SpendAuthorization,
 )
+from flowx_os.flow_mcp.jobs import (
+    FlowGenerationJobStore,
+    FlowJobObservation,
+    FlowJobResumeService,
+    FlowJobState,
+    FlowJobSubmissionService,
+    JobSubmissionClaim,
+    JobSubmissionRequest,
+    PersistedJobResumeContext,
+    generation_fingerprint,
+    observe_in_flight_job,
+    observe_resume_result,
+)
 
 __all__ = [
     "AdapterConfig",
@@ -41,9 +54,20 @@ __all__ = [
     "FlowAdapterError",
     "FlowMcpManifest",
     "FlowOperation",
+    "FlowJobObservation",
+    "FlowGenerationJobStore",
+    "FlowJobResumeService",
+    "FlowJobState",
+    "FlowJobSubmissionService",
+    "JobSubmissionClaim",
+    "JobSubmissionRequest",
+    "PersistedJobResumeContext",
     "McpTool",
     "McpTransport",
     "SpendAuthorization",
     "SpendAuthorizationVerifier",
     "inspect_flow_account_health",
+    "generation_fingerprint",
+    "observe_in_flight_job",
+    "observe_resume_result",
 ]

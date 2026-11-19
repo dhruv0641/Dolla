@@ -68,8 +68,16 @@ def manifest(*, observed_at=NOW, spend=False):
     if spend:
         gen_tool = McpTool("observed_generation_tool", {
             "type": "object",
-            "properties": {"prompt": {"type": "string"}},
-            "required": ["prompt"],
+            "properties": {
+                "prompt": {"type": "string"},
+                "project_url": {"type": "string"},
+                "output_dir": {"type": "string"},
+                "model": {"type": "string"},
+                "duration": {"type": "integer", "enum": [4, 6, 8, 10]},
+                "ratio": {"type": "string", "enum": ["9:16", "16:9"]},
+                "auto_confirm": {"type": "boolean", "const": True},
+            },
+            "required": ["prompt", "project_url", "output_dir", "duration", "ratio", "auto_confirm"],
         })
         tools[gen_tool.name] = gen_tool
         bindings[FlowOperation.VIDEO_GENERATE] = CapabilityBinding(
@@ -225,7 +233,10 @@ class CapabilityGatedFlowAdapterTests(unittest.IsolatedAsyncioTestCase):
         transport = FakeTransport()
         spend = SpendAuthorization("approval-1", "acct-primary", FlowOperation.VIDEO_GENERATE, 2)
         await self.adapter(provider=provider, transport=transport, spend_authorizer=authorizer).invoke(
-            FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account, spend=spend
+            FlowOperation.VIDEO_GENERATE,
+            {"prompt": "x", "project_url": "https://labs.google/fx/tools/flow",
+             "output_dir": "C:/flow-output", "duration": 8, "ratio": "9:16", "auto_confirm": True},
+            account=self.account, spend=spend
         )
         self.assertEqual(authorizer.calls[0]["max_allowed_credits"], 2)
         self.assertEqual(transport.calls[0][0], "observed_generation_tool")
@@ -237,9 +248,60 @@ class CapabilityGatedFlowAdapterTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(FlowAdapterError) as caught:
             await self.adapter(
                 provider=provider, transport=transport, spend_authorizer=FakeSpendAuthorizer(False)
-            ).invoke(FlowOperation.VIDEO_GENERATE, {"prompt": "x"}, account=self.account, spend=spend)
+            ).invoke(FlowOperation.VIDEO_GENERATE,
+                     {"prompt": "x", "project_url": "https://labs.google/fx/tools/flow",
+                      "output_dir": "C:/flow-output", "duration": 8, "ratio": "9:16", "auto_confirm": True},
+                     account=self.account, spend=spend)
         self.assertEqual(caught.exception.code, AdapterErrorCode.SPEND_AUTHORIZATION_INVALID)
         self.assertEqual(transport.calls, [])
+
+    async def test_existing_job_resume_is_read_only_and_does_not_require_spend_approval(self):
+        tool = McpTool("observed_resume_tool", {
+            "type": "object",
+            "properties": {
+                "job_id": {"type": "string", "minLength": 1},
+                "resume": {"type": "boolean", "const": True},
+                "auto_confirm": {"type": "boolean", "const": False},
+                "project_url": {"type": "string"},
+                "prompt": {"type": "string"},
+                "output_dir": {"type": "string"},
+            },
+            "required": ["project_url", "prompt", "output_dir", "job_id", "resume", "auto_confirm"],
+        })
+        observed = FlowMcpManifest(
+            "runtime-server-1", NOW, {tool.name: tool},
+            {FlowOperation.JOB_RESUME: CapabilityBinding(
+                FlowOperation.JOB_RESUME, tool.name,
+                required_inputs=frozenset({"job_id", "resume", "auto_confirm"}),
+            )},
+        )
+        transport = FakeTransport({"job_id": "job-1", "status": "running"})
+        result = await self.adapter(
+            provider=FakeManifestProvider(observed), transport=transport,
+        ).invoke(
+            FlowOperation.JOB_RESUME,
+            {"job_id": "job-1", "resume": True, "auto_confirm": False,
+             "project_url": "https://labs.google/fx/tools/flow", "prompt": "original prompt",
+             "output_dir": "C:/flow-output"},
+            account=self.account,
+        )
+        self.assertEqual(result["status"], "running")
+        self.assertEqual(transport.calls[0][0], "observed_resume_tool")
+
+    async def test_existing_job_resume_rejects_any_submission_shaped_arguments(self):
+        for arguments in [
+            {"job_id": "job-1", "resume": True, "auto_confirm": True},
+            {"job_id": "job-1", "resume": False, "auto_confirm": False},
+            {"job_id": "job-1", "resume": True, "auto_confirm": False, "count": 2},
+            {"resume": True, "auto_confirm": False},
+        ]:
+            with self.subTest(arguments=arguments):
+                with self.assertRaises(FlowAdapterError) as caught:
+                    await self.adapter().invoke(
+                        FlowOperation.JOB_RESUME, arguments, account=self.account,
+                    )
+                self.assertEqual(caught.exception.code, AdapterErrorCode.JOB_RESUME_UNSAFE)
+        self.assertEqual(self.transport.calls, [])
 
     async def test_transport_error_is_sanitized(self):
         transport = FakeTransport(error=RuntimeError("secret payload and cookie"))
