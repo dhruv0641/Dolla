@@ -23,7 +23,7 @@ The connected runtime manifest includes the following tools. These are the actua
 |---|---|---|
 | MCP server/tool identity | RUNTIME IDENTITY VERIFIED; HOST DETAILS UNKNOWN | Runtime exposes `mcp__google_flow` and the actual tools above. Host deployment identity/version and transport are not available in metadata. |
 | Connection/login | SESSION CONNECTED; USER ACCEPTED IDENTITY | `flow_connect` and `flow_status` returned connected/logged-in. The account details identity was directly inspected and explicitly accepted by the user. |
-| Intended account authorization | USER CONFIRMED; TASK-023 ACCEPTANCE SATISFIED | The displayed identity differs from the earlier requested address, but the user directly inspected and explicitly accepted the identity shown. Exact address is omitted from repository docs. |
+| Intended account authorization | USER CONFIRMED; TASK-023 ACCEPTANCE SATISFIED | The user-approved address is currently shown in the Flow account panel. Exact address is omitted from repository docs. |
 | Video generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. Paid use requires explicit user authorization. |
 | Image generation | SCHEMA VERIFIED; LIVE OPERATION UNVERIFIED | Tool schema and explicit prepare/submit gate are exposed. No generation was called. |
 | Media retrieval | APP-SIDE IMPLEMENTED; LIVE UNVERIFIED | Typed service lists UUID-backed project media and downloads into an isolated directory, checking path, file type/signature, size and hash. Unit tested with fakes; no real asset was retrieved and app transport remains unconfigured. Video UUIDs are not guaranteed in project listings. |

@@ -36,7 +36,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Added `flow_mcp.media.FlowMediaService` to read Flow project grid metadata, retain only unique UUID-backed media, and retrieve media under a configured local root. Retrieval requires a previously discovered UUID; it validates the returned path stays within an isolated temporary directory, rejects symlinks/non-regular files, enforces size limits, checks MIME type and file signatures, computes SHA-256, and atomically places an idempotently named asset in the managed root.
 - Added unit tests for malformed/duplicate metadata, URL validation, path escape, MIME/signature mismatch, size limits, unknown IDs and repeat downloads. Focused service/adapter suite: 24 passed; full repository suite: 268 passed; plan validation, compileall and diff check passed.
 - Actual Flow retrieval is not claimed: no media was downloaded from the live account. Flow video UUIDs are not guaranteed in project listings, though generation results already return file paths. Asset database lineage/retention and media probing/QC remain in downstream TASK-032/TASK-034.
-- Account-specific Flow screenshot failed; latest read-only status confirms connected/logged-in but does not expose the signed-in address. User approved the supplied identity if it appears in Flow; no account change was made.
+- The Flow account panel was directly inspected through the authenticated browser and showed the identity the user approved. Exact address is omitted from repository docs. No account change was made.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
