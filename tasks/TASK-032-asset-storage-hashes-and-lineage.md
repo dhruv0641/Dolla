@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-031
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#122](https://github.com/dhruv0641/Dolla/issues/122); branch `feature/TASK-032-asset-storage-hashes-and-lineage`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
