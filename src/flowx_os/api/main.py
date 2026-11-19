@@ -50,6 +50,7 @@ from flowx_os.db.content import (
     OwnedContentNotFound,
     RepositoryUnavailable,
 )
+from flowx_os.db.assets import AssetRepository, AssetRecord, InvalidAssetLineage
 from flowx_os.db.storyboards import (
     InvalidStoryboardTimeline,
     StoryboardRepository,
@@ -72,6 +73,7 @@ from flowx_os.db.credit_reservations import (
 from flowx_os.db.credit_ledger import FlowCreditLedgerRepository
 from flowx_os.db.credit_alarms import FlowCreditRiskAlarmRepository
 from flowx_os.domain.content_state import ContentStatus
+from flowx_os.domain.assets import AssetKind
 from flowx_os.domain.storyboard import StoryboardTimeline
 from flowx_os.api.observability import RequestMetrics
 
@@ -183,6 +185,20 @@ class StoryboardVersionResponse(BaseModel):
     title: str
     total_duration_ms: int
     storyboard: StoryboardTimeline
+    created_at: datetime
+
+
+class AssetResponse(BaseModel):
+    asset_id: UUID
+    content_id: UUID
+    scene_id: UUID | None
+    source_job_id: UUID | None
+    kind: AssetKind
+    storage_uri: str
+    sha256_hex: str
+    mime_type: str
+    size_bytes: int
+    media_metadata: dict[str, object]
     created_at: datetime
 
 
@@ -980,6 +996,44 @@ def create_app(
             storyboard=record.storyboard,
             created_at=record.created_at,
         ) for record in versions]
+
+    @app.get(
+        "/api/v1/brands/{brand_id}/content/{content_id}/assets",
+        response_model=list[AssetResponse],
+        tags=["content"],
+    )
+    async def list_content_assets(
+        brand_id: UUID,
+        content_id: UUID,
+        scene_id: UUID | None = None,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> list[AssetResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            records: list[AssetRecord] = await AssetRepository(database_pool).list_for_content(
+                brand_id=brand_id, content_id=content_id,
+                owner_user_id=principal.subject, scene_id=scene_id,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except InvalidAssetLineage as exc:
+            raise HTTPException(status_code=404, detail="scene_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return [AssetResponse(
+            asset_id=record.metadata.asset_id,
+            content_id=record.metadata.content_id,
+            scene_id=record.metadata.scene_id,
+            source_job_id=record.metadata.source_job_id,
+            kind=record.metadata.kind,
+            storage_uri=record.metadata.storage_uri,
+            sha256_hex=record.metadata.sha256_hex,
+            mime_type=record.metadata.mime_type,
+            size_bytes=record.metadata.size_bytes,
+            media_metadata=record.metadata.media_metadata,
+            created_at=record.created_at,
+        ) for record in records]
 
     return app
 

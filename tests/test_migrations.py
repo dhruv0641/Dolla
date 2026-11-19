@@ -63,6 +63,14 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("storyboard_version", sql)
         self.assertIn("UNIQUE (content_id, storyboard_version, scene_index)", sql)
 
+    def test_assets_require_consistent_content_scene_and_job_lineage(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0008_asset_lineage_integrity.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("assets_scene_content_fk", sql)
+        self.assertIn("assets_job_scene_fk", sql)
+        self.assertIn("assets_scene_requires_content", sql)
+        self.assertIn("assets_sha256_hex_format", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
