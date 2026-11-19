@@ -61,12 +61,14 @@ class AssetRepository:
     async def assert_lineage(
         self, *, brand_id: UUID, content_id: UUID, owner_user_id: str,
         scene_id: UUID | None = None, source_job_id: UUID | None = None,
+        asset_id: UUID | None = None,
     ) -> None:
         """Check ownership and optional lineage before placing bytes on disk."""
         if (not isinstance(brand_id, UUID) or not isinstance(content_id, UUID)
                 or not isinstance(owner_user_id, str) or not owner_user_id.strip()
                 or (scene_id is not None and not isinstance(scene_id, UUID))
                 or (source_job_id is not None and not isinstance(source_job_id, UUID))
+                or (asset_id is not None and not isinstance(asset_id, UUID))
                 or (source_job_id is not None and scene_id is None)):
             raise ValueError("asset lineage request is invalid")
         try:
@@ -76,7 +78,15 @@ class AssetRepository:
                     owner_user_id=owner_user_id, scene_id=scene_id,
                     source_job_id=source_job_id, lock_content=False,
                 )
-        except (OwnedContentNotFound, InvalidAssetLineage, RepositoryUnavailable):
+                if asset_id is not None:
+                    cursor = await connection.execute(
+                        "SELECT retention_state FROM assets WHERE id = %s FOR SHARE",
+                        (asset_id,),
+                    )
+                    row = await cursor.fetchone()
+                    if row is not None and row[0] != "ACTIVE":
+                        raise AssetConflict("asset identity has been retired")
+        except (OwnedContentNotFound, InvalidAssetLineage, AssetConflict, RepositoryUnavailable):
             raise
         except Exception as exc:
             raise RepositoryUnavailable("asset storage is unavailable") from exc
@@ -122,7 +132,8 @@ class AssetRepository:
                     f"""SELECT {_QUALIFIED_ASSET_COLUMNS}
                        FROM assets AS a JOIN content_items AS c ON c.id = a.content_id
                        JOIN brands AS b ON b.id = c.brand_id
-                       WHERE a.id = %s AND b.owner_user_id = %s""",
+                       WHERE a.id = %s AND b.owner_user_id = %s
+                         AND a.retention_state = 'ACTIVE'""",
                     (metadata.asset_id, owner_user_id.strip()),
                 )
                 existing_row = await cursor.fetchone()
@@ -192,7 +203,8 @@ class AssetRepository:
                 query = f"""SELECT {_QUALIFIED_ASSET_COLUMNS}
                              FROM assets AS a JOIN content_items AS c ON c.id = a.content_id
                              JOIN brands AS b ON b.id = c.brand_id
-                             WHERE c.id = %s AND b.id = %s AND b.owner_user_id = %s"""
+                             WHERE c.id = %s AND b.id = %s AND b.owner_user_id = %s
+                               AND a.retention_state = 'ACTIVE'"""
                 params: tuple[object, ...] = (content_id, brand_id, owner_user_id.strip())
                 if scene_id is not None:
                     query += " AND a.scene_id = %s"

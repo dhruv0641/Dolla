@@ -99,6 +99,9 @@ class ManagedAssetStore:
         except OSError as exc:
             raise AssetStorageError("managed asset storage is unavailable") from exc
         target = object_dir / "payload"
+        purge_marker = object_dir / ".purge-intent"
+        if purge_marker.exists() or purge_marker.is_symlink():
+            raise AssetStorageConflict("asset UUID is reserved for retired media")
         fd, temp_name = tempfile.mkstemp(prefix=".stage-", dir=object_dir)
         staged = Path(temp_name)
         digest = hashlib.sha256()
@@ -118,6 +121,8 @@ class ManagedAssetStore:
                 os.fsync(output.fileno())
             if size <= 0 or not signature[1](bytes(prefix)):
                 raise AssetStorageError("asset bytes do not match the declared MIME type")
+            if purge_marker.exists() or purge_marker.is_symlink():
+                raise AssetStorageConflict("asset UUID is reserved for retired media")
             sha256_hex = digest.hexdigest()
             if target.exists():
                 if target.is_symlink() or not target.is_file():
@@ -127,15 +132,21 @@ class ManagedAssetStore:
                     raise AssetStorageConflict("asset UUID already refers to different bytes")
                 staged.unlink()
             else:
+                created_target = False
                 try:
                     # Same-directory hard-link creation is atomic and refuses to replace an existing object.
                     os.link(staged, target)
+                    created_target = True
                 except FileExistsError:
                     if target.is_symlink() or not target.is_file():
                         raise AssetStorageError("existing managed asset object is unsafe")
                     existing_hash, existing_size = _hash_file(target)
                     if existing_hash != sha256_hex or existing_size != size:
                         raise AssetStorageConflict("asset UUID already refers to different bytes")
+                if purge_marker.exists() or purge_marker.is_symlink():
+                    if created_target and target.exists() and target.stat().st_ino == staged.stat().st_ino:
+                        target.unlink()
+                    raise AssetStorageConflict("asset UUID is reserved for retired media")
                 staged.unlink(missing_ok=True)
             return StoredAssetFile(
                 asset_id=asset_id,
