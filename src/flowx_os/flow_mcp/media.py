@@ -77,6 +77,7 @@ class FlowMediaService:
         if self._root.is_symlink() or not self._root.is_dir():
             raise ValueError("media root must be a real directory")
         self._max_bytes = max_bytes
+        self._discovered: dict[str, FlowMediaItem] = {}
 
     async def list_project(self, *, project_url: str) -> FlowProjectMedia:
         if not _valid_project_url(project_url):
@@ -108,6 +109,8 @@ class FlowMediaService:
                 continue
             seen.add(normalized_id)
             items.append(FlowMediaItem(normalized_id, kind.casefold(), title))
+        for item in items:
+            self._discovered[item.media_id] = item
         return FlowProjectMedia(project_id.strip(), project_url, tuple(items))
 
     async def retrieve(self, *, item: FlowMediaItem) -> RetrievedFlowMedia:
@@ -119,6 +122,8 @@ class FlowMediaService:
             raise ValueError("media ID must be a UUID from verified Flow metadata") from exc
         if item.kind not in {"image", "video"}:
             raise ValueError("unsupported Flow media kind")
+        if self._discovered.get(media_id) != item:
+            raise ValueError("media item must exactly match metadata discovered by this service")
         stage = Path(tempfile.mkdtemp(prefix=".flow-download-", dir=self._root)).resolve()
         try:
             try:
@@ -161,7 +166,11 @@ class FlowMediaService:
             if destination.exists():
                 if destination.is_symlink() or not destination.is_file() or destination.stat().st_size != size:
                     raise FlowMediaError("existing managed media path conflicts with retrieved data")
-                existing_hash = hashlib.sha256(destination.read_bytes()).hexdigest()
+                existing_digest = hashlib.sha256()
+                with destination.open("rb") as existing_stream:
+                    while block := existing_stream.read(1024 * 1024):
+                        existing_digest.update(block)
+                existing_hash = existing_digest.hexdigest()
                 if existing_hash != sha256_hex:
                     raise FlowMediaError("existing managed media path has a different content hash")
             else:

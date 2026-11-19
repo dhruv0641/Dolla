@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from flowx_os.flow_mcp.capabilities import FlowAccountAuthorization, FlowOperation, _issue_flow_account_authorization
+from flowx_os.flow_mcp.capabilities import FlowOperation, _issue_flow_account_authorization
 from flowx_os.flow_mcp.media import FlowMediaError, FlowMediaItem, FlowMediaService
 
 
@@ -41,6 +41,10 @@ class FlowMediaServiceTests(unittest.IsolatedAsyncioTestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
 
+    async def discover_item(self, service):
+        project = await service.list_project(project_url="https://flow.google.com/project/project-1")
+        return project.items[0]
+
     async def test_project_listing_keeps_only_valid_unique_media_uuids(self):
         adapter = FakeFlowAdapter()
         service = FlowMediaService(adapter, account=self.account, media_root=Path(self.tmp.name))
@@ -52,14 +56,14 @@ class FlowMediaServiceTests(unittest.IsolatedAsyncioTestCase):
     async def test_retrieval_verifies_bytes_records_hash_and_is_idempotent(self):
         adapter = FakeFlowAdapter()
         service = FlowMediaService(adapter, account=self.account, media_root=Path(self.tmp.name))
-        item = FlowMediaItem(MEDIA_ID, "image", "still")
+        item = await self.discover_item(service)
         first = await service.retrieve(item=item)
         second = await service.retrieve(item=item)
         self.assertEqual(first, second)
         self.assertEqual(first.mime_type, "image/png")
         self.assertEqual(first.size_bytes, first.storage_path.stat().st_size)
         self.assertEqual(len(first.sha256_hex), 64)
-        self.assertEqual(len(adapter.calls), 2)
+        self.assertEqual(len(adapter.calls), 3)
         self.assertFalse(any(path.name.startswith(".flow-download-") for path in Path(self.tmp.name).iterdir()))
 
     async def test_project_url_must_be_https_flow_project(self):
@@ -72,8 +76,9 @@ class FlowMediaServiceTests(unittest.IsolatedAsyncioTestCase):
         outside.write_bytes(b"\x89PNG\r\n\x1a\n" + b"x" * 32)
         adapter = FakeFlowAdapter(download=lambda _: {"path": str(outside), "content_type": "image/png"})
         service = FlowMediaService(adapter, account=self.account, media_root=Path(self.tmp.name) / "managed")
+        item = await self.discover_item(service)
         with self.assertRaises(FlowMediaError):
-            await service.retrieve(item=FlowMediaItem(MEDIA_ID, "image", "still"))
+            await service.retrieve(item=item)
 
     async def test_mime_signature_conflict_and_size_limit_fail_closed(self):
         def wrong_mime(args):
@@ -82,19 +87,29 @@ class FlowMediaServiceTests(unittest.IsolatedAsyncioTestCase):
             return {"path": str(path), "content_type": "image/jpeg"}
         service = FlowMediaService(FakeFlowAdapter(download=wrong_mime), account=self.account,
                                    media_root=Path(self.tmp.name) / "wrong")
+        item = await self.discover_item(service)
         with self.assertRaises(FlowMediaError):
-            await service.retrieve(item=FlowMediaItem(MEDIA_ID, "image", "still"))
+            await service.retrieve(item=item)
 
         service = FlowMediaService(FakeFlowAdapter(), account=self.account,
                                    media_root=Path(self.tmp.name) / "small", max_bytes=8)
+        item = await self.discover_item(service)
         with self.assertRaises(FlowMediaError):
-            await service.retrieve(item=FlowMediaItem(MEDIA_ID, "image", "still"))
+            await service.retrieve(item=item)
 
     async def test_unknown_or_invalid_media_items_are_rejected_before_tool_call(self):
         adapter = FakeFlowAdapter()
         service = FlowMediaService(adapter, account=self.account, media_root=Path(self.tmp.name))
         with self.assertRaises(ValueError):
             await service.retrieve(item=FlowMediaItem("../x", "image", "bad"))
+        self.assertEqual(adapter.calls, [])
+
+    async def test_valid_uuid_not_discovered_by_this_service_is_rejected(self):
+        adapter = FakeFlowAdapter()
+        service = FlowMediaService(adapter, account=self.account, media_root=Path(self.tmp.name))
+        undiscovered = FlowMediaItem("fe5a1ea3-4d3b-4b89-b56f-9c3f6e93595c", "image", "forged")
+        with self.assertRaises(ValueError):
+            await service.retrieve(item=undiscovered)
         self.assertEqual(adapter.calls, [])
 
 
