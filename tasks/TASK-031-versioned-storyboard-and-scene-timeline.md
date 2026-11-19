@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-006, TASK-019, TASK-025, TASK-030
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#119](https://github.com/dhruv0641/Dolla/issues/119); branch `feature/TASK-031-versioned-storyboard-and-scene-timeline`.
+- **Status:** DONE
+- **GitHub:** Issue [#119](https://github.com/dhruv0641/Dolla/issues/119), tracker closeout pending; implementation PR [#120](https://github.com/dhruv0641/Dolla/pull/120) merged to `develop` as `6b6aa07`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
