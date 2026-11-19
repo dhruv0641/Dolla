@@ -5,8 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-032
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
-- **GitHub:** Issue [#125](https://github.com/dhruv0641/Dolla/issues/125); branch `feature/TASK-033-scene-jobs-and-bounded-retries`.
+- **Status:** DONE
+- **GitHub:** Issue [#125](https://github.com/dhruv0641/Dolla/issues/125), closed by tracker PR (pending); implementation PR [#126](https://github.com/dhruv0641/Dolla/pull/126) merged to `develop` as `c034303`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -43,7 +43,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - All migration SQL parses with `pglast`; `python -m compileall -q src tests` and `git diff --check` pass.
 - Independent Technical Reviewer found no blockers after the historical retry-decision replay regression was fixed.
 - PostgreSQL migration execution/locking and live Flow job operations are not verified; no Flow calls or paid operations were made.
-- Required GitHub CI is pending on the implementation PR.
+- Implementation PR #126 passed both required `validate-project-plan` checks; post-merge validation on `c034303` passed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
