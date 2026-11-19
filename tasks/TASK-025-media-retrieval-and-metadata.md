@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-024
 - **Estimated complexity:** 4 engineering hours (planning estimate)
 - **Status:** DONE
-- **GitHub:** Implementation PR [#117](https://github.com/dhruv0641/Dolla/pull/117) merged to `develop` as `89204d6`; issue [#116](https://github.com/dhruv0641/Dolla/issues/116) closes through tracker PR [#118](https://github.com/dhruv0641/Dolla/pull/118); branch `feature/TASK-025-media-retrieval-and-metadata`.
+- **GitHub:** Implementation PR [#117](https://github.com/dhruv0641/Dolla/pull/117) merged to `develop` as `89204d6`; issue [#116](https://github.com/dhruv0641/Dolla/issues/116) closed by tracker PR [#118](https://github.com/dhruv0641/Dolla/pull/118), merged as `d5cf6c8`; branch `feature/TASK-025-media-retrieval-and-metadata`.
 - **Related source documents:** FLOW_MCP_ADAPTER_CONTRACT.json; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 

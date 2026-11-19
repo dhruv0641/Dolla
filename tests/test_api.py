@@ -4,6 +4,9 @@ import hashlib
 import hmac
 import json
 import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from uuid import UUID
 
 import httpx
 
@@ -109,8 +112,89 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
                 "/api/v1/flow-accounts/{account_id}/credit-alarms",
                 "/api/v1/flow-accounts/{account_id}/credit-reservations/{request_id}/unknown-spend",
                 "/api/v1/brands/{brand_id}/content/{content_id}/transition",
+                "/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+                "/api/v1/brands/{brand_id}/content/{content_id}/storyboard/versions",
             },
         )
+
+    async def test_storyboard_route_persists_owner_scoped_version_and_returns_snapshot(self) -> None:
+        key = b"test-key-that-is-long-enough-for-hmac"
+        verifier = TokenVerifier(key, issuer="flowx-test", audience="flowx-api", clock_skew_seconds=0)
+        now = int(time.time())
+        content_id = "64135a38-e28b-4e22-bebf-c1906761b681"
+        brand_id = "b6bb37b4-a27f-4de4-9277-45a6449aef01"
+        storyboard = {
+            "title": "A falling apple",
+            "scenes": [
+                {"scene_number": 1, "start_ms": 0, "end_ms": 4_000, "beat": "Setup", "visual_prompt": "Tree"},
+                {"scene_number": 2, "start_ms": 4_000, "end_ms": 8_000, "beat": "Turn", "visual_prompt": "Apple"},
+            ],
+        }
+        snapshot = {
+            "title": "A falling apple",
+            "scenes": [
+                {"scene_number": 1, "start_ms": 0, "end_ms": 4_000, "beat": "Setup", "narration_text": "", "visual_prompt": "Tree", "prompt_version": 1},
+                {"scene_number": 2, "start_ms": 4_000, "end_ms": 8_000, "beat": "Turn", "narration_text": "", "visual_prompt": "Apple", "prompt_version": 1},
+            ],
+        }
+        pool = _FakePool([
+            _FakeCursor((0, 8, "SCRIPT_READY")),
+            _FakeCursor((UUID(content_id), 1, "A falling apple", 8_000, snapshot, datetime.now(timezone.utc))),
+            _FakeCursor(),
+            _FakeCursor(),
+            _FakeCursor((1, "STORYBOARD_READY")),
+        ])
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(token_verifier=verifier, database_pool=pool)),
+            base_url="http://testserver",
+        )
+        async with client:
+            response = await client.put(
+                f"/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+                headers={"Authorization": f"Bearer {_signed_token(key, roles=['operator'], now=now)}"},
+                json={"expected_version": 0, "storyboard": storyboard},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["version"], 1)
+        self.assertEqual(response.json()["storyboard"], snapshot)
+        self.assertEqual(pool.connection_value.queries[0][1], (UUID(content_id), UUID(brand_id), "operator-1"))
+
+    async def test_storyboard_route_reports_conflicts_and_unconfigured_database(self) -> None:
+        key = b"test-key-that-is-long-enough-for-hmac"
+        verifier = TokenVerifier(key, issuer="flowx-test", audience="flowx-api", clock_skew_seconds=0)
+        now = int(time.time())
+        content_id = "64135a38-e28b-4e22-bebf-c1906761b681"
+        brand_id = "b6bb37b4-a27f-4de4-9277-45a6449aef01"
+        headers = {"Authorization": f"Bearer {_signed_token(key, roles=['operator'], now=now)}"}
+        request_body = {"expected_version": 0, "storyboard": {"title": "A", "scenes": [
+            {"scene_number": 1, "start_ms": 0, "end_ms": 8_000, "beat": "Setup", "visual_prompt": "Tree"},
+        ]}}
+        pool = _FakePool([_FakeCursor((1, 8, "STORYBOARD_READY"))])
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(token_verifier=verifier, database_pool=pool)),
+            base_url="http://testserver",
+        )
+        async with client:
+            conflict = await client.put(
+                f"/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+                headers=headers, json=request_body,
+            )
+        self.assertEqual(conflict.status_code, 409)
+        self.assertEqual(conflict.json()["detail"], {
+            "code": "storyboard_version_conflict", "current_version": 1,
+        })
+
+        unconfigured = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app(token_verifier=verifier)),
+            base_url="http://testserver",
+        )
+        async with unconfigured:
+            response = await unconfigured.put(
+                f"/api/v1/brands/{brand_id}/content/{content_id}/storyboard",
+                headers=headers, json=request_body,
+            )
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["detail"], "database_not_configured")
 
     async def test_authenticated_identity_route_fails_closed_when_not_configured(self) -> None:
         response = await self.client.get("/api/v1/me")
@@ -173,6 +257,37 @@ def _signed_token(key: bytes, *, roles: list[str], now: int) -> str:
     signing_input = f"{header}.{claims}"
     signature = _b64(hmac.new(key, signing_input.encode("ascii"), hashlib.sha256).digest())
     return f"{signing_input}.{signature}"
+
+
+class _FakeCursor:
+    def __init__(self, one=None):
+        self.one = one
+
+    async def fetchone(self):
+        return self.one
+
+
+class _FakeConnection:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.queries = []
+
+    @asynccontextmanager
+    async def transaction(self):
+        yield
+
+    async def execute(self, query, params=None):
+        self.queries.append((query, params))
+        return self.responses.pop(0)
+
+
+class _FakePool:
+    def __init__(self, responses):
+        self.connection_value = _FakeConnection(responses)
+
+    @asynccontextmanager
+    async def connection(self):
+        yield self.connection_value
 
 
 if __name__ == "__main__":

@@ -55,6 +55,14 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("REFERENCES flow_credit_reservations(id)", sql)
         self.assertIn("CREATE UNIQUE INDEX idx_generation_job_credit_reservation", sql)
 
+    def test_storyboard_version_storage_and_scene_version_scoping(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0007_versioned_storyboard_timeline.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE storyboard_versions", sql)
+        self.assertIn("UNIQUE (content_id, version)", sql)
+        self.assertIn("storyboard_version", sql)
+        self.assertIn("UNIQUE (content_id, storyboard_version, scene_index)", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

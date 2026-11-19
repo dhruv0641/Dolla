@@ -21,3 +21,5 @@
 | `ARCHIVED` | none (terminal) |
 
 The generic transition API cannot enter or leave `SCHEDULED`, `PARTIALLY_PUBLISHED` or `PUBLISHED`. Scheduling and publishing states have separate job records and require a future workflow that updates both records atomically and verifies remote publication before recording its outcome. Operators cannot use this generic endpoint to mark content scheduled or published. `FAILED` can only be archived until a versioned artifact reset/retry workflow exists, so stale scripts, scenes or assets cannot be reused accidentally. Live database concurrency behavior remains unverified until PostgreSQL integration tests are available.
+
+The storyboard write endpoint has its own guarded lifecycle behavior: the first version can be saved only from `SCRIPT_READY` or `NEEDS_REVIEW`, transitioning content to `STORYBOARD_READY`; later versions of `STORYBOARD_READY` content preserve that state. Every version is an immutable snapshot, and scene rows are keyed by storyboard version so prior generations and asset lineage remain attached to the scene version they used. Writes require the caller's expected version and reject stale concurrent edits.
