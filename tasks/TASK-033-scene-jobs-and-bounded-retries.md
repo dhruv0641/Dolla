@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-032
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub:** Issue [#125](https://github.com/dhruv0641/Dolla/issues/125); branch `feature/TASK-033-scene-jobs-and-bounded-retries`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 

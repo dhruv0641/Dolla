@@ -54,8 +54,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-07: Scene and Media Management
 
 - **TASK-031 Versioned storyboard and scene timeline** — DONE · Media Pipeline Engineer · 12h · deps: TASK-006, TASK-019, TASK-025, TASK-030 · Issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); implementation PR [#120](https://github.com/dhruv0641/Dolla/pull/120) merged as `6b6aa07`; 281 tests and required CI passed; independent review passed; live PostgreSQL unverified
-- **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122), tracker closeout pending · implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
-- **TASK-033 Scene jobs and bounded retries** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-032
+- **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
+- **TASK-033 Scene jobs and bounded retries** — IN_PROGRESS · Media Pipeline Engineer · 4h · deps: TASK-032 · Issue [#125](https://github.com/dhruv0641/Dolla/issues/125) · Branch: `feature/TASK-033-scene-jobs-and-bounded-retries`
 - **TASK-034 Media probing and validation** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-033
 - **TASK-035 Asset search and retention** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-034
 
@@ -132,10 +132,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - DONE: 43 (TASK-001 through TASK-025, TASK-026 through TASK-032, TASK-051 through TASK-056, and TASK-072 through TASK-076).
 - IN_REVIEW: 0.
 - TESTING: 0.
-- IN_PROGRESS: 0.
+- IN_PROGRESS: 1 (TASK-033; dependencies satisfied, implementation starting).
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 33.
+- BACKLOG: 32.
 
 ## GitHub delivery references
 
@@ -188,7 +188,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - TASK-020 issue [#49](https://github.com/dhruv0641/Dolla/issues/49) and PR [#50](https://github.com/dhruv0641/Dolla/pull/50) merged to `develop` as `f25e3d1`; checks and independent review passed.
 
 - TASK-021 issue [#52](https://github.com/dhruv0641/Dolla/issues/52) closed by PR [#82](https://github.com/dhruv0641/Dolla/pull/82), merged to develop as `36864b1`; live manifest discovery, current API fail-closed tests, CI and independent review passed. Account verification is assigned to TASK-023; old job reconciliation to TASK-024.
-- TASK-024 issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closed by PR [#115](https://github.com/dhruv0641/Dolla/pull/115), merged as `0525b02`; TASK-025 issue [#116](https://github.com/dhruv0641/Dolla/issues/116) closed by tracker PR [#118](https://github.com/dhruv0641/Dolla/pull/118), merged as `d5cf6c8`; TASK-031 issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); TASK-032 issue [#122](https://github.com/dhruv0641/Dolla/issues/122) is ready for tracker closeout after implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged.
+- TASK-024 issue [#113](https://github.com/dhruv0641/Dolla/issues/113) closed by PR [#115](https://github.com/dhruv0641/Dolla/pull/115), merged as `0525b02`; TASK-025 issue [#116](https://github.com/dhruv0641/Dolla/issues/116) closed by tracker PR [#118](https://github.com/dhruv0641/Dolla/pull/118), merged as `d5cf6c8`; TASK-031 issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); TASK-032 issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); TASK-033 issue [#125](https://github.com/dhruv0641/Dolla/issues/125) is open and its branch is active.
 - TASK-022 issue [#83](https://github.com/dhruv0641/Dolla/issues/83) opened; capability-gated Flow MCP adapter interface is now in progress on `feature/TASK-022-capability-gated-adapter-interface`.
 - TASK-022 implementation commit `62b9a2b` and tracker commit `4600339` were pushed to PR [#84](https://github.com/dhruv0641/Dolla/pull/84); local suite 170 passed and independent technical review passed.
 - TASK-022 PR [#84](https://github.com/dhruv0641/Dolla/pull/84) merged to `develop` as `8d429b9`; required PR and post-merge CI passed; issue #83 closed.
