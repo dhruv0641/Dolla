@@ -6,7 +6,7 @@
 - **Dependencies:** TASK-033
 - **Estimated complexity:** 6 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
-- **GitHub:** Issue [#129](https://github.com/dhruv0641/Dolla/issues/129); branch `feature/TASK-034-media-probing-and-validation`.
+- **GitHub:** Issue [#129](https://github.com/dhruv0641/Dolla/issues/129), PR [#130](https://github.com/dhruv0641/Dolla/pull/130); branch `feature/TASK-034-media-probing-and-validation`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
