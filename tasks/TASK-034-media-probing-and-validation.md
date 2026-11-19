@@ -5,7 +5,8 @@
 - **Priority:** P1
 - **Dependencies:** TASK-033
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
+- **GitHub:** Issue [#129](https://github.com/dhruv0641/Dolla/issues/129), PR [#130](https://github.com/dhruv0641/Dolla/pull/130); branch `feature/TASK-034-media-probing-and-validation`.
 - **Related source documents:** SCHEMA.sql; ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -26,9 +27,9 @@ Deliver media probing and validation as an independently verifiable capability w
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -37,3 +38,9 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Acceptance evidence
+- Implemented managed snapshot/hash checks, ffprobe metadata, configurable duration/aspect/codec/stream policies, bounded FFmpeg full decode, and decoded-duration reconciliation in `assets/probing.py`. Metadata reports integrate with the existing ingestion field.
+- Full backend suite: 314 passed; focused probing suite: 7 passed including actual local MP4/WAV fixtures and corrupt-file refusal.
+- Project-plan validation, compileall and diff checks pass. Independent Technical Reviewer approved after duration reconciliation regression correction.
+- CI and container install FFmpeg. Container execution, worker scheduling, live Flow retrieval and PostgreSQL persistence remain unverified. Required PR CI pending.
