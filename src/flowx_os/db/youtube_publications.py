@@ -118,13 +118,13 @@ class YouTubePublicationRepository:
 
                 cursor = await connection.execute(
                     f"""INSERT INTO publication_jobs
-                         (id, request_id, request_fingerprint, content_id, channel_id,
+                         (id, publication_contract, request_id, request_fingerprint, content_id, channel_id,
                           asset_id, approval_decision_id, artifact_version,
                           channel_external_id_snapshot, credentials_ref_snapshot,
                           destination_fingerprint,
                           asset_sha256_hex, asset_size_bytes, intended_privacy_status,
                           platform_metadata, status)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                       VALUES (%s, 'YOUTUBE_V1', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                %s, %s, %s, %s::jsonb, 'DRAFT')
                        ON CONFLICT (request_id) WHERE request_id IS NOT NULL DO NOTHING
                        RETURNING id""",
