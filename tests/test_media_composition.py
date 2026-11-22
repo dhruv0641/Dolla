@@ -113,7 +113,11 @@ class CompositionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first, second)
         self.assertEqual(first.inputs_manifest()["asset_ids"], [str(item) for item in request().input_asset_ids])
         self.assertEqual([item.role for item in first.inputs], ["SCENE", "SCENE", "NARRATION", "SUBTITLE"])
-        self.assertNotIn("path", str(first.command_manifest()).lower())
+        command = first.command_manifest()
+        self.assertEqual(command["input_roles"], ["SCENE", "SCENE", "NARRATION", "SUBTITLE"])
+        self.assertEqual(command["scene_timeline"][1]["start_ms"], 200)
+        self.assertEqual((command["narration_input_position"], command["subtitle_input_position"]), (2, 3))
+        self.assertNotIn("path", str(command).lower())
 
     def test_manifest_rejects_scene_audio_and_subtitle_lineage_mismatch(self):
         sources = {}

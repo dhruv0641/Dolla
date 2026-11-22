@@ -126,7 +126,25 @@ class CompositionManifest(BaseModel):
         return {"asset_ids": [str(item.asset_id) for item in self.inputs]}
 
     def command_manifest(self) -> dict[str, object]:
-        return self.model_dump(mode="json", exclude={"inputs", "content_id", "output_asset_id"})
+        payload = self.model_dump(mode="json", exclude={"inputs", "content_id", "output_asset_id"})
+        payload["input_roles"] = [item.role for item in self.inputs]
+        payload["scene_timeline"] = [
+            {
+                "input_position": item.position,
+                "scene_number": item.scene_number,
+                "scene_id": str(item.scene_id),
+                "start_ms": item.start_ms,
+                "end_ms": item.end_ms,
+            }
+            for item in self.inputs if item.role == "SCENE"
+        ]
+        payload["narration_input_position"] = next(
+            item.position for item in self.inputs if item.role == "NARRATION"
+        )
+        payload["subtitle_input_position"] = next(
+            item.position for item in self.inputs if item.role == "SUBTITLE"
+        )
+        return payload
 
 
 @dataclass(frozen=True, slots=True)

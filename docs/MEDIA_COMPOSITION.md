@@ -7,7 +7,7 @@
 - Scene numbers begin at one, scene intervals begin at 0 ms and have no gaps or overlaps. Each video asset must be a `RAW_FLOW_CLIP` whose `scene_id` matches its timeline entry.
 - Narration must be the content-level `NARRATION` WAV produced by normalization version 1, with `timeline_start_ms = 0` and duration equal to the complete scene timeline.
 - Subtitles must be the content-level `CAPTION_SRT` version 1 for the same storyboard version and normalized narration asset, starting at 0 and ending at the timeline duration.
-- All input and output UUIDs are distinct. The normalized `inputs_manifest` lists scene assets in playback order, followed by narration and subtitles. The path-free command manifest and SHA-256 fingerprint bind all hashes, timings, roles, versions and output profile.
+- All input and output UUIDs are distinct. The normalized `inputs_manifest` lists scene assets in playback order, followed by narration and subtitles. The path-free command manifest records input roles/positions and the complete scene timeline so the split database manifests remain replayable; the SHA-256 fingerprint additionally binds all input hashes, timings, roles, versions and output profile.
 
 ## Fixed execution
 
