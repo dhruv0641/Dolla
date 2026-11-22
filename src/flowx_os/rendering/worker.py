@@ -276,6 +276,8 @@ def _inspect_output(path: Path, *, max_bytes: int) -> tuple[str, int]:
 
 def _validate_output_media(
     path: Path, *, ffprobe: str, timeout: float, output_limit: int, policy: RenderPolicy,
+    require_audio: bool = False, require_subtitle: bool = False,
+    expected_duration_seconds: float | None = None,
 ) -> None:
     try:
         raw = _run(
@@ -290,6 +292,7 @@ def _validate_output_media(
         streams = payload["streams"]
         videos = [item for item in streams if isinstance(item, dict) and item.get("codec_type") == "video"]
         audios = [item for item in streams if isinstance(item, dict) and item.get("codec_type") == "audio"]
+        subtitles = [item for item in streams if isinstance(item, dict) and item.get("codec_type") == "subtitle"]
         if not math.isfinite(duration) or duration <= 0 or len(videos) != 1:
             raise ValueError("video stream or duration missing")
         video = videos[0]
@@ -298,7 +301,10 @@ def _validate_output_media(
                 or video.get("height") != policy.target_height
                 or video.get("sample_aspect_ratio") not in {"1:1", None}
                 or not math.isfinite(rate) or abs(rate - policy.frame_rate) > 0.001
-                or any(item.get("codec_name") != "aac" for item in audios)):
+                or any(item.get("codec_name") != "aac" for item in audios)
+                or (require_audio and len(audios) != 1)
+                or (require_subtitle and (len(subtitles) != 1 or subtitles[0].get("codec_name") != "mov_text"))
+                or (expected_duration_seconds is not None and abs(duration - expected_duration_seconds) > 0.25)):
             raise ValueError("normalized media profile mismatch")
     except (MediaProbeError, ValueError, TypeError, KeyError, ZeroDivisionError, json.JSONDecodeError) as exc:
         raise RenderError("OUTPUT_MEDIA_INVALID", "render output failed media validation") from exc
