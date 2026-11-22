@@ -384,6 +384,8 @@ class InstagramPublisher:
                 "PUBLICATION_OUTCOME_UNKNOWN", "Instagram container identity requires reconciliation",
                 ambiguous=True,
             )
+        if claim.remote_media_id is not None:
+            return await self._verify_safely(claim)
         container_status = await self._get_container_safely(claim)
         claim = await self._store.record_container_status(claim=claim, remote=container_status)
         if container_status.state in {InstagramContainerState.ERROR, InstagramContainerState.EXPIRED}:
@@ -460,6 +462,10 @@ class InstagramPublisher:
                 or now - authorization.checked_at > maximum_age
                 or authorization.valid_until <= now):
             raise InstagramError("AUTHORIZATION_INVALID", "Instagram authorization is not ready")
+        # The provider check is asynchronous. Re-read the owner-scoped channel
+        # immediately afterwards so revocation or destination changes during the
+        # await cannot authorize the following external action.
+        await self._store.assert_network_ready(claim)
 
     async def _get_container_safely(
         self, claim: InstagramPublicationClaim,
@@ -489,6 +495,10 @@ class InstagramPublisher:
     ) -> InstagramPublicationResult:
         try:
             container = await self._get_container_safely(claim)
+            if container.state != InstagramContainerState.PUBLISHED:
+                return InstagramPublicationResult(
+                    claim.publication_id, "VERIFY_PENDING", claim.remote_media_id,
+                )
             await self._authorize(claim)
             remote = await self._transport.get_media(
                 credentials_ref=claim.credentials_ref,
@@ -497,10 +507,6 @@ class InstagramPublisher:
             if (remote.media_id != claim.remote_media_id
                     or remote.owner_id != claim.professional_account_id):
                 raise InstagramError("REMOTE_IDENTITY_MISMATCH", "Instagram media identity is invalid")
-            if container.state != InstagramContainerState.PUBLISHED:
-                return InstagramPublicationResult(
-                    claim.publication_id, "VERIFY_PENDING", claim.remote_media_id,
-                )
             return await self._store.record_verification(
                 claim=claim, container=container, media=remote,
             )

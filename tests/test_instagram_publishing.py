@@ -231,6 +231,33 @@ class BlockingCreateTransport(FakeTransport):
         return await super().create_reel_container(**kwargs)
 
 
+class RevocableStore(FakeStore):
+    def __init__(self, claim):
+        super().__init__(claim)
+        self.revoked = False
+
+    async def assert_network_ready(self, claim):
+        await super().assert_network_ready(claim)
+        if self.revoked:
+            raise InstagramError("CHANNEL_REVOKED", "Instagram channel authorization changed")
+
+
+class BlockingAuthorizationTransport(FakeTransport):
+    def __init__(self, *, block_on_call=1, statuses=None):
+        super().__init__(statuses=statuses)
+        self.block_on_call = block_on_call
+        self.authorization_count = 0
+        self.authorization_started = asyncio.Event()
+        self.authorization_release = asyncio.Event()
+
+    async def check_authorization(self, **kwargs):
+        self.authorization_count += 1
+        if self.authorization_count == self.block_on_call:
+            self.authorization_started.set()
+            await self.authorization_release.wait()
+        return await super().check_authorization(**kwargs)
+
+
 class InstagramPublishingTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -327,6 +354,50 @@ class InstagramPublishingTests(unittest.IsolatedAsyncioTestCase):
             await self.publisher(store, transport).publish(self.req)
         self.assertEqual(retry.exception.code, "PUBLICATION_OUTCOME_UNKNOWN")
         self.assertEqual([call[0] for call in transport.calls].count("publish"), 1)
+
+    async def test_media_identity_reconciliation_does_not_regress_on_finished_container(self):
+        current = claim_for(
+            self.req, self.data, status="VERIFY_PENDING", phase="MEDIA_RECORDED",
+            remote_container_id="container_123", remote_media_id="media_123",
+            verification_attempt_count=1,
+        )
+        store = FakeStore(current)
+        transport = FakeTransport(statuses=[InstagramContainerState.FINISHED])
+        result = await self.publisher(store, transport).reconcile(self.req)
+        self.assertEqual(result.status, "VERIFY_PENDING")
+        self.assertEqual(store.current.phase, "MEDIA_RECORDED")
+        self.assertNotIn("container_status", [call[0] for call in store.calls])
+        self.assertNotIn("publish", [call[0] for call in transport.calls])
+
+    async def test_revocation_during_authorization_blocks_container_creation(self):
+        store = RevocableStore(claim_for(self.req, self.data))
+        transport = BlockingAuthorizationTransport(block_on_call=1)
+        task = asyncio.create_task(self.publisher(store, transport).publish(self.req))
+        await transport.authorization_started.wait()
+        store.revoked = True
+        transport.authorization_release.set()
+        with self.assertRaises(InstagramError) as caught:
+            await task
+        self.assertEqual(caught.exception.code, "CHANNEL_REVOKED")
+        self.assertNotIn("create", [call[0] for call in transport.calls])
+
+    async def test_revocation_during_publish_authorization_blocks_publish_call(self):
+        current = claim_for(
+            self.req, self.data, status="PROCESSING", phase="CONTAINER_READY",
+            remote_container_id="container_123", verification_attempt_count=1,
+        )
+        store = RevocableStore(current)
+        transport = BlockingAuthorizationTransport(
+            block_on_call=3, statuses=[InstagramContainerState.FINISHED],
+        )
+        task = asyncio.create_task(self.publisher(store, transport).publish(self.req))
+        await transport.authorization_started.wait()
+        store.revoked = True
+        transport.authorization_release.set()
+        with self.assertRaises(InstagramError) as caught:
+            await task
+        self.assertEqual(caught.exception.code, "CHANNEL_REVOKED")
+        self.assertNotIn("publish", [call[0] for call in transport.calls])
 
     async def test_atomic_container_reservation_has_single_winner(self):
         store = FakeStore(claim_for(self.req, self.data))
