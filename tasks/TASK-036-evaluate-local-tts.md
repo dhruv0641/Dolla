@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-031
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **GitHub:** Issue [#135](https://github.com/dhruv0641/Dolla/issues/135); branch `feature/TASK-036-evaluate-local-tts`.
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
@@ -38,3 +38,10 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Acceptance evidence
+- [x] Added a provider-neutral evaluator for explicitly configured local TTS executables with bounded version and optional voice-list probes.
+- [x] Probes use closed stdin, no shell, live bounded stdout/stderr readers and timeouts; unavailable, failed, timed-out and oversized probes return explicit evidence codes.
+- [x] Licensing remains `UNVERIFIED`; no synthesis, model download, network call or paid service is performed.
+- [x] Focused evaluator suite: 4 passed, including fake-engine discovery and output-limit handling. Full backend suite: 330 passed. Compileall, diff check and project-plan validation pass.
+- [x] Operator documentation is in `docs/TTS_EVALUATION.md`; local engine availability on this host/CI remains unverified until an operator configures candidates.
