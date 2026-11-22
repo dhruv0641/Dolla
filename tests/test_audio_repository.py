@@ -31,7 +31,7 @@ def voice_profile():
         license_status=VoiceLicenseStatus.VERIFIED,
         license_reference="docs/licenses/local-test.md",
         consent_status=VoiceConsentStatus.NOT_REQUIRED,
-        config={"model_ref": "models/local-test-v1"},
+        config_ref="models/local-test-v1",
     )
 
 
@@ -43,7 +43,7 @@ def profile_row():
         profile.sample_rate_hz, profile.channels, profile.source.value,
         profile.license_status.value, profile.license_reference,
         profile.consent_status.value, profile.consent_reference,
-        profile.active, profile.config,
+        profile.active, profile.config_ref,
     )
 
 

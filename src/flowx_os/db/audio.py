@@ -31,21 +31,18 @@ class SynthesisStateConflict(RuntimeError):
 _PROFILE_COLUMNS = """vp.id, vp.brand_id, vp.name, vp.engine_name, vp.engine_version,
                        vp.voice_key, vp.language, vp.sample_rate_hz, vp.channels,
                        vp.source, vp.license_status, vp.license_reference,
-                       vp.consent_status, vp.consent_reference, vp.active, vp.config"""
+                       vp.consent_status, vp.consent_reference, vp.active, vp.config_ref"""
 
 
 def _profile(row: tuple[object, ...]) -> VoiceProfile:
     try:
-        config = row[15]
-        if isinstance(config, str):
-            config = json.loads(config)
         return VoiceProfile(
             profile_id=row[0], brand_id=row[1], name=row[2], engine_name=row[3],
             engine_version=row[4], voice_key=row[5], language=row[6],
             sample_rate_hz=row[7], channels=row[8], source=VoiceSource(row[9]),
             license_status=VoiceLicenseStatus(row[10]), license_reference=row[11],
             consent_status=VoiceConsentStatus(row[12]), consent_reference=row[13],
-            active=row[14], config=config,
+            active=row[14], config_ref=row[15],
         )
     except Exception as exc:
         raise RepositoryUnavailable("stored voice profile is invalid") from exc
@@ -67,7 +64,6 @@ class AudioRepository:
     async def create_profile(self, *, profile: VoiceProfile, owner_user_id: str) -> VoiceProfile:
         if not isinstance(profile, VoiceProfile) or not isinstance(owner_user_id, str) or not owner_user_id.strip():
             raise ValueError("voice profile request is invalid")
-        config = json.dumps(profile.config, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
         try:
             async with unit_of_work(self._pool) as connection:
                 cursor = await connection.execute(
@@ -80,15 +76,15 @@ class AudioRepository:
                     f"""INSERT INTO voice_profiles
                          (id, brand_id, name, engine_name, engine_version, voice_key,
                           language, sample_rate_hz, channels, source, license_status,
-                          license_reference, consent_status, consent_reference, active, config)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                          license_reference, consent_status, consent_reference, active, config_ref)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                        ON CONFLICT DO NOTHING RETURNING {_PROFILE_COLUMNS.replace('vp.', '')}""",
                     (profile.profile_id, profile.brand_id, profile.name, profile.engine_name,
                      profile.engine_version, profile.voice_key, profile.language,
                      profile.sample_rate_hz, profile.channels, profile.source.value,
                      profile.license_status.value, profile.license_reference,
                      profile.consent_status.value, profile.consent_reference,
-                     profile.active, config),
+                     profile.active, profile.config_ref),
                 )
                 row = await cursor.fetchone()
                 if row is None:

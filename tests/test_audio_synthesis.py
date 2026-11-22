@@ -37,7 +37,7 @@ def profile(**updates):
         "license_status": VoiceLicenseStatus.VERIFIED,
         "license_reference": "docs/licenses/local-test.md",
         "consent_status": VoiceConsentStatus.NOT_REQUIRED,
-        "config": {"model_ref": "models/local-test-v1"},
+        "config_ref": "models/local-test-v1",
     }
     values.update(updates)
     return VoiceProfile.model_validate(values)
@@ -118,7 +118,7 @@ class VoiceSynthesisTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValidationError):
             profile(license_reference=None)
         with self.assertRaises(ValidationError):
-            profile(config={"api_token": "must-not-be-stored"})
+            profile(config_ref="https://example.invalid/model?api_token=must-not-be-stored")
         first = synthesis_fingerprint(request(), profile())
         second = synthesis_fingerprint(request(text="Different narration"), profile())
         self.assertRegex(first, r"^[0-9a-f]{64}$")

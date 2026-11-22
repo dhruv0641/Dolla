@@ -16,7 +16,7 @@ CREATE TABLE voice_profiles (
     consent_status text NOT NULL CHECK (consent_status IN ('NOT_REQUIRED','VERIFIED','MISSING','REVOKED')),
     consent_reference text,
     active boolean NOT NULL DEFAULT true,
-    config jsonb NOT NULL DEFAULT '{}'::jsonb,
+    config_ref text,
     created_at timestamptz NOT NULL DEFAULT now(),
     CHECK (license_status <> 'VERIFIED' OR license_reference IS NOT NULL),
     CHECK (consent_status <> 'VERIFIED' OR consent_reference IS NOT NULL),

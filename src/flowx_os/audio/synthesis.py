@@ -60,9 +60,9 @@ class VoiceProfile(BaseModel):
     consent_status: VoiceConsentStatus
     consent_reference: str | None = Field(default=None, max_length=500)
     active: bool = True
-    config: dict[str, object] = Field(default_factory=dict)
+    config_ref: str | None = Field(default=None, max_length=500)
 
-    @field_validator("name", "engine_version", "voice_key", "license_reference", "consent_reference")
+    @field_validator("name", "engine_version", "voice_key")
     @classmethod
     def validate_text(cls, value: str | None) -> str | None:
         if value is None:
@@ -72,31 +72,23 @@ class VoiceProfile(BaseModel):
             raise ValueError("voice profile text is invalid")
         return normalized
 
+    @field_validator("license_reference", "consent_reference", "config_ref")
+    @classmethod
+    def validate_reference(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = unicodedata.normalize("NFC", value).strip()
+        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:/\\-"
+        if not normalized or len(normalized) > 500 or any(char not in allowed for char in normalized):
+            raise ValueError("voice evidence/configuration reference is invalid")
+        return normalized
+
     @model_validator(mode="after")
     def validate_evidence(self) -> "VoiceProfile":
         if self.license_status == VoiceLicenseStatus.VERIFIED and self.license_reference is None:
             raise ValueError("verified voice license requires a reference")
         if self.consent_status == VoiceConsentStatus.VERIFIED and self.consent_reference is None:
             raise ValueError("verified voice consent requires a reference")
-        try:
-            encoded = json.dumps(
-                self.config, ensure_ascii=False, sort_keys=True,
-                separators=(",", ":"), allow_nan=False,
-            ).encode("utf-8")
-        except (TypeError, ValueError) as exc:
-            raise ValueError("voice configuration must be JSON") from exc
-        if len(encoded) > 16_384:
-            raise ValueError("voice configuration is too large")
-        blocked = ("secret", "password", "token", "credential", "api_key", "apikey")
-        pending: list[object] = [self.config]
-        while pending:
-            value = pending.pop()
-            if isinstance(value, dict):
-                if any(any(word in str(key).casefold() for word in blocked) for key in value):
-                    raise ValueError("voice configuration must contain references, not credentials")
-                pending.extend(value.values())
-            elif isinstance(value, (list, tuple)):
-                pending.extend(value)
         return self
 
 
@@ -214,7 +206,7 @@ def synthesis_fingerprint(request: SynthesisRequest, profile: VoiceProfile) -> s
         "language": profile.language,
         "sample_rate_hz": profile.sample_rate_hz,
         "channels": profile.channels,
-        "config": profile.config,
+        "config_ref": profile.config_ref,
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
