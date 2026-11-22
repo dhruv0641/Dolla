@@ -149,3 +149,5 @@ Caveman accepted TASK-041 final head `9f45402` with no blocker after the worker 
 TASK-041 implementation PR [#151](https://github.com/dhruv0641/Dolla/pull/151) passed both required checks and merged to protected `develop` as `f23b176`; the post-merge check also passed. TASK-041 is DONE pending tracker-only closeout and issue closure, making TASK-042 dependency-ready.
 
 TASK-041 tracker PR [#152](https://github.com/dhruv0641/Dolla/pull/152) merged as `89e5e77`, post-merge validation passed and issue #150 closed. TASK-042 began on issue [#153](https://github.com/dhruv0641/Dolla/issues/153) to add deterministic codec, frame-rate and aspect normalization on the bounded local worker foundation.
+
+TASK-042 now binds bounded dimensions, pixel count, FPS and `COVER`/`CONTAIN` geometry into the path-free render manifest and fingerprint. The fixed filter produces H.264/AAC/yuv420p square-pixel output, and `ffprobe` verifies exact dimensions/FPS/SAR/codecs before ingest. Six focused, 19 regression and 348 backend tests pass; independent review is pending.

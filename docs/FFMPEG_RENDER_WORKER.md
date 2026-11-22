@@ -1,6 +1,6 @@
 # Local FFmpeg render worker
 
-`flowx_os.rendering.FfmpegRenderWorker` provides the bounded execution foundation for automated editing. TASK-041 intentionally supports one verified managed video input and emits one managed MP4; later TASK-042 and TASK-043 add normalization and multi-input composition rather than accepting arbitrary FFmpeg arguments here.
+`flowx_os.rendering.FfmpegRenderWorker` provides the bounded execution foundation for automated editing. It supports one verified managed video input and emits one managed normalized MP4. TASK-042 adds a fingerprinted codec/FPS/aspect profile; TASK-043 later adds multi-input composition rather than accepting arbitrary FFmpeg arguments here.
 
 ## Trust boundary
 
