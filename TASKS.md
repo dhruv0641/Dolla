@@ -81,7 +81,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-047 Visual and audio evaluation** — DONE · QA and Security Engineer · 8h · deps: TASK-046 · Issue [#168](https://github.com/dhruv0641/Dolla/issues/168) · PR [#169](https://github.com/dhruv0641/Dolla/pull/169) merged as `d76343c`; 12 task-specific/34 focused/404 full-suite tests, independent review and required/post-merge checks passed; production calibration/live PostgreSQL unverified
 - **TASK-048 Policy, factuality and copyright signals** — DONE · QA and Security Engineer · 12h · deps: TASK-047 · Issue [#171](https://github.com/dhruv0641/Dolla/issues/171) · PR [#172](https://github.com/dhruv0641/Dolla/pull/172) merged as `446e10e`; 15 task-specific/40 focused/420 full-suite tests, independent review and required/post-merge checks passed; live providers/legal conclusions unverified
 - **TASK-049 Scene retry limits and spend gate** — DONE · QA and Security Engineer · 16h · deps: TASK-048 · Issue [#174](https://github.com/dhruv0641/Dolla/issues/174) · PR [#175](https://github.com/dhruv0641/Dolla/pull/175) merged to `develop` as `f860fb08`; independent review and required/post-merge checks passed
-- **TASK-050 Human review and approvals** — IN_PROGRESS · QA and Security Engineer · 4h · deps: TASK-049 · Issue [#177](https://github.com/dhruv0641/Dolla/issues/177) · Branch `feature/TASK-050-human-review-approvals`
+- **TASK-050 Human review and approvals** — IN_REVIEW · QA and Security Engineer · 4h · deps: TASK-049 · Issue [#177](https://github.com/dhruv0641/Dolla/issues/177) · Branch `feature/TASK-050-human-review-approvals`
 
 ## EPIC-11: Frontend Dashboard
 
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 60 (TASK-001 through TASK-049, TASK-051 through TASK-056, and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-050).
-- IN_REVIEW: 0.
+- IN_PROGRESS: 0.
+- IN_REVIEW: 1 (TASK-050).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 15.

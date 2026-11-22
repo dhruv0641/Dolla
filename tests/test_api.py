@@ -118,6 +118,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
                 "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets",
                 "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets/{asset_id}/preview",
                 "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets/{asset_id}/retire",
+                "/api/v1/brands/{brand_id}/content/{content_id}/human-reviews",
             },
         )
 
