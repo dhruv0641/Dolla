@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from contextlib import contextmanager
 from fractions import Fraction
 import hashlib
 import json
@@ -165,8 +166,8 @@ def parse_probe(payload: bytes) -> tuple[float, tuple[MediaStream, ...]]:
     return duration, streams
 
 
-def _run(args: list[str], *, timeout: float, output_limit: int) -> bytes:
-    """Drain both pipes, kill on output cap/timeout, and never expose stderr."""
+def _run_streams(args: list[str], *, timeout: float, output_limit: int) -> tuple[bytes, bytes]:
+    """Drain bounded stdout/stderr, kill on failure, and return no command text."""
     try:
         process = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     except OSError as exc:
@@ -200,7 +201,64 @@ def _run(args: list[str], *, timeout: float, output_limit: int) -> bytes:
         raise MediaProbeError("MEDIA_TOOL_OUTPUT_LIMIT")
     if process.returncode != 0:
         raise MediaProbeError("MEDIA_TOOL_FAILED")
-    return bytes(buffers[0])
+    return bytes(buffers[0]), bytes(buffers[1])
+
+
+def _run(args: list[str], *, timeout: float, output_limit: int) -> bytes:
+    """Run a bounded command and expose stdout only."""
+    return _run_streams(args, timeout=timeout, output_limit=output_limit)[0]
+
+
+@contextmanager
+def verified_media_snapshot(
+    asset: StoredAssetFile, *, storage_root: Path, max_bytes: int,
+):
+    """Yield a private immutable snapshot of complete managed bytes."""
+    if not isinstance(asset, StoredAssetFile) or type(max_bytes) is not int or not 1 <= max_bytes <= 4_000_000_000:
+        raise ValueError("managed media snapshot request is invalid")
+    root = Path(storage_root).expanduser().resolve() / "assets"
+    expected = root / asset.asset_id.hex / "payload"
+    demuxer = MediaProbeService._FORMATS.get(asset.mime_type)
+    if demuxer is None:
+        raise MediaProbeError("MEDIA_TYPE_UNSUPPORTED")
+    try:
+        file_stat = expected.lstat()
+        if (asset.storage_uri != f"managed://assets/{asset.asset_id.hex}/payload"
+                or asset.path.absolute() != expected or root.is_symlink()
+                or expected.parent.is_symlink() or expected.is_symlink()
+                or not stat.S_ISREG(file_stat.st_mode) or file_stat.st_nlink != 1):
+            raise MediaProbeError("MEDIA_PATH_UNSAFE")
+        with tempfile.TemporaryDirectory(prefix="flowx-media-") as temporary:
+            snapshot = Path(temporary) / "input"
+            digest, size = hashlib.sha256(), 0
+            with expected.open("rb") as incoming, snapshot.open("xb") as output:
+                before = os.fstat(incoming.fileno())
+                if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                    raise MediaProbeError("MEDIA_PATH_UNSAFE")
+                while block := incoming.read(1024 * 1024):
+                    size += len(block)
+                    if size > max_bytes:
+                        raise MediaProbeError("MEDIA_SIZE_LIMIT")
+                    digest.update(block)
+                    output.write(block)
+                output.flush()
+                os.fsync(output.fileno())
+                after = os.fstat(incoming.fileno())
+            identity = lambda value: (
+                value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns,
+                value.st_nlink,
+            )
+            if (identity(before) != identity(after) or size <= 0
+                    or size != asset.size_bytes or digest.hexdigest() != asset.sha256_hex):
+                raise MediaProbeError("MEDIA_INTEGRITY_MISMATCH")
+            options = ["-protocol_whitelist", "file", "-format_whitelist", demuxer, "-f", demuxer]
+            if demuxer == "mov":
+                options += ["-enable_drefs", "0", "-use_absolute_path", "0"]
+            yield snapshot, tuple(options)
+    except MediaProbeError:
+        raise
+    except OSError as exc:
+        raise MediaProbeError("MEDIA_FILE_UNAVAILABLE") from exc
 
 
 def _violations(duration: float, streams: tuple[MediaStream, ...], policy: ProbePolicy) -> tuple[str, ...]:
@@ -246,32 +304,10 @@ class MediaProbeService:
         policy = policy or ProbePolicy()
         if not isinstance(asset, StoredAssetFile) or not isinstance(policy, ProbePolicy):
             raise ValueError("asset and probe policy are required")
-        demuxer = self._FORMATS.get(asset.mime_type)
-        if demuxer is None:
-            raise MediaProbeError("MEDIA_TYPE_UNSUPPORTED")
-        expected = self.root / asset.asset_id.hex / "payload"
         try:
-            if asset.path.absolute() != expected or any(p.is_symlink() for p in (self.root, expected.parent, expected)):
-                raise MediaProbeError("MEDIA_PATH_UNSAFE")
-            if not stat.S_ISREG(expected.lstat().st_mode):
-                raise MediaProbeError("MEDIA_PATH_UNSAFE")
-            with tempfile.TemporaryDirectory(prefix="flowx-probe-") as temporary:
-                snapshot = Path(temporary) / "input"
-                digest, size = hashlib.sha256(), 0
-                with expected.open("rb") as incoming, snapshot.open("xb") as output:
-                    if not stat.S_ISREG(os.fstat(incoming.fileno()).st_mode):
-                        raise MediaProbeError("MEDIA_PATH_UNSAFE")
-                    while block := incoming.read(1024 * 1024):
-                        size += len(block)
-                        if size > self.max_bytes:
-                            raise MediaProbeError("MEDIA_SIZE_LIMIT")
-                        digest.update(block)
-                        output.write(block)
-                if size <= 0 or size != asset.size_bytes or digest.hexdigest() != asset.sha256_hex:
-                    raise MediaProbeError("MEDIA_INTEGRITY_MISMATCH")
-                options = ["-protocol_whitelist", "file", "-format_whitelist", demuxer, "-f", demuxer]
-                if demuxer == "mov":
-                    options += ["-enable_drefs", "0", "-use_absolute_path", "0"]
+            with verified_media_snapshot(
+                asset, storage_root=self.root.parent, max_bytes=self.max_bytes,
+            ) as (snapshot, options):
                 payload = _run([self.ffprobe, "-v", "error", "-max_alloc", "268435456", *options, "-show_entries", "format=format_name,duration:stream=codec_type,codec_name,profile,pix_fmt,width,height,sample_aspect_ratio,avg_frame_rate,sample_rate,channels:stream_side_data=rotation", "-of", "json", str(snapshot)], timeout=self.timeout, output_limit=self.output_limit)
                 duration, streams, containers = _parse_probe_document(payload)
                 violations = _violations(duration, streams, policy)

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -110,6 +111,21 @@ class MediaProbeTests(unittest.TestCase):
             with patch('flowx_os.assets.probing._run',side_effect=[metadata,MediaProbeError('MEDIA_TOOL_FAILED')]):
                 with self.assertRaisesRegex(MediaProbeError,'TOOL_FAILED'):
                     service.inspect(asset)
+
+    def test_hardlinked_managed_payload_is_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); source = root / 'fixture.mp4'
+            source.write_bytes(b'\0\0\0\x18ftyp' + b'0' * 32)
+            asset = ManagedAssetStore(root).store(
+                asset_id=uuid4(), source_path=source, mime_type='video/mp4',
+            )
+            link = root / 'external-link.mp4'
+            try:
+                os.link(asset.path, link)
+            except OSError as exc:
+                self.skipTest(f'hard links unavailable: {type(exc).__name__}')
+            with self.assertRaisesRegex(MediaProbeError, 'PATH_UNSAFE'):
+                MediaProbeService(root).inspect(asset)
 
 if __name__=='__main__':
     unittest.main()
