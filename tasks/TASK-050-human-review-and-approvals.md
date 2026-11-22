@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-049
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#177](https://github.com/dhruv0641/Dolla/issues/177)
+- **Branch:** `feature/TASK-050-human-review-approvals`
+- **Blockers:** None for local implementation; this task does not authorize scheduling, publishing, account connection or external operations.
 
 ## User Story
 As a FLOW AI Content OS operator, I want human review and approvals, so the platform can progress safely through a traceable production lifecycle.
@@ -23,7 +25,7 @@ Deliver human review and approvals as an independently verifiable capability wit
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+Typed human review contracts, owner-scoped review-decision repository, reviewer-role API, migration 0017, focused tests and operator documentation. Bind every decision to the exact active final/export asset and immutable `signals-v1` QA evidence; do not add scheduling or publishing behavior.
 
 ## Acceptance Criteria
 - [ ] Capability is implemented behind documented interfaces and configuration.
