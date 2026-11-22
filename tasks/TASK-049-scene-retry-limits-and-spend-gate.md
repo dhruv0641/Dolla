@@ -5,8 +5,10 @@
 - **Priority:** P1
 - **Dependencies:** TASK-048
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
+- **GitHub issue:** [#174](https://github.com/dhruv0641/Dolla/issues/174)
+- **Branch:** `feature/TASK-049-scene-retry-limits-spend-gate`
 - **Blockers:** None for bounded local implementation; live spend/account state and paid retry execution must remain unavailable without explicit authorization.
 
 ## User Story
@@ -23,17 +25,20 @@ Deliver scene retry limits and spend gate as an independently verifiable capabil
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+QA retry-decision service, existing scene retry and credit-reservation contracts, idempotent persistence/migration if needed, focused tests and operator documentation. Reuse rather than bypass TASK-027 through TASK-030 and TASK-033; select exact paths after targeted inspection.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
-- Unit tests for domain rules and failure cases.
-- Integration tests for persistence and adapter boundaries where relevant.
-- Record actual commands/results; live integration evidence is required for production-readiness claims.
+- `python -m unittest tests.test_retry_spend_gate tests.test_generation_jobs tests.test_scene_retry_policy tests.test_credit_reservations tests.test_credit_ledger tests.test_credit_alarms tests.test_flow_jobs tests.test_migrations` — 100 passed.
+- `python -m unittest discover -s tests` — 434 passed.
+- `python -m compileall -q src tests`, `python scripts/validate_project_plan.py`, and `git diff --check` passed; all 16 migrations parse through the migration test.
+- Evidence covers job and reservation ownership preflight before approval, exact approval/reservation/account binding, account → reservation → prior job/scene lock order, bounded attempts, stale/malformed spend denial, idempotent replay, direct-SQL gate shape and complete decided-row immutability.
+- Live PostgreSQL concurrency, real approval-provider behavior, actual retry execution and paid Flow generation remain unverified and unauthorized.
+- Independent Technical Reviewer accepted exact implementation commit `424943d90e7d3cf177060a3a663015828eb849ae` with no blocker after confirming full decided-row immutability, account → reservation → prior-job lock order, owner preflights, direct-SQL account/reservation binding, exact next-attempt reservation and fail-closed replay. Reviewer verification: 27 focused retry/generation/policy tests, 16 migration/parser tests, project validator and diff check passed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

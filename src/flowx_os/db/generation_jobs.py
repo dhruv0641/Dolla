@@ -13,11 +13,13 @@ from flowx_os.db.transaction import ConnectionPool, unit_of_work
 from flowx_os.db.credit_reservations import FlowCreditReservationRepository
 from flowx_os.flow_mcp.jobs import JobSubmissionClaim, JobSubmissionRequest, PersistedJobResumeContext
 from flowx_os.domain.scene_jobs import (
-    SceneAttemptLimitExceeded,
-    SceneAttemptStateConflict,
     SceneJobState,
-    SceneRetryDecision,
     SceneRetryPolicy,
+)
+from flowx_os.qa.retry_gate import (
+    RetryGateReason,
+    RetrySpendEvidence,
+    SceneRetryGateDecision,
 )
 
 
@@ -29,13 +31,16 @@ class FlowGenerationJobRepository:
     """Persist one credit-reserved submission claim per canonical fingerprint."""
 
     def __init__(self, pool: ConnectionPool, *, max_quote_age: timedelta = timedelta(minutes=5),
-                 max_balance_age: timedelta = timedelta(minutes=15), now=None,
+                 max_balance_age: timedelta = timedelta(minutes=15),
+                 max_approval_age: timedelta = timedelta(minutes=5), now=None,
                  retry_policy: SceneRetryPolicy | None = None):
         self._pool = pool
-        if max_quote_age <= timedelta(0) or max_balance_age <= timedelta(0):
-            raise ValueError("quote and balance freshness windows must be positive")
+        if (max_quote_age <= timedelta(0) or max_balance_age <= timedelta(0)
+                or max_approval_age <= timedelta(0)):
+            raise ValueError("quote, balance and approval freshness windows must be positive")
         self._max_quote_age = max_quote_age
         self._max_balance_age = max_balance_age
+        self._max_approval_age = max_approval_age
         self._now = now or (lambda: datetime.now(timezone.utc))
         self._retry_policy = retry_policy or SceneRetryPolicy()
         if not isinstance(self._retry_policy, SceneRetryPolicy):
@@ -153,6 +158,24 @@ class FlowGenerationJobRepository:
                     )
                 except (ValueError, TypeError) as exc:
                     raise RepositoryUnavailable("scene state does not permit this generation attempt") from exc
+
+                if request.attempt_index > 1:
+                    cursor = await connection.execute(
+                        """SELECT status, retry_scheduled, retry_gate_decision,
+                                  retry_credit_reservation_id, retry_max_attempts
+                           FROM generation_jobs
+                           WHERE scene_id = %s AND attempt_index = %s FOR UPDATE""",
+                        (request.scene_id, request.attempt_index - 1),
+                    )
+                    prior = await cursor.fetchone()
+                    if (not isinstance(prior, tuple) or len(prior) != 5
+                            or prior[0] != "FAILED" or prior[1] is not True
+                            or prior[2] != "ALLOW" or prior[3] != reservation_id
+                            or isinstance(prior[4], bool) or not isinstance(prior[4], int)
+                            or request.attempt_index > prior[4]):
+                        raise RepositoryUnavailable(
+                            "scene retry claim lacks an exact eligible retry-gate reservation"
+                        )
 
                 cursor = await connection.execute(
                     """INSERT INTO generation_jobs
@@ -275,38 +298,194 @@ class FlowGenerationJobRepository:
         except Exception as exc:
             raise RepositoryUnavailable("generation job storage is unavailable") from exc
 
-    async def mark_attempt_failure(
-        self, *, job_id: UUID, retryable: bool, failure_code: str = "GENERATION_FAILED",
-    ) -> SceneRetryDecision:
-        """Record a definitive failure and atomically schedule or exhaust a retry.
-
-        Call only after a terminal failure has been authoritatively observed.
-        Unknown remote submission outcomes must use ``mark_remote_submission_unknown``.
-        """
-        if (not isinstance(job_id, UUID) or not isinstance(retryable, bool)
-                or not isinstance(failure_code, str) or not _SAFE_FAILURE_CODE.fullmatch(failure_code)):
-            raise ValueError("generation failure record is invalid")
+    async def assert_failure_owned(
+        self, *, job_id: UUID, owner_user_id: str,
+    ) -> SceneRetryGateDecision | None:
+        """Reject foreign jobs before approval-provider calls expose spend identity."""
+        if (not isinstance(job_id, UUID) or not isinstance(owner_user_id, str)
+                or not owner_user_id.strip() or len(owner_user_id.strip()) > 200):
+            raise ValueError("owner-scoped generation failure is invalid")
         try:
             async with unit_of_work(self._pool) as connection:
-                attempt = await self._lock_attempt(connection, job_id)
+                cursor = await connection.execute(
+                    """SELECT j.status, j.attempt_index, s.id, j.retry_scheduled,
+                              j.retry_gate_decision, j.retry_gate_reason,
+                              j.retry_credit_reservation_id,
+                              j.retry_approval_fingerprint, j.retry_max_attempts
+                       FROM generation_jobs AS j
+                       JOIN scenes AS s ON s.id = j.scene_id
+                       JOIN content_items AS c ON c.id = s.content_id
+                       JOIN brands AS b ON b.id = c.brand_id
+                       WHERE j.id = %s AND b.owner_user_id = %s""",
+                    (job_id, owner_user_id.strip()),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise RepositoryUnavailable("owner-scoped generation job is unavailable")
+                (status, attempt_index, scene_id, retry_scheduled, gate_decision,
+                 gate_reason, gate_reservation, gate_fingerprint,
+                 stored_max_attempts) = row
+                if status != "FAILED":
+                    return None
+                if gate_decision not in {"ALLOW", "DENY"}:
+                    raise RepositoryUnavailable("failed generation job lacks retry-gate evidence")
+                try:
+                    reason = RetryGateReason(gate_reason)
+                except (TypeError, ValueError) as exc:
+                    raise RepositoryUnavailable("stored retry-gate reason is invalid") from exc
+                if (isinstance(attempt_index, bool) or not isinstance(attempt_index, int)
+                        or attempt_index < 1 or isinstance(stored_max_attempts, bool)
+                        or not isinstance(stored_max_attempts, int)
+                        or not 1 <= stored_max_attempts <= 11):
+                    raise RepositoryUnavailable("stored retry-gate attempt policy is invalid")
+                return SceneRetryGateDecision(
+                    scene_id, job_id, attempt_index,
+                    attempt_index if retry_scheduled else attempt_index - 1,
+                    SceneJobState.RETRY_WAIT if retry_scheduled else SceneJobState.FAILED,
+                    bool(retry_scheduled), reason, gate_reservation, gate_fingerprint,
+                )
+        except RepositoryUnavailable:
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("generation job storage is unavailable") from exc
+
+    async def get_owned_retry_reservation(
+        self, *, reservation_id: UUID, account_id: UUID, owner_user_id: str,
+    ):
+        """Return only a repository-sourced reservation owned by the job owner."""
+        if (not isinstance(reservation_id, UUID) or not isinstance(account_id, UUID)
+                or not isinstance(owner_user_id, str) or not owner_user_id.strip()
+                or len(owner_user_id.strip()) > 200
+                or any(ord(char) < 32 or ord(char) == 127 for char in owner_user_id)):
+            raise ValueError("owner-scoped retry reservation identity is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    """SELECT r.id, r.flow_account_id, r.request_id, r.model_name,
+                              r.duration_seconds, r.quote_ref, r.quoted_credits,
+                              r.quote_source, r.quoted_at, r.quote_expires_at,
+                              r.state, r.created_at
+                       FROM flow_credit_reservations AS r
+                       JOIN flow_accounts AS a ON a.id = r.flow_account_id
+                       WHERE r.id = %s AND r.flow_account_id = %s
+                         AND a.owner_user_id = %s""",
+                    (reservation_id, account_id, owner_user_id.strip()),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise RepositoryUnavailable("owner-scoped retry reservation is unavailable")
+                return FlowCreditReservationRepository._to_record(row)
+        except RepositoryUnavailable:
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("credit reservation storage is unavailable") from exc
+
+    async def record_failure_retry_gate(
+        self, *, job_id: UUID, owner_user_id: str, retryable: bool,
+        failure_code: str, spend_evidence: RetrySpendEvidence | None,
+        denial_reason: RetryGateReason,
+    ) -> SceneRetryGateDecision:
+        """Record one immutable failure/retry decision under account and scene locks."""
+        if (not isinstance(job_id, UUID) or not isinstance(owner_user_id, str)
+                or not owner_user_id.strip() or len(owner_user_id.strip()) > 200
+                or any(ord(char) < 32 or ord(char) == 127 for char in owner_user_id)
+                or not isinstance(retryable, bool)
+                or not isinstance(failure_code, str)
+                or not _SAFE_FAILURE_CODE.fullmatch(failure_code)
+                or not isinstance(denial_reason, RetryGateReason)
+                or (spend_evidence is None) != (denial_reason != RetryGateReason.ELIGIBLE)):
+            raise ValueError("generation retry gate record is invalid")
+        try:
+            decision_now = self._now()
+            if (not isinstance(decision_now, datetime) or decision_now.tzinfo is None
+                    or decision_now.utcoffset() is None):
+                raise RepositoryUnavailable("retry decision time is invalid")
+            evidence_is_well_formed = bool(
+                spend_evidence is not None
+                and isinstance(spend_evidence.reservation_id, UUID)
+                and isinstance(spend_evidence.account_id, UUID)
+                and isinstance(spend_evidence.request_id, UUID)
+                and not isinstance(spend_evidence.quoted_credits, bool)
+                and isinstance(spend_evidence.quoted_credits, int)
+                and spend_evidence.quoted_credits > 0
+                and isinstance(spend_evidence.quote_expires_at, datetime)
+                and spend_evidence.quote_expires_at.tzinfo is not None
+                and spend_evidence.quote_expires_at.utcoffset() is not None
+                and isinstance(spend_evidence.verified_at, datetime)
+                and spend_evidence.verified_at.tzinfo is not None
+                and spend_evidence.verified_at.utcoffset() is not None
+                and spend_evidence.verified_at <= decision_now
+                and spend_evidence.verified_at >= decision_now - self._max_approval_age
+                and isinstance(spend_evidence.approval_fingerprint, str)
+                and bool(_FINGERPRINT.fullmatch(spend_evidence.approval_fingerprint))
+            )
+            async with unit_of_work(self._pool) as connection:
+                # Match the credit subsystem's global lock order.  The job and
+                # scene are deliberately locked only after account -> reservation.
+                locked_account = None
+                locked_reservation = None
+                if evidence_is_well_formed:
+                    assert spend_evidence is not None
+                    cursor = await connection.execute(
+                        """SELECT session_health, paused, compliance_approved,
+                                  observed_daily_available, observed_monthly_available,
+                                  last_reconciled_at, next_daily_reset_at,
+                                  monthly_cycle_starts_at, max_inflight
+                           FROM flow_accounts
+                           WHERE id = %s AND owner_user_id = %s FOR UPDATE""",
+                        (spend_evidence.account_id, owner_user_id.strip()),
+                    )
+                    locked_account = await cursor.fetchone()
+                    if locked_account is not None:
+                        cursor = await connection.execute(
+                            """SELECT id, flow_account_id, request_id, quoted_credits,
+                                      quoted_at, quote_expires_at, state
+                               FROM flow_credit_reservations
+                               WHERE id = %s AND flow_account_id = %s FOR UPDATE""",
+                            (spend_evidence.reservation_id, spend_evidence.account_id),
+                        )
+                        locked_reservation = await cursor.fetchone()
+                cursor = await connection.execute(
+                    """SELECT j.status, j.attempt_index, s.id, s.state, s.retry_count,
+                              j.retry_scheduled, j.retry_gate_decision,
+                              j.retry_gate_reason, j.retry_credit_reservation_id,
+                              j.retry_approval_fingerprint, j.credit_reservation_id,
+                              j.retry_max_attempts
+                       FROM generation_jobs AS j
+                       JOIN scenes AS s ON s.id = j.scene_id
+                       JOIN content_items AS c ON c.id = s.content_id
+                       JOIN brands AS b ON b.id = c.brand_id
+                       WHERE j.id = %s AND b.owner_user_id = %s
+                       FOR UPDATE OF j, s""",
+                    (job_id, owner_user_id.strip()),
+                )
+                attempt = await cursor.fetchone()
                 if attempt is None:
-                    raise RepositoryUnavailable("generation job is unavailable")
-                status, attempt_index, scene_id, scene_state, retry_count, retry_scheduled = attempt
+                    raise RepositoryUnavailable("owner-scoped generation job is unavailable")
+                (status, attempt_index, scene_id, scene_state, retry_count,
+                 retry_scheduled, gate_decision, gate_reason, gate_reservation,
+                 gate_fingerprint, current_reservation, stored_max_attempts) = attempt
                 try:
                     typed_scene_state = SceneJobState(scene_state)
                 except (ValueError, TypeError) as exc:
                     raise RepositoryUnavailable("stored scene state is invalid") from exc
                 if status == "FAILED":
-                    # The scene may already have advanced through a later attempt.
-                    # Reconstruct this immutable decision from its attempt index,
-                    # not from the scene's current lifecycle state.
-                    decision_state = (
-                        SceneJobState.RETRY_WAIT if retry_scheduled else SceneJobState.FAILED
-                    )
-                    decision_retry_count = attempt_index if retry_scheduled else attempt_index - 1
-                    return SceneRetryDecision(
-                        scene_id, job_id, attempt_index, decision_retry_count,
-                        decision_state, bool(retry_scheduled),
+                    if gate_decision not in {"ALLOW", "DENY"}:
+                        raise RepositoryUnavailable("failed generation job lacks retry-gate evidence")
+                    try:
+                        stored_reason = RetryGateReason(gate_reason)
+                    except (TypeError, ValueError) as exc:
+                        raise RepositoryUnavailable("stored retry-gate reason is invalid") from exc
+                    if (isinstance(stored_max_attempts, bool)
+                            or not isinstance(stored_max_attempts, int)
+                            or not 1 <= stored_max_attempts <= 11):
+                        raise RepositoryUnavailable("stored retry-gate attempt policy is invalid")
+                    return SceneRetryGateDecision(
+                        scene_id, job_id, attempt_index,
+                        attempt_index if retry_scheduled else attempt_index - 1,
+                        SceneJobState.RETRY_WAIT if retry_scheduled else SceneJobState.FAILED,
+                        bool(retry_scheduled), stored_reason,
+                        gate_reservation, gate_fingerprint,
                     )
                 if status not in {"SUBMITTED", "RUNNING", "DOWNLOADED", "QA_FAILED"}:
                     raise RepositoryUnavailable("generation job is not in a definitive failure state")
@@ -315,16 +494,96 @@ class FlowGenerationJobRepository:
                         SceneJobState.DOWNLOADED, SceneJobState.QA_FAILED,
                     } or retry_count != attempt_index - 1):
                     raise RepositoryUnavailable("scene state does not match the failed attempt")
-                should_retry = self._retry_policy.should_schedule_retry(
-                    attempt_index=attempt_index, retryable=retryable,
-                )
+                should_retry = False
+                reason = denial_reason
+                valid_spend = False
+                if not retryable:
+                    reason = RetryGateReason.FAILURE_NOT_RETRYABLE
+                elif attempt_index >= self._retry_policy.max_attempts:
+                    reason = RetryGateReason.ATTEMPT_LIMIT_EXHAUSTED
+                elif spend_evidence is not None:
+                    evidence = spend_evidence
+                    if not evidence_is_well_formed:
+                        reason = RetryGateReason.SPEND_STATE_INVALID
+                    elif (isinstance(locked_account, tuple) and len(locked_account) == 9
+                          and isinstance(locked_reservation, tuple)
+                          and len(locked_reservation) == 7):
+                        (health, paused, compliant, daily, monthly, reconciled,
+                         daily_reset, cycle_start, max_inflight) = locked_account
+                        (reservation_id, account_id, request_id, quoted_credits,
+                         quoted_at, quote_expires_at, reservation_state) = locked_reservation
+                        cursor = await connection.execute(
+                            """SELECT COUNT(*), COALESCE(SUM(quoted_credits), 0)
+                               FROM flow_credit_reservations
+                               WHERE flow_account_id = %s
+                                 AND state IN ('RESERVED','RECONCILE_PENDING')""",
+                            (account_id,),
+                        )
+                        active = await cursor.fetchone()
+                        cursor = await connection.execute(
+                            """SELECT 1 FROM generation_jobs
+                               WHERE credit_reservation_id = %s
+                                  OR retry_credit_reservation_id = %s""",
+                            (reservation_id, reservation_id),
+                        )
+                        used = await cursor.fetchone()
+                        try:
+                            FlowCreditReservationRepository._require_eligible_account(
+                                (health, paused, compliant, daily, monthly, reconciled,
+                                 daily_reset, cycle_start, max_inflight),
+                                now=decision_now,
+                                max_balance_age=self._max_balance_age,
+                            )
+                        except Exception:
+                            eligible_account = False
+                        else:
+                            eligible_account = True
+                        active_valid = bool(
+                            isinstance(active, tuple) and len(active) == 2
+                            and not isinstance(active[0], bool) and isinstance(active[0], int)
+                            and not isinstance(active[1], bool) and isinstance(active[1], int)
+                            and active[0] >= 0 and active[1] >= 0
+                        )
+                        valid_spend = bool(
+                            reservation_id == evidence.reservation_id
+                            and account_id == evidence.account_id
+                            and request_id == evidence.request_id
+                            and quoted_credits == evidence.quoted_credits
+                            and quote_expires_at == evidence.quote_expires_at
+                            and reservation_state == "RESERVED"
+                            and reservation_id != current_reservation
+                            and quote_expires_at is not None
+                            and quote_expires_at.tzinfo is not None
+                            and quote_expires_at > decision_now
+                            and quoted_at is not None and quoted_at.tzinfo is not None
+                            and quoted_at <= decision_now
+                            and quoted_at >= decision_now - self._max_quote_age
+                            and eligible_account
+                            and active_valid
+                            and active[0] <= max_inflight
+                            and active[1] <= daily and active[1] <= monthly
+                            and used is None
+                        )
+                        if valid_spend:
+                            should_retry = True
+                            reason = RetryGateReason.ELIGIBLE
+                        else:
+                            reason = RetryGateReason.SPEND_STATE_INVALID
                 next_state = SceneJobState.RETRY_WAIT if should_retry else SceneJobState.FAILED
                 next_retry_count = retry_count + 1 if should_retry else retry_count
                 cursor = await connection.execute(
                     """UPDATE generation_jobs SET status = 'FAILED', error_code = %s,
-                              retry_scheduled = %s, completed_at = now()
+                              retry_scheduled = %s, retry_gate_decision = %s,
+                              retry_gate_reason = %s, retry_credit_reservation_id = %s,
+                              retry_approval_fingerprint = %s,
+                              retry_max_attempts = %s, retry_decided_at = %s,
+                              completed_at = now()
                        WHERE id = %s AND status = %s AND retry_scheduled = false""",
-                    (failure_code, should_retry, job_id, status),
+                    (failure_code, should_retry, "ALLOW" if should_retry else "DENY",
+                     reason.value,
+                     spend_evidence.reservation_id if should_retry else None,
+                     spend_evidence.approval_fingerprint if should_retry else None,
+                     self._retry_policy.max_attempts, decision_now, job_id, status),
                 )
                 if cursor.rowcount != 1:
                     raise RepositoryUnavailable("generation job changed while failure was recorded")
@@ -335,8 +594,11 @@ class FlowGenerationJobRepository:
                 )
                 if cursor.rowcount != 1:
                     raise RepositoryUnavailable("scene changed while retry decision was recorded")
-                return SceneRetryDecision(
+                return SceneRetryGateDecision(
                     scene_id, job_id, attempt_index, next_retry_count, next_state, should_retry,
+                    reason,
+                    spend_evidence.reservation_id if should_retry else None,
+                    spend_evidence.approval_fingerprint if should_retry else None,
                 )
         except RepositoryUnavailable:
             raise

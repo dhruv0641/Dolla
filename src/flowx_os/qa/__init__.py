@@ -31,6 +31,13 @@ from .policy_signals import (
     SignalFindingSeverity,
     SignalState,
 )
+from .retry_gate import (
+    RetryGateReason,
+    RetrySpendEvidence,
+    SceneRetryGateDecision,
+    SceneRetrySpendGateService,
+    retry_approval_fingerprint,
+)
 
 __all__ = [
     "AvDecision",
@@ -56,4 +63,9 @@ __all__ = [
     "SignalFindingCode",
     "SignalFindingSeverity",
     "SignalState",
+    "RetryGateReason",
+    "RetrySpendEvidence",
+    "SceneRetryGateDecision",
+    "SceneRetrySpendGateService",
+    "retry_approval_fingerprint",
 ]
