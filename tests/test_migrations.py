@@ -181,6 +181,9 @@ class MigrationSyntaxTests(unittest.TestCase):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0018_youtube_publication_verification.sql"
         sql = migration.read_text(encoding="utf-8")
         self.assertIn("idx_publication_jobs_request_v1", sql)
+        self.assertIn("channel_external_id_snapshot", sql)
+        self.assertIn("credentials_ref_snapshot", sql)
+        self.assertIn("YouTube destination fingerprint is invalid", sql)
         self.assertIn("approval_decision_id uuid REFERENCES review_decisions(id)", sql)
         self.assertIn("require_youtube_publication_claim", sql)
         self.assertIn("rja.profile_id", sql)
@@ -192,6 +195,7 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("remote_privacy_status IS DISTINCT FROM NEW.intended_privacy_status", sql)
         self.assertIn("terminal YouTube publication state is immutable", sql)
         self.assertIn("YouTube remote identities are immutable once observed", sql)
+        self.assertIn("OLD.status = 'DRAFT' AND NEW.status = 'PUBLISH_REQUESTED'", sql)
         self.assertIn("failed YouTube publication requires an error code", sql)
         self.assertIn("YouTube publication evidence is immutable", sql)
 

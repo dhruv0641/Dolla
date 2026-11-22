@@ -45,17 +45,20 @@ Typed official YouTube authorization/transport contracts, owner-scoped publicati
   `READY` content, the exact active `YOUTUBE_SHORTS_V1` export from the selected
   completed render version, its immutable human `APPROVE` decision, and an
   enabled `VALID` YouTube channel with an opaque credentials reference.
-- Persisted request fingerprints, opaque resumable-session references, upload
-  progress, remote IDs and bounded verification evidence. Unknown submission
-  outcomes enter `VERIFY_PENDING` and cannot start a replacement upload.
+- Persisted request and immutable destination fingerprints, opaque resumable-
+  session references, upload progress, remote IDs and bounded verification
+  evidence. A transactional `PUBLISH_REQUESTED` barrier admits only one remote
+  initiation. Unknown outcomes enter `VERIFY_PENDING` and cannot start a
+  replacement upload; operators can bind a recovered session or cancel safely.
 - `PUBLISHED` requires matching owner-only remote channel/video evidence,
   `uploadStatus=processed`, `processingStatus=succeeded`, and the intended
   privacy status. Upload acceptance alone remains `PROCESSING`.
 - Publishing defaults off through `FLOWX_YOUTUBE_PUBLISHING_ENABLED=false`;
   private is the only default privacy and subscriber notifications are disabled.
-- Verification: 45 focused/config/migration tests and the complete 466-test
-  suite pass; all 18 migrations parse, compilation, diff hygiene and the
-  76-task project validator pass. Live PostgreSQL, OAuth, channel connection,
+- Verification after independent-review corrections: 50 focused/config/
+  migration tests and the complete 472-test suite pass;
+  all 18 migrations parse, compilation, diff hygiene and the 76-task project
+  validator pass. Live PostgreSQL, OAuth, channel connection,
   quota behavior, upload and public publication remain unverified and unused.
 
 ## Definition of Done

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import hashlib
 import json
 import re
 from uuid import UUID
@@ -33,7 +33,8 @@ class YouTubePublicationNotAllowed(RuntimeError):
 _CLAIM_COLUMNS = """p.id, p.request_fingerprint, b.id, b.owner_user_id,
     p.content_id, p.channel_id,
     p.asset_id, p.approval_decision_id, p.artifact_version,
-    ch.external_channel_id, ch.credentials_ref, a.storage_uri, a.sha256_hex,
+    p.channel_external_id_snapshot, p.credentials_ref_snapshot,
+    p.destination_fingerprint, a.storage_uri, a.sha256_hex,
     a.size_bytes, a.mime_type, p.intended_privacy_status, p.status,
     p.upload_session_ref, p.remote_upload_id, p.remote_post_id"""
 _SAFE_REMOTE_ID = re.compile(r"^[A-Za-z0-9_-]{1,200}$")
@@ -72,6 +73,7 @@ class YouTubePublicationRepository:
                     claim = self._claim(existing)
                     if claim.publication_id != request.publication_id or claim.request_fingerprint != request.fingerprint:
                         raise YouTubePublicationConflict("YouTube request already identifies different work")
+                    await self._assert_network_ready_in_transaction(connection, claim)
                     return claim
                 if owned[0] != "READY":
                     raise YouTubePublicationNotAllowed("content is not ready for publication")
@@ -119,20 +121,24 @@ class YouTubePublicationRepository:
                     f"""INSERT INTO publication_jobs
                          (id, request_id, request_fingerprint, content_id, channel_id,
                           asset_id, approval_decision_id, artifact_version,
+                          channel_external_id_snapshot, credentials_ref_snapshot,
+                          destination_fingerprint,
                           asset_sha256_hex, asset_size_bytes, intended_privacy_status,
                           platform_metadata, status)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                               %s::jsonb, 'DRAFT')
+                               %s, %s, %s, %s::jsonb, 'DRAFT')
                        ON CONFLICT (request_id) WHERE request_id IS NOT NULL DO NOTHING
                        RETURNING id""",
                     (
                         request.publication_id, request.request_id, request.fingerprint,
                         request.content_id, request.channel_id, request.asset_id,
-                        approval_id, request.artifact_version, sha256_hex,
-                        size_bytes, request.privacy_status.value, metadata,
+                        approval_id, request.artifact_version, external_channel_id,
+                        credentials_ref, self._destination_fingerprint(
+                            external_channel_id, credentials_ref,
+                        ), sha256_hex, size_bytes, request.privacy_status.value, metadata,
                     ),
                 )
-                inserted = await cursor.fetchone()
+                await cursor.fetchone()
                 row = await self._find_request(
                     connection, request_id=request.request_id,
                     brand_id=request.brand_id, owner_user_id=request.owner_user_id,
@@ -149,6 +155,29 @@ class YouTubePublicationRepository:
         except Exception as exc:
             raise RepositoryUnavailable("YouTube publication storage is unavailable") from exc
 
+    async def assert_network_ready(self, claim: YouTubePublicationClaim) -> None:
+        if not isinstance(claim, YouTubePublicationClaim):
+            raise ValueError("YouTube publication claim is required")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                await self._assert_network_ready_in_transaction(connection, claim)
+        except (YouTubePublicationNotAllowed, YouTubePublicationConflict, RepositoryUnavailable):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("YouTube publication storage is unavailable") from exc
+
+    async def reserve_start(self, claim: YouTubePublicationClaim) -> YouTubePublicationClaim:
+        if not isinstance(claim, YouTubePublicationClaim):
+            raise ValueError("YouTube publication claim is required")
+        return await self._update_claim(
+            claim,
+            """UPDATE publication_jobs SET status = 'PUBLISH_REQUESTED',
+                      last_error_code = NULL, last_error_message = NULL
+               WHERE id = %s AND request_fingerprint = %s AND status = 'DRAFT'
+               RETURNING id""",
+            (claim.publication_id, claim.request_fingerprint),
+        )
+
     async def record_session(
         self, *, claim: YouTubePublicationClaim, session: YouTubeUploadSession,
     ) -> YouTubePublicationClaim:
@@ -159,7 +188,9 @@ class YouTubePublicationRepository:
             """UPDATE publication_jobs SET status = 'UPLOAD_STARTED',
                       upload_session_ref = %s, remote_upload_id = %s,
                       last_error_code = NULL, last_error_message = NULL
-               WHERE id = %s AND request_fingerprint = %s AND status = 'DRAFT'
+               WHERE id = %s AND request_fingerprint = %s
+                 AND status IN ('PUBLISH_REQUESTED','VERIFY_PENDING')
+                 AND upload_session_ref IS NULL AND remote_post_id IS NULL
                RETURNING id""",
             (session.session_ref, session.upload_id, claim.publication_id, claim.request_fingerprint),
         )
@@ -255,6 +286,88 @@ class YouTubePublicationRepository:
         except Exception as exc:
             raise RepositoryUnavailable("YouTube publication storage is unavailable") from exc
 
+    async def recover_unknown_session(
+        self, *, request: YouTubePublishRequest, session: YouTubeUploadSession,
+    ) -> YouTubePublicationClaim:
+        if not isinstance(request, YouTubePublishRequest) or not isinstance(session, YouTubeUploadSession):
+            raise ValueError("YouTube unknown-outcome recovery is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                row = await self._find_request(
+                    connection, request_id=request.request_id,
+                    brand_id=request.brand_id, owner_user_id=request.owner_user_id,
+                )
+                if row is None:
+                    raise YouTubePublicationConflict("YouTube publication claim is unavailable")
+                claim = self._claim(row)
+                if (claim.publication_id != request.publication_id
+                        or claim.request_fingerprint != request.fingerprint
+                        or claim.status not in {"PUBLISH_REQUESTED", "VERIFY_PENDING"}
+                        or claim.upload_session_ref is not None or claim.remote_video_id is not None):
+                    raise YouTubePublicationConflict("YouTube publication is not recoverable")
+                cursor = await connection.execute(
+                    """UPDATE publication_jobs SET status = 'UPLOAD_STARTED',
+                              upload_session_ref = %s, remote_upload_id = %s,
+                              last_error_code = NULL, last_error_message = NULL
+                       WHERE id = %s AND request_fingerprint = %s
+                         AND status IN ('PUBLISH_REQUESTED','VERIFY_PENDING')
+                         AND upload_session_ref IS NULL AND remote_post_id IS NULL
+                       RETURNING id""",
+                    (session.session_ref, session.upload_id,
+                     claim.publication_id, claim.request_fingerprint),
+                )
+                if await cursor.fetchone() is None:
+                    raise YouTubePublicationConflict("YouTube recovery state changed")
+                recovered = await self._find_claim(connection, claim)
+                if recovered is None:
+                    raise YouTubePublicationConflict("YouTube publication claim is unavailable")
+                return self._claim(recovered)
+        except (YouTubePublicationConflict, RepositoryUnavailable):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("YouTube publication storage is unavailable") from exc
+
+    async def cancel_unknown(
+        self, *, request: YouTubePublishRequest, reason: str,
+    ) -> YouTubePublicationResult:
+        normalized = reason.strip() if isinstance(reason, str) else ""
+        if (not isinstance(request, YouTubePublishRequest) or not normalized
+                or len(normalized) > 500 or any(ord(character) < 32 for character in normalized)
+                or re.search(r"(?i)(token|secret|credential|authorization|cookie)\s*[:=]", normalized)):
+            raise ValueError("YouTube cancellation reason is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                row = await self._find_request(
+                    connection, request_id=request.request_id,
+                    brand_id=request.brand_id, owner_user_id=request.owner_user_id,
+                )
+                if row is None:
+                    raise YouTubePublicationConflict("YouTube publication claim is unavailable")
+                claim = self._claim(row)
+                if (claim.publication_id != request.publication_id
+                        or claim.request_fingerprint != request.fingerprint
+                        or claim.status not in {"PUBLISH_REQUESTED", "VERIFY_PENDING"}
+                        or claim.remote_video_id is not None):
+                    raise YouTubePublicationConflict("YouTube publication cannot be cancelled")
+                cursor = await connection.execute(
+                    """UPDATE publication_jobs SET status = 'CANCELLED',
+                              last_error_code = 'OPERATOR_CANCELLED',
+                              last_error_message = %s
+                       WHERE id = %s AND request_fingerprint = %s
+                         AND status IN ('PUBLISH_REQUESTED','VERIFY_PENDING')
+                         AND remote_post_id IS NULL
+                       RETURNING id, status, remote_post_id, remote_url""",
+                    (normalized, claim.publication_id, claim.request_fingerprint),
+                )
+                result = await cursor.fetchone()
+                if result is None:
+                    raise YouTubePublicationConflict("YouTube cancellation state changed")
+                return YouTubePublicationResult(result[0], result[1], result[2], result[3])
+        except (YouTubePublicationConflict, RepositoryUnavailable):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("YouTube publication storage is unavailable") from exc
+
     async def _update_claim(self, claim: YouTubePublicationClaim, query: str, params) -> YouTubePublicationClaim:
         try:
             async with unit_of_work(self._pool) as connection:
@@ -319,6 +432,35 @@ class YouTubePublicationRepository:
         return await cursor.fetchone()
 
     @staticmethod
+    async def _assert_network_ready_in_transaction(connection, claim: YouTubePublicationClaim) -> None:
+        cursor = await connection.execute(
+            """SELECT 1 FROM publication_jobs AS p
+               JOIN social_channels AS ch ON ch.id = p.channel_id
+               JOIN brands AS b ON b.id = ch.brand_id
+               WHERE p.id = %s AND p.request_fingerprint = %s
+                 AND b.id = %s AND b.owner_user_id = %s
+                 AND ch.enabled = true AND ch.permissions_status = 'VALID'
+                 AND ch.platform = 'YOUTUBE'
+                 AND ch.external_channel_id = p.channel_external_id_snapshot
+                 AND ch.credentials_ref = p.credentials_ref_snapshot
+                 AND p.channel_external_id_snapshot = %s
+                 AND p.credentials_ref_snapshot = %s
+                 AND p.destination_fingerprint = %s
+               FOR KEY SHARE OF p, ch""",
+            (claim.publication_id, claim.request_fingerprint, claim.brand_id,
+             claim.owner_user_id, claim.channel_external_id, claim.credentials_ref,
+             claim.destination_fingerprint),
+        )
+        if await cursor.fetchone() is None:
+            raise YouTubePublicationNotAllowed("YouTube channel authorization changed")
+
+    @staticmethod
+    def _destination_fingerprint(channel_external_id: str, credentials_ref: str) -> str:
+        return hashlib.sha256(
+            f"{channel_external_id}|{credentials_ref}".encode("utf-8")
+        ).hexdigest()
+
+    @staticmethod
     def _eligible(**values) -> bool:
         request = values["request"]
         media = values["media"]
@@ -351,7 +493,7 @@ class YouTubePublicationRepository:
             (publication_id, request_fingerprint, brand_id, owner_user_id,
              content_id, channel_id, asset_id,
              approval_id, artifact_version, external_channel_id, credentials_ref,
-             storage_uri, sha256_hex, size_bytes, mime_type, privacy, status,
+             destination_fingerprint, storage_uri, sha256_hex, size_bytes, mime_type, privacy, status,
              session_ref, upload_id, video_id) = row
             return YouTubePublicationClaim(
                 publication_id=publication_id,
@@ -360,6 +502,7 @@ class YouTubePublicationRepository:
                 content_id=content_id, channel_id=channel_id, asset_id=asset_id,
                 approval_decision_id=approval_id, artifact_version=artifact_version,
                 channel_external_id=external_channel_id, credentials_ref=credentials_ref,
+                destination_fingerprint=destination_fingerprint.strip(),
                 asset_storage_uri=storage_uri, asset_sha256_hex=sha256_hex.strip(),
                 asset_size_bytes=size_bytes, asset_mime_type=mime_type,
                 privacy_status=YouTubePrivacy(privacy), status=status,

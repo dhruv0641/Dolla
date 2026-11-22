@@ -4,6 +4,9 @@ ALTER TABLE publication_jobs
   ADD COLUMN request_id uuid,
   ADD COLUMN request_fingerprint char(64),
   ADD COLUMN approval_decision_id uuid REFERENCES review_decisions(id),
+  ADD COLUMN channel_external_id_snapshot text,
+  ADD COLUMN credentials_ref_snapshot text,
+  ADD COLUMN destination_fingerprint char(64),
   ADD COLUMN asset_sha256_hex char(64),
   ADD COLUMN asset_size_bytes bigint,
   ADD COLUMN intended_privacy_status text,
@@ -14,12 +17,18 @@ ALTER TABLE publication_jobs
   ADD CONSTRAINT publication_jobs_youtube_v1_shape CHECK (
     (request_id IS NULL AND request_fingerprint IS NULL
       AND approval_decision_id IS NULL AND asset_sha256_hex IS NULL
+      AND channel_external_id_snapshot IS NULL
+      AND credentials_ref_snapshot IS NULL
+      AND destination_fingerprint IS NULL
       AND asset_size_bytes IS NULL AND intended_privacy_status IS NULL
       AND upload_session_ref IS NULL AND uploaded_bytes = 0
       AND verification_attempt_count = 0 AND last_verified_at IS NULL)
     OR
     (request_id IS NOT NULL AND request_fingerprint ~ '^[0-9a-f]{64}$'
       AND approval_decision_id IS NOT NULL
+      AND channel_external_id_snapshot ~ '^[A-Za-z0-9_-]{1,200}$'
+      AND credentials_ref_snapshot ~ '^secretref://[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)+$'
+      AND destination_fingerprint ~ '^[0-9a-f]{64}$'
       AND asset_sha256_hex ~ '^[0-9a-f]{64}$'
       AND asset_size_bytes > 0
       AND intended_privacy_status IN ('private','unlisted','public')
@@ -54,6 +63,7 @@ DECLARE render_version_value integer;
 DECLARE render_status text;
 DECLARE review_decision text;
 DECLARE expected_fingerprint text;
+DECLARE expected_destination_fingerprint text;
 BEGIN
   IF NEW.request_id IS NULL THEN
     RAISE EXCEPTION 'new publication jobs require v1 evidence'
@@ -68,9 +78,19 @@ BEGIN
     RAISE EXCEPTION 'initial YouTube publication state is invalid'
       USING ERRCODE = 'check_violation';
   END IF;
+  expected_destination_fingerprint := encode(digest(
+    NEW.channel_external_id_snapshot || '|' || NEW.credentials_ref_snapshot,
+    'sha256'
+  ), 'hex');
+  IF NEW.destination_fingerprint IS DISTINCT FROM expected_destination_fingerprint THEN
+    RAISE EXCEPTION 'YouTube destination fingerprint is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
   IF jsonb_typeof(NEW.platform_metadata) IS DISTINCT FROM 'object'
      OR length(btrim(NEW.platform_metadata->>'title')) NOT BETWEEN 1 AND 100
      OR length(NEW.platform_metadata->>'description') > 5000
+     OR NEW.platform_metadata->>'title' IS DISTINCT FROM btrim(NEW.platform_metadata->>'title')
+     OR NEW.platform_metadata->>'description' IS DISTINCT FROM btrim(NEW.platform_metadata->>'description')
      OR NEW.platform_metadata->>'privacy_status' IS DISTINCT FROM NEW.intended_privacy_status
      OR jsonb_typeof(NEW.platform_metadata->'contains_synthetic_media') IS DISTINCT FROM 'boolean'
      OR NEW.platform_metadata->'notify_subscribers' IS DISTINCT FROM 'false'::jsonb
@@ -113,6 +133,8 @@ BEGIN
      OR channel_platform IS DISTINCT FROM 'YOUTUBE'
      OR channel_external_id !~ '^[A-Za-z0-9_-]{1,200}$'
      OR channel_credentials_ref !~ '^secretref://[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)+$'
+     OR NEW.channel_external_id_snapshot IS DISTINCT FROM channel_external_id
+     OR NEW.credentials_ref_snapshot IS DISTINCT FROM channel_credentials_ref
      OR channel_permissions IS DISTINCT FROM 'VALID' OR channel_enabled IS DISTINCT FROM true
      OR asset_kind_value IS DISTINCT FROM 'EXPORT_VARIANT'
      OR asset_retention IS DISTINCT FROM 'ACTIVE'
@@ -166,12 +188,16 @@ BEGIN
   END IF;
   IF (NEW.id, NEW.request_id, NEW.request_fingerprint, NEW.content_id,
       NEW.channel_id, NEW.asset_id, NEW.approval_decision_id,
-      NEW.artifact_version, NEW.asset_sha256_hex, NEW.asset_size_bytes,
+      NEW.artifact_version, NEW.channel_external_id_snapshot,
+      NEW.credentials_ref_snapshot, NEW.destination_fingerprint,
+      NEW.asset_sha256_hex, NEW.asset_size_bytes,
       NEW.intended_privacy_status, NEW.platform_metadata, NEW.created_at)
      IS DISTINCT FROM
      (OLD.id, OLD.request_id, OLD.request_fingerprint, OLD.content_id,
       OLD.channel_id, OLD.asset_id, OLD.approval_decision_id,
-      OLD.artifact_version, OLD.asset_sha256_hex, OLD.asset_size_bytes,
+      OLD.artifact_version, OLD.channel_external_id_snapshot,
+      OLD.credentials_ref_snapshot, OLD.destination_fingerprint,
+      OLD.asset_sha256_hex, OLD.asset_size_bytes,
       OLD.intended_privacy_status, OLD.platform_metadata, OLD.created_at) THEN
     RAISE EXCEPTION 'YouTube publication claim evidence is immutable'
       USING ERRCODE = 'check_violation';
@@ -190,9 +216,10 @@ BEGIN
       USING ERRCODE = 'check_violation';
   END IF;
   IF NOT (
-    (OLD.status = 'DRAFT' AND NEW.status IN ('UPLOAD_STARTED','VERIFY_PENDING','FAILED')) OR
+    (OLD.status = 'DRAFT' AND NEW.status = 'PUBLISH_REQUESTED') OR
+    (OLD.status = 'PUBLISH_REQUESTED' AND NEW.status IN ('UPLOAD_STARTED','VERIFY_PENDING','FAILED','CANCELLED')) OR
     (OLD.status = 'UPLOAD_STARTED' AND NEW.status IN ('UPLOAD_STARTED','PROCESSING','VERIFY_PENDING','FAILED')) OR
-    (OLD.status = 'VERIFY_PENDING' AND NEW.status IN ('UPLOAD_STARTED','PROCESSING','VERIFY_PENDING','FAILED')) OR
+    (OLD.status = 'VERIFY_PENDING' AND NEW.status IN ('UPLOAD_STARTED','PROCESSING','VERIFY_PENDING','FAILED','CANCELLED')) OR
     (OLD.status = 'PROCESSING' AND NEW.status IN ('PROCESSING','VERIFY_PENDING','PUBLISHED','FAILED'))
   ) THEN
     RAISE EXCEPTION 'YouTube publication transition is invalid'

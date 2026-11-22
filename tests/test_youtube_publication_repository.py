@@ -64,11 +64,15 @@ def publication_request():
 
 def claim_row(request, *, status="DRAFT", session=None, upload_id=None, video_id=None):
     data = b"approved-video"
+    destination_fingerprint = hashlib.sha256(
+        b"UC_verified_channel|secretref://os/youtube-owner-1"
+    ).hexdigest()
     return (
         request.publication_id, request.fingerprint, request.brand_id,
         request.owner_user_id, request.content_id, request.channel_id,
         request.asset_id, uuid4(), request.artifact_version,
         "UC_verified_channel", "secretref://os/youtube-owner-1",
+        destination_fingerprint,
         f"managed://assets/{request.asset_id.hex}/payload",
         hashlib.sha256(data).hexdigest(), len(data), "video/mp4",
         request.privacy_status.value, status, session, upload_id, video_id,
@@ -143,10 +147,11 @@ class YouTubePublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         request = publication_request()
         row = claim_row(request, status="UPLOAD_STARTED",
                         session="secretref://runtime/session-1", upload_id="upload_1")
-        connection = FakeConnection([("SCHEDULED",), row])
+        connection = FakeConnection([("SCHEDULED",), row, (1,)])
         claim = await YouTubePublicationRepository(FakePool(connection)).claim(request)
         self.assertEqual(claim.status, "UPLOAD_STARTED")
-        self.assertEqual(len(connection.calls), 2)
+        self.assertEqual(len(connection.calls), 3)
+        self.assertIn("ch.enabled = true", connection.calls[2][0])
 
     async def test_session_and_upload_updates_lock_exact_owned_claim(self):
         request = publication_request()
@@ -172,6 +177,47 @@ class YouTubePublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         processed = await repository.record_upload(claim=updated, outcome=outcome)
         self.assertEqual(processed.remote_video_id, "video_1")
         self.assertIn("uploaded_bytes", connection.calls[1][0])
+
+    async def test_start_reservation_is_atomic_and_destination_is_rechecked(self):
+        request = publication_request()
+        initial = YouTubePublicationRepository._claim(claim_row(request))
+        requested_row = claim_row(request, status="PUBLISH_REQUESTED")
+        connection = FakeConnection([("DRAFT",), (request.publication_id,), requested_row])
+        repository = YouTubePublicationRepository(FakePool(connection))
+        reserved = await repository.reserve_start(initial)
+        self.assertEqual(reserved.status, "PUBLISH_REQUESTED")
+        self.assertIn("status = 'DRAFT'", connection.calls[1][0])
+
+        connection = FakeConnection([(1,)])
+        await YouTubePublicationRepository(FakePool(connection)).assert_network_ready(reserved)
+        self.assertIn("channel_external_id_snapshot", connection.calls[0][0])
+        self.assertIn("credentials_ref_snapshot", connection.calls[0][0])
+
+    async def test_operator_recovery_and_cancellation_are_owner_scoped(self):
+        request = publication_request()
+        unknown_row = claim_row(request, status="VERIFY_PENDING")
+        recovered_row = claim_row(
+            request, status="UPLOAD_STARTED", session="secretref://runtime/recovered",
+            upload_id="upload_recovered",
+        )
+        connection = FakeConnection([
+            unknown_row, (request.publication_id,), recovered_row,
+        ])
+        repository = YouTubePublicationRepository(FakePool(connection))
+        recovered = await repository.recover_unknown_session(
+            request=request,
+            session=YouTubeUploadSession("secretref://runtime/recovered", "upload_recovered"),
+        )
+        self.assertEqual(recovered.status, "UPLOAD_STARTED")
+
+        connection = FakeConnection([
+            unknown_row,
+            (request.publication_id, "CANCELLED", None, None),
+        ])
+        cancelled = await YouTubePublicationRepository(FakePool(connection)).cancel_unknown(
+            request=request, reason="Operator verified no usable remote session.",
+        )
+        self.assertEqual(cancelled.status, "CANCELLED")
 
     async def test_remote_verification_persists_bounded_canonical_evidence(self):
         request = publication_request()

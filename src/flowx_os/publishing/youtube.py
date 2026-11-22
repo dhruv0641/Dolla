@@ -202,6 +202,7 @@ class YouTubePublicationClaim:
     artifact_version: int
     channel_external_id: str
     credentials_ref: str
+    destination_fingerprint: str
     asset_storage_uri: str
     asset_sha256_hex: str
     asset_size_bytes: int
@@ -220,13 +221,16 @@ class YouTubePublicationClaim:
                 or re.fullmatch(r"[0-9a-f]{64}", self.request_fingerprint) is None
                 or _SAFE_REMOTE_ID.fullmatch(self.channel_external_id) is None
                 or _SECRET_REF.fullmatch(self.credentials_ref) is None
+                or self.destination_fingerprint != hashlib.sha256(
+                    f"{self.channel_external_id}|{self.credentials_ref}".encode("utf-8")
+                ).hexdigest()
                 or self.asset_storage_uri != f"managed://assets/{self.asset_id.hex}/payload"
                 or re.fullmatch(r"[0-9a-f]{64}", self.asset_sha256_hex) is None
                 or type(self.asset_size_bytes) is not int or self.asset_size_bytes <= 0
                 or self.asset_mime_type != "video/mp4"
                 or not isinstance(self.privacy_status, YouTubePrivacy)
                 or self.status not in {
-                    "DRAFT", "UPLOAD_STARTED", "PROCESSING", "VERIFY_PENDING",
+                    "DRAFT", "PUBLISH_REQUESTED", "UPLOAD_STARTED", "PROCESSING", "VERIFY_PENDING",
                     "PUBLISHED", "FAILED", "CANCELLED",
                 }
                 or (self.upload_session_ref is not None
@@ -287,6 +291,8 @@ class YouTubeTransport(Protocol):
 
 class YouTubePublicationStore(Protocol):
     async def claim(self, request: YouTubePublishRequest) -> YouTubePublicationClaim: ...
+    async def assert_network_ready(self, claim: YouTubePublicationClaim) -> None: ...
+    async def reserve_start(self, claim: YouTubePublicationClaim) -> YouTubePublicationClaim: ...
     async def record_session(
         self, *, claim: YouTubePublicationClaim, session: YouTubeUploadSession,
     ) -> YouTubePublicationClaim: ...
@@ -299,6 +305,12 @@ class YouTubePublicationStore(Protocol):
     async def record_verification(
         self, *, claim: YouTubePublicationClaim, remote: YouTubeRemoteVideo,
         status: str,
+    ) -> YouTubePublicationResult: ...
+    async def recover_unknown_session(
+        self, *, request: YouTubePublishRequest, session: YouTubeUploadSession,
+    ) -> YouTubePublicationClaim: ...
+    async def cancel_unknown(
+        self, *, request: YouTubePublishRequest, reason: str,
     ) -> YouTubePublicationResult: ...
 
 
@@ -332,7 +344,8 @@ class YouTubePublisher:
             )
         if claim.status in {"FAILED", "CANCELLED"}:
             raise YouTubeError("PUBLICATION_TERMINAL", "YouTube publication is terminal")
-        if (claim.status == "VERIFY_PENDING" and claim.upload_session_ref is None
+        if (claim.status in {"PUBLISH_REQUESTED", "VERIFY_PENDING"}
+                and claim.upload_session_ref is None
                 and claim.remote_video_id is None):
             raise YouTubeError(
                 "PUBLICATION_OUTCOME_UNKNOWN",
@@ -340,6 +353,7 @@ class YouTubePublisher:
                 ambiguous=True,
             )
 
+        await self._store.assert_network_ready(claim)
         try:
             authorization = await self._transport.check_authorization(
                 credentials_ref=claim.credentials_ref,
@@ -356,6 +370,8 @@ class YouTubePublisher:
             return await self._verify_safely(claim, claim.remote_video_id)
         try:
             if claim.upload_session_ref is None:
+                claim = await self._store.reserve_start(claim)
+                await self._store.assert_network_ready(claim)
                 session = await self._transport.start_resumable_upload(
                     credentials_ref=claim.credentials_ref,
                     expected_channel_id=claim.channel_external_id,
@@ -366,6 +382,7 @@ class YouTubePublisher:
                 )
                 claim = await self._store.record_session(claim=claim, session=session)
             assert claim.upload_session_ref is not None
+            await self._store.assert_network_ready(claim)
             with tempfile.TemporaryDirectory(prefix="flowx-youtube-") as directory:
                 snapshot = Path(directory) / "upload.mp4"
                 await asyncio.to_thread(self._snapshot, claim, snapshot)
@@ -376,7 +393,9 @@ class YouTubePublisher:
                     content_length=claim.asset_size_bytes,
                     sha256_hex=claim.asset_sha256_hex,
                 )
-            if outcome.committed_bytes > claim.asset_size_bytes:
+            if (outcome.committed_bytes > claim.asset_size_bytes
+                    or (outcome.state == YouTubeUploadState.COMPLETE
+                        and outcome.committed_bytes != claim.asset_size_bytes)):
                 raise YouTubeError("REMOTE_RESPONSE_INVALID", "YouTube upload progress is invalid")
             claim = await self._store.record_upload(claim=claim, outcome=outcome)
         except YouTubeError as exc:
@@ -404,6 +423,22 @@ class YouTubePublisher:
         """Re-enter safely: the store returns the existing claim/session/video identity."""
         return await self.publish(request)
 
+    async def recover_session(
+        self, *, request: YouTubePublishRequest, session: YouTubeUploadSession,
+    ) -> YouTubePublicationClaim:
+        """Bind an operator-recovered official session without calling YouTube."""
+        if not isinstance(request, YouTubePublishRequest) or not isinstance(session, YouTubeUploadSession):
+            raise ValueError("YouTube unknown-outcome recovery is invalid")
+        return await self._store.recover_unknown_session(request=request, session=session)
+
+    async def cancel_unknown(
+        self, *, request: YouTubePublishRequest, reason: str,
+    ) -> YouTubePublicationResult:
+        """Resolve an unknown initiation terminally without calling YouTube."""
+        if not isinstance(request, YouTubePublishRequest):
+            raise ValueError("YouTube unknown-outcome cancellation is invalid")
+        return await self._store.cancel_unknown(request=request, reason=reason)
+
     def _require_authorization(
         self, claim: YouTubePublicationClaim, authorization: YouTubeAuthorization,
     ) -> None:
@@ -419,6 +454,7 @@ class YouTubePublisher:
     async def _verify(
         self, claim: YouTubePublicationClaim, video_id: str,
     ) -> YouTubePublicationResult:
+        await self._store.assert_network_ready(claim)
         remote = await self._transport.get_video(
             credentials_ref=claim.credentials_ref, video_id=video_id,
         )

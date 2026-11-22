@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -54,6 +55,9 @@ def claim_for(req, data, **changes):
         "artifact_version": req.artifact_version,
         "channel_external_id": "UC_verified_channel",
         "credentials_ref": "secretref://os/youtube-owner-1",
+        "destination_fingerprint": hashlib.sha256(
+            b"UC_verified_channel|secretref://os/youtube-owner-1"
+        ).hexdigest(),
         "asset_storage_uri": f"managed://assets/{req.asset_id.hex}/payload",
         "asset_sha256_hex": hashlib.sha256(data).hexdigest(),
         "asset_size_bytes": len(data),
@@ -69,10 +73,22 @@ class FakeStore:
     def __init__(self, claim):
         self.current = claim
         self.calls = []
+        self.lock = asyncio.Lock()
 
     async def claim(self, publish_request):
         self.calls.append(("claim", publish_request))
         return self.current
+
+    async def assert_network_ready(self, claim):
+        self.calls.append(("ready", claim.status))
+
+    async def reserve_start(self, claim):
+        async with self.lock:
+            if self.current.status != "DRAFT":
+                raise YouTubeError("START_ALREADY_RESERVED", "YouTube upload start is already reserved")
+            self.current = replace(self.current, status="PUBLISH_REQUESTED")
+            self.calls.append(("reserve", claim.publication_id))
+            return self.current
 
     async def record_session(self, *, claim, session):
         self.calls.append(("session", session))
@@ -106,6 +122,19 @@ class FakeStore:
             claim.publication_id, status, remote.video_id,
             remote.canonical_url if status == "PUBLISHED" else None,
         )
+
+    async def recover_unknown_session(self, *, request, session):
+        if self.current.status not in {"PUBLISH_REQUESTED", "VERIFY_PENDING"}:
+            raise YouTubeError("RECOVERY_NOT_ALLOWED", "YouTube publication is not recoverable")
+        self.current = replace(
+            self.current, status="UPLOAD_STARTED",
+            upload_session_ref=session.session_ref, remote_upload_id=session.upload_id,
+        )
+        return self.current
+
+    async def cancel_unknown(self, *, request, reason):
+        self.current = replace(self.current, status="CANCELLED")
+        return YouTubePublicationResult(self.current.publication_id, "CANCELLED")
 
 
 class FakeTransport:
@@ -145,6 +174,20 @@ class FakeTransport:
 class ExplodingTransport(FakeTransport):
     async def start_resumable_upload(self, **kwargs):
         raise RuntimeError("raw transport detail must not escape")
+
+
+class BlockingStartTransport(FakeTransport):
+    def __init__(self):
+        super().__init__()
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+        self.start_count = 0
+
+    async def start_resumable_upload(self, **kwargs):
+        self.start_count += 1
+        self.started.set()
+        await self.release.wait()
+        return await super().start_resumable_upload(**kwargs)
 
 
 class YouTubePublishingTests(unittest.IsolatedAsyncioTestCase):
@@ -187,7 +230,8 @@ class YouTubePublishingTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(start["metadata"]["notify_subscribers"])
         self.assertEqual(start["metadata"]["privacy_status"], "private")
         self.assertEqual([item[0] for item in store.calls], [
-            "claim", "session", "upload", "verification",
+            "claim", "ready", "reserve", "ready", "session", "ready",
+            "upload", "ready", "verification",
         ])
 
     async def test_processing_is_not_misreported_as_published(self):
@@ -220,6 +264,20 @@ class YouTubePublishingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(second.status, "UPLOAD_STARTED")
         self.assertNotIn("start", [item[0] for item in transport.calls])
         self.assertIn("resume", [item[0] for item in transport.calls])
+
+    async def test_atomic_start_reservation_allows_only_one_remote_initiation(self):
+        store = FakeStore(claim_for(self.req, self.data))
+        transport = BlockingStartTransport()
+        publisher = self.publisher(store, transport)
+        first = asyncio.create_task(publisher.publish(self.req))
+        await transport.started.wait()
+        with self.assertRaises(YouTubeError) as second:
+            await publisher.publish(self.req)
+        self.assertEqual(second.exception.code, "PUBLICATION_OUTCOME_UNKNOWN")
+        transport.release.set()
+        result = await first
+        self.assertEqual(result.status, "PUBLISHED")
+        self.assertEqual(transport.start_count, 1)
 
     async def test_existing_video_identity_verifies_without_reupload(self):
         current = claim_for(
@@ -279,6 +337,34 @@ class YouTubePublishingTests(unittest.IsolatedAsyncioTestCase):
             await self.publisher(store, transport).publish(self.req)
         self.assertEqual(retry.exception.code, "PUBLICATION_OUTCOME_UNKNOWN")
         self.assertNotIn("start", [item[0] for item in transport.calls])
+
+    async def test_operator_can_recover_session_or_cancel_unknown_without_network(self):
+        unknown = claim_for(self.req, self.data, status="VERIFY_PENDING")
+        store, transport = FakeStore(unknown), FakeTransport()
+        publisher = self.publisher(store, transport)
+        recovered = await publisher.recover_session(
+            request=self.req,
+            session=YouTubeUploadSession("secretref://runtime/recovered-session", "upload_recovered"),
+        )
+        self.assertEqual(recovered.status, "UPLOAD_STARTED")
+        self.assertEqual(transport.calls, [])
+
+        store.current = replace(unknown, status="VERIFY_PENDING")
+        cancelled = await publisher.cancel_unknown(
+            request=self.req, reason="Operator verified no usable remote session.",
+        )
+        self.assertEqual(cancelled.status, "CANCELLED")
+        self.assertEqual(transport.calls, [])
+
+    async def test_short_complete_response_is_rejected_before_persistence(self):
+        outcome = YouTubeUploadOutcome(
+            YouTubeUploadState.COMPLETE, len(self.data) - 1, "video_123",
+        )
+        store, transport = FakeStore(claim_for(self.req, self.data)), FakeTransport(outcome=outcome)
+        with self.assertRaises(YouTubeError) as caught:
+            await self.publisher(store, transport).publish(self.req)
+        self.assertEqual(caught.exception.code, "REMOTE_RESPONSE_INVALID")
+        self.assertNotIn("upload", [item[0] for item in store.calls])
 
     async def test_asset_integrity_mismatch_fails_after_session_without_upload(self):
         current = claim_for(self.req, self.data, asset_sha256_hex="0" * 64)

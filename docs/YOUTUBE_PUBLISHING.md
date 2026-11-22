@@ -22,10 +22,17 @@ itself. No live upload was performed while implementing this task.
   after its path, MP4 signature, size and SHA-256 digest are revalidated.
 - Metadata always sends `notifySubscribers=false`. The default policy allows
   only `private`; `unlisted` or `public` requires an explicit policy change.
-- The request fingerprint and unique request/approval-channel keys make claim
-  creation idempotent. A stored upload-session reference and committed byte
-  count support resumable re-entry. Unknown transport outcomes become
-  `VERIFY_PENDING`; they are never blindly replaced with a new upload.
+- The request fingerprint, immutable channel/credential destination fingerprint
+  and unique request/approval-channel keys make claim creation idempotent. The
+  current channel must still be enabled, `VALID` and equal to that snapshot
+  before every network operation.
+- A transactional `PUBLISH_REQUESTED` transition is the single-winner barrier
+  before `videos.insert`; the adapter fingerprint is not assumed to be a remote
+  YouTube idempotency key. A stored upload-session reference and committed byte
+  count support resumable re-entry. Unknown initiation outcomes become
+  `VERIFY_PENDING` and never start a replacement upload automatically. An
+  authenticated operator may attach a recovered opaque session reference or
+  cancel the unknown claim after investigation.
 - A completed upload response is not publication proof. The job reaches
   `PUBLISHED` only after owner-authorized `videos.list` evidence matches the
   exact video ID and channel, reports `status.uploadStatus=processed`, reports
