@@ -35,7 +35,7 @@ Scheduling is permission to attempt the normal claim flow, not proof that genera
 
 ## Persistence
 
-Migration 0016 adds the decision, stable reason, unique retry reservation, approval fingerprint, configured maximum attempts and decision time to `generation_jobs`. New transitions to `FAILED` require a complete gate envelope. `ALLOW` requires an eligible same-owner reserved wallet record; `DENY` cannot carry reservation or approval evidence. Once written, retry-gate fields, `retry_scheduled`, and the decision row cannot be updated or deleted.
+Migration 0016 adds the decision, stable reason, unique retry reservation, approval fingerprint, configured maximum attempts and decision time to `generation_jobs`. New transitions to `FAILED` require a complete gate envelope. `ALLOW` requires an eligible same-owner reserved wallet record; `DENY` cannot carry reservation or approval evidence. Once written, the complete decided generation-job row cannot be updated or deleted, preserving its request, remote identity, spend, failure and gate evidence together.
 
 Pre-migration failed rows are retained as legacy history; they cannot be represented as new verified TASK-049 decisions. Repository replay fails closed if a failed row lacks the new evidence.
 
