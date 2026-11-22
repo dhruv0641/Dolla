@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-039
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#147](https://github.com/dhruv0641/Dolla/issues/147)
+- **Branch:** `feature/TASK-040-audio-preview-management`
+- **Blockers:** No code blocker. Preview must remain owner-scoped and local; raw paths and unverified/retired media must never be served.
 
 ## User Story
 As a FLOW AI Content OS operator, I want audio preview and management, so the platform can progress safely through a traceable production lifecycle.
@@ -26,9 +28,16 @@ Deliver audio preview and management as an independently verifiable capability w
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+
+## Acceptance Evidence
+- Commit `5210a5c` implements owner-scoped audio inventory, full-integrity bounded previews and recoverable retirement APIs; issue [#147](https://github.com/dhruv0641/Dolla/issues/147) tracks delivery.
+- Independent review reran 23 preview/catalog/API tests with no blocker; the full 342-test non-migration backend suite passes.
+- Reviewer confirmed owner/lineage concealment, path/inode/hash safety, range semantics, private response controls, role gates, redacted errors and transactional tombstones.
+- Compileall, project-plan validation and diff check pass. No migration is added by this task.
+- PostgreSQL concurrency, production filesystem races, live deployment and browser playback remain unverified and are not claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.

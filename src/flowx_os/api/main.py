@@ -5,13 +5,14 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 import json
 import logging
+from pathlib import Path
 import re
 from time import perf_counter
 from uuid import UUID
 from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
@@ -51,6 +52,7 @@ from flowx_os.db.content import (
     RepositoryUnavailable,
 )
 from flowx_os.db.assets import AssetRepository, AssetRecord, InvalidAssetLineage
+from flowx_os.db.asset_catalog import AssetCatalogRepository, AssetRetentionBlocked
 from flowx_os.db.storyboards import (
     InvalidStoryboardTimeline,
     StoryboardRepository,
@@ -76,6 +78,7 @@ from flowx_os.domain.content_state import ContentStatus
 from flowx_os.domain.assets import AssetKind
 from flowx_os.domain.storyboard import StoryboardTimeline
 from flowx_os.api.observability import RequestMetrics
+from flowx_os.assets.audio_preview import AudioPreviewError, AudioPreviewService
 
 
 _request_logger = logging.getLogger("flowx.api.request")
@@ -200,6 +203,40 @@ class AssetResponse(BaseModel):
     size_bytes: int
     media_metadata: dict[str, object]
     created_at: datetime
+
+
+class AudioAssetResponse(BaseModel):
+    asset_id: UUID
+    content_id: UUID
+    scene_id: UUID | None
+    kind: AssetKind
+    mime_type: str
+    size_bytes: int
+    duration_ms: int | None
+    timeline_start_ms: int | None
+    created_at: datetime
+
+
+class AudioRetireRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created_before: datetime
+    reason: str = Field(min_length=3, max_length=100)
+
+    @field_validator("created_before")
+    @classmethod
+    def cutoff_is_aware_and_past(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value >= datetime.now(timezone.utc):
+            raise ValueError("an explicit past retention cutoff is required")
+        return value
+
+    @field_validator("reason")
+    @classmethod
+    def reason_is_safe(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3 or any(ord(character) < 32 for character in value):
+            raise ValueError("retention reason is invalid")
+        return value
 
 
 class FlowAccountCreate(BaseModel):
@@ -406,6 +443,7 @@ def create_app(
     credit_reservation_service: CreditReservationService | None = None,
     credit_reconciliation_service: CreditReconciliationService | None = None,
     credit_risk_alarm_service: CreditRiskAlarmService | None = None,
+    storage_root: Path | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -435,6 +473,7 @@ def create_app(
 
     app.state.token_verifier = token_verifier
     app.state.database_pool = database_pool
+    app.state.storage_root = storage_root
     configured_credit_ledger_service = credit_reconciliation_service
     if configured_credit_ledger_service is None and database_pool is not None:
         configured_credit_ledger_service = CreditReconciliationService(
@@ -1034,6 +1073,122 @@ def create_app(
             media_metadata=record.metadata.media_metadata,
             created_at=record.created_at,
         ) for record in records]
+
+    @app.get(
+        "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets",
+        response_model=list[AudioAssetResponse],
+        tags=["audio"],
+    )
+    async def list_audio_assets(
+        brand_id: UUID,
+        content_id: UUID,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> list[AudioAssetResponse]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            records = await AssetRepository(database_pool).list_for_content(
+                brand_id=brand_id, content_id=content_id, owner_user_id=principal.subject,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        response: list[AudioAssetResponse] = []
+        for record in records:
+            asset = record.metadata
+            if not asset.mime_type.startswith("audio/"):
+                continue
+            duration = asset.media_metadata.get("duration_ms")
+            start = asset.media_metadata.get("timeline_start_ms")
+            response.append(AudioAssetResponse(
+                asset_id=asset.asset_id, content_id=asset.content_id, scene_id=asset.scene_id,
+                kind=asset.kind, mime_type=asset.mime_type, size_bytes=asset.size_bytes,
+                duration_ms=duration if type(duration) is int and duration >= 0 else None,
+                timeline_start_ms=start if type(start) is int and start >= 0 else None,
+                created_at=record.created_at,
+            ))
+        return response
+
+    @app.get(
+        "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets/{asset_id}/preview",
+        tags=["audio"],
+    )
+    async def preview_audio_asset(
+        brand_id: UUID,
+        content_id: UUID,
+        asset_id: UUID,
+        range_header: str | None = Header(default=None, alias="Range"),
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.REVIEWER)),
+    ) -> Response:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        if storage_root is None:
+            raise HTTPException(status_code=503, detail="audio_preview_not_configured")
+        try:
+            payload = await AudioPreviewService(
+                storage_root=storage_root,
+                store=AssetCatalogRepository(database_pool),
+            ).preview(
+                asset_id=asset_id, brand_id=brand_id, content_id=content_id,
+                owner_user_id=principal.subject, range_header=range_header,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="audio_asset_not_found") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        except AudioPreviewError as exc:
+            if exc.code.startswith("RANGE_"):
+                headers = {"Accept-Ranges": "bytes"}
+                if exc.total is not None:
+                    headers["Content-Range"] = f"bytes */{exc.total}"
+                raise HTTPException(status_code=416, detail="audio_range_invalid", headers=headers) from exc
+            raise HTTPException(status_code=409, detail="audio_preview_unavailable") from exc
+        selected = payload.selected_range
+        headers = {
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "private, no-store",
+            "ETag": payload.etag,
+            "Content-Length": str(selected.length),
+            "X-Content-Type-Options": "nosniff",
+        }
+        if payload.partial:
+            headers["Content-Range"] = f"bytes {selected.start}-{selected.end}/{selected.total}"
+        return Response(
+            content=payload.data, status_code=206 if payload.partial else 200,
+            media_type=payload.mime_type, headers=headers,
+        )
+
+    @app.post(
+        "/api/v1/brands/{brand_id}/content/{content_id}/audio-assets/{asset_id}/retire",
+        tags=["audio"],
+    )
+    async def retire_audio_asset(
+        brand_id: UUID,
+        content_id: UUID,
+        asset_id: UUID,
+        body: AudioRetireRequest,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+    ) -> dict[str, bool]:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        catalog = AssetCatalogRepository(database_pool)
+        try:
+            await catalog.get_active_audio(
+                asset_id=asset_id, brand_id=brand_id, content_id=content_id,
+                owner_user_id=principal.subject,
+            )
+            retired = await catalog.tombstone(
+                asset_id=asset_id, owner_user_id=principal.subject,
+                created_before=body.created_before, reason=body.reason,
+            )
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="audio_asset_not_found") from exc
+        except AssetRetentionBlocked as exc:
+            raise HTTPException(status_code=409, detail="audio_retention_blocked") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        return {"retired": retired}
 
     return app
 
