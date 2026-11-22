@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-042
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#156](https://github.com/dhruv0641/Dolla/issues/156)
+- **Branch:** `feature/TASK-043-compose-scenes-media`
+- **Blockers:** None. Composition remains local and fails closed if any scene, narration or subtitle asset is unavailable or outside authorized lineage.
 
 ## User Story
 As a FLOW AI Content OS operator, I want compose scenes, audio and subtitles, so the platform can progress safely through a traceable production lifecycle.
