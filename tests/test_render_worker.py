@@ -75,10 +75,10 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
         contain = RenderPolicy(target_width=320, target_height=180, frame_rate=30, fit_mode="CONTAIN")
         self.assertEqual(
             _video_filter(cover),
-            "scale=180:320:force_original_aspect_ratio=increase:force_divisible_by=2,"
+            "scale=180:320:force_original_aspect_ratio=increase:force_divisible_by=2:reset_sar=1,"
             "crop=180:320,setsar=1,fps=24,setpts=PTS-STARTPTS",
         )
-        self.assertIn("pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black", _video_filter(contain))
+        self.assertIn("reset_sar=1,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black", _video_filter(contain))
         source = type("Source", (), {
             "asset_id": SOURCE_ID, "storage_uri": f"managed://assets/{SOURCE_ID.hex}/payload",
             "sha256_hex": "d" * 64, "mime_type": "video/mp4", "size_bytes": 120,
@@ -133,7 +133,7 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
             subprocess.run(
                 ["ffmpeg", "-nostdin", "-v", "error", "-f", "lavfi", "-i",
                  "color=c=blue:s=160x90:r=10", "-t", "0.25", "-c:v", "libx264",
-                 "-pix_fmt", "yuv420p", "-an", str(raw)],
+                 "-vf", "setsar=4/3", "-pix_fmt", "yuv420p", "-an", str(raw)],
                 check=True, timeout=20,
             )
             source = ManagedAssetStore(root).store(asset_id=SOURCE_ID, source_path=raw, mime_type="video/mp4")

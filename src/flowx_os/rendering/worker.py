@@ -308,12 +308,12 @@ def _video_filter(policy: RenderPolicy) -> str:
     width, height = policy.target_width, policy.target_height
     if policy.fit_mode == "COVER":
         geometry = (
-            f"scale={width}:{height}:force_original_aspect_ratio=increase:force_divisible_by=2,"
+            f"scale={width}:{height}:force_original_aspect_ratio=increase:force_divisible_by=2:reset_sar=1,"
             f"crop={width}:{height}"
         )
     else:
         geometry = (
-            f"scale={width}:{height}:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+            f"scale={width}:{height}:force_original_aspect_ratio=decrease:force_divisible_by=2:reset_sar=1,"
             f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black"
         )
     return f"{geometry},setsar=1,fps={policy.frame_rate},setpts=PTS-STARTPTS"
@@ -355,7 +355,7 @@ class FfmpegRenderWorker:
                 )
                 await asyncio.to_thread(
                     _run,
-                    [self._ffmpeg, "-nostdin", "-v", "error", "-xerror", "-threads", "1",
+                    [self._ffmpeg, "-nostdin", "-v", "error", "-xerror", "-max_alloc", "268435456", "-threads", "1",
                      "-protocol_whitelist", "file", "-format_whitelist", demuxer[1], "-f", demuxer[0],
                      "-i", str(snapshot), "-map", "0:v:0", "-map", "0:a?", "-map_metadata", "-1",
                      "-map_chapters", "-1", "-vf", _video_filter(self._policy),

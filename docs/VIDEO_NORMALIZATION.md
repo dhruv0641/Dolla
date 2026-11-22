@@ -6,7 +6,7 @@ TASK-042 extends the bounded `FfmpegRenderWorker` with a declarative `RenderPoli
 
 - `COVER` scales until the target canvas is filled, then center-crops. It preserves geometry without stretching but may remove edge content.
 - `CONTAIN` scales until the complete source fits, then centers it on black padding. It preserves all source content but may add bars.
-- Both modes reset sample aspect to 1:1, set a constant frame-rate filter and rebase video timestamps to zero. FFmpeg's local autorotation is applied before filtering, and source rotation metadata is removed from the output.
+- Both modes ask the scale stage to preserve display aspect while converting anamorphic input to square pixels, then explicitly set sample aspect to 1:1, set a constant frame-rate filter and rebase video timestamps to zero. FFmpeg's local autorotation is applied before filtering, and source rotation metadata is removed from the output.
 
 Width, height, FPS and fit mode are recorded in both the path-free command manifest and the final asset metadata. They are part of the plan fingerprint, so changing any profile field creates a different deterministic plan. Raw filters and arbitrary codec names remain unavailable to callers.
 
