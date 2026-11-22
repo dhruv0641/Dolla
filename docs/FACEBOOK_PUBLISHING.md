@@ -24,9 +24,11 @@ API-published Reels to 30 posts per Page in a moving 24-hour period; scheduling
 and policy-level rate accounting belong to TASK-061.
 
 Transport adapters normalize Meta phase values to `completed`, `error`,
-`not_started`, or `in_progress`. They must not weaken an unrecognized value to a
-successful state. A Reel is locally `PUBLISHED` only after the exact video reports
-completed upload, processing and publishing phases and a separately retrieved
+`not_started`, or `in_progress`, and retain the separate publishing
+`publish_status` value. They must not weaken an unrecognized value to a
+successful state. A Reel is locally `PUBLISHED` only after the exact video is
+`ready`, reports completed upload, processing and publishing phases, has
+`publish_status=published`, and a separately retrieved
 Page Reel/Post proof binds the expected Page, video, post and Facebook permalink.
 
 ## Local safety contract

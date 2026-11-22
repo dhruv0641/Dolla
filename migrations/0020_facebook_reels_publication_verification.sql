@@ -318,10 +318,11 @@ BEGIN
     IF video_id_value IS DISTINCT FROM NEW.remote_upload_id
        OR page_id_value IS DISTINCT FROM NEW.channel_external_id_snapshot
        OR post_id_value IS DISTINCT FROM NEW.remote_post_id
-       OR NEW.last_remote_status->>'video_status' IS DISTINCT FROM 'published'
+       OR NEW.last_remote_status->>'video_status' IS DISTINCT FROM 'ready'
        OR NEW.last_remote_status->>'uploading_status' IS DISTINCT FROM 'completed'
        OR NEW.last_remote_status->>'processing_status' IS DISTINCT FROM 'completed'
        OR NEW.last_remote_status->>'publishing_status' IS DISTINCT FROM 'completed'
+       OR NEW.last_remote_status->>'publish_status' IS DISTINCT FROM 'published'
        OR NEW.last_remote_status->'published' IS DISTINCT FROM 'true'::jsonb
        OR (NEW.last_remote_status->>'bytes_transferred')::bigint IS DISTINCT FROM NEW.asset_size_bytes
        OR permalink_value !~ '^https://(www[.])?facebook[.]com/[A-Za-z0-9._/?=&-]+$'

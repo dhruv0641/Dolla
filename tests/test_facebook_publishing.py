@@ -48,13 +48,15 @@ def request() -> FacebookPublishRequest:
 
 def status(
     claim: FacebookPublicationClaim, state: FacebookVideoState,
+    *, published: bool = False,
 ) -> FacebookVideoStatus:
-    complete = state in {FacebookVideoState.READY, FacebookVideoState.PUBLISHED}
+    complete = state == FacebookVideoState.READY
     return FacebookVideoStatus(
         video_id=claim.remote_video_id or "video-1", page_id=claim.page_id,
         state=state, uploading_status="completed" if complete else "in_progress",
         processing_status="completed" if complete else "in_progress",
-        publishing_status="completed" if state == FacebookVideoState.PUBLISHED else "not_started",
+        publishing_status="completed" if published else "not_started",
+        publish_status="published" if published else "not_started",
         bytes_transferred=claim.asset_size_bytes if complete else 0,
         source_file_size=claim.asset_size_bytes,
     )
@@ -258,7 +260,9 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(transport.calls.count("finish"), 1)
         self.assertEqual(transport.calls.count("reel"), 0)
 
-        transport.remote_status = status(store.value, FacebookVideoState.PUBLISHED)
+        transport.remote_status = status(
+            store.value, FacebookVideoState.READY, published=True,
+        )
         fourth = await publisher.publish(self.request)
         self.assertEqual(fourth.status, "PUBLISHED")
         self.assertEqual(fourth.remote_url, "https://www.facebook.com/reel/12345")
@@ -370,7 +374,7 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
             remote_video_id="video-1", upload_session_ref="secretref://meta/upload/session-1",
         )
         publisher, store, transport = self.publisher(Store(base), Transport(base))
-        transport.remote_status = status(base, FacebookVideoState.PUBLISHED)
+        transport.remote_status = status(base, FacebookVideoState.READY, published=True)
         with self.assertRaises(FacebookError) as raised:
             await publisher.publish(self.request)
         self.assertTrue(raised.exception.ambiguous)
@@ -387,7 +391,8 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
         publisher, store, transport = self.publisher(Store(base), Transport(base))
         transport.remote_status = FacebookVideoStatus(
             "video-1", base.page_id, FacebookVideoState.ERROR,
-            "completed", "error", "error", base.asset_size_bytes, base.asset_size_bytes,
+            "completed", "error", "error", "error",
+            base.asset_size_bytes, base.asset_size_bytes,
         )
         result = await publisher.publish(self.request)
         self.assertEqual(result.status, "FAILED")

@@ -40,7 +40,6 @@ class FacebookVideoState(StrEnum):
     UPLOAD_COMPLETE = "upload_complete"
     PROCESSING = "processing"
     READY = "ready"
-    PUBLISHED = "published"
     ERROR = "error"
     EXPIRED = "expired"
     UPLOAD_FAILED = "upload_failed"
@@ -169,6 +168,7 @@ class FacebookVideoStatus:
     uploading_status: str
     processing_status: str
     publishing_status: str
+    publish_status: str
     bytes_transferred: int
     source_file_size: int
 
@@ -180,6 +180,9 @@ class FacebookVideoStatus:
                 or self.uploading_status not in phase_states
                 or self.processing_status not in phase_states
                 or self.publishing_status not in phase_states
+                or self.publish_status not in {
+                    "draft", "error", "not_started", "published", "scheduled",
+                }
                 or type(self.bytes_transferred) is not int or self.bytes_transferred < 0
                 or type(self.source_file_size) is not int or self.source_file_size < 0
                 or self.bytes_transferred > self.source_file_size):
@@ -456,7 +459,7 @@ class FacebookPublisher:
             return await self._verify_safely(claim)
 
         remote = await self._status_safely(claim)
-        if remote.state == FacebookVideoState.PUBLISHED:
+        if remote.publish_status == "published":
             error = FacebookError(
                 "PUBLISH_RECEIPT_UNKNOWN",
                 "published Facebook Reel requires publish recovery evidence",
@@ -465,10 +468,11 @@ class FacebookPublisher:
             await self._store.record_transport_failure(claim=claim, error=error)
             raise error
         claim = await self._store.record_video_status(claim=claim, remote=remote)
-        if remote.state in {FacebookVideoState.ERROR, FacebookVideoState.EXPIRED,
-                            FacebookVideoState.UPLOAD_FAILED}:
+        if (remote.state in {FacebookVideoState.ERROR, FacebookVideoState.EXPIRED,
+                             FacebookVideoState.UPLOAD_FAILED}
+                or remote.publish_status == "error"):
             return FacebookPublicationResult(claim.publication_id, "FAILED", claim.remote_video_id)
-        if remote.state not in {FacebookVideoState.READY, FacebookVideoState.PUBLISHED}:
+        if remote.state != FacebookVideoState.READY:
             return FacebookPublicationResult(claim.publication_id, "PROCESSING", claim.remote_video_id)
         claim = await self._store.reserve_publish(claim)
         await self._authorize(claim)
@@ -573,18 +577,19 @@ class FacebookPublisher:
         try:
             status = await self._status_safely(claim)
             claim = await self._store.record_video_status(claim=claim, remote=status)
-            if status.state in {
+            if (status.state in {
                 FacebookVideoState.ERROR,
                 FacebookVideoState.EXPIRED,
                 FacebookVideoState.UPLOAD_FAILED,
-            }:
+            } or status.publish_status == "error"):
                 return FacebookPublicationResult(
                     claim.publication_id, "FAILED", claim.remote_video_id,
                 )
-            if (status.state != FacebookVideoState.PUBLISHED
+            if (status.state != FacebookVideoState.READY
                     or status.uploading_status != "completed"
                     or status.processing_status != "completed"
-                    or status.publishing_status != "completed"):
+                    or status.publishing_status != "completed"
+                    or status.publish_status != "published"):
                 return FacebookPublicationResult(
                     claim.publication_id, "VERIFY_PENDING", claim.remote_video_id,
                 )

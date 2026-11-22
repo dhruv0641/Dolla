@@ -103,13 +103,14 @@ def eligible_evidence(request, **changes):
     )
 
 
-def video_status(claim, state=FacebookVideoState.READY):
-    completed = state in {FacebookVideoState.READY, FacebookVideoState.PUBLISHED}
+def video_status(claim, state=FacebookVideoState.READY, *, published=False):
+    completed = state == FacebookVideoState.READY
     return FacebookVideoStatus(
         claim.remote_video_id, claim.page_id, state,
         "completed" if completed else "in_progress",
         "completed" if completed else "in_progress",
-        "completed" if state == FacebookVideoState.PUBLISHED else "not_started",
+        "completed" if published else "not_started",
+        "published" if published else "not_started",
         claim.asset_size_bytes if completed else 0, claim.asset_size_bytes,
     )
 
@@ -208,7 +209,7 @@ class FacebookPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
             request, status="VERIFY_PENDING", phase="PUBLISH_ACCEPTED",
             video="video_1", session="secretref://meta/upload/session-1", post="post_1",
         ))
-        published_status = video_status(accepted, FacebookVideoState.PUBLISHED)
+        published_status = video_status(accepted, published=True)
         remote = FacebookRemoteReel(
             "video_1", "123456", "post_1",
             "https://www.facebook.com/reel/12345", True,

@@ -253,8 +253,9 @@ class FacebookPublicationRepository:
                 or remote.page_id != claim.page_id
                 or remote.source_file_size != claim.asset_size_bytes):
             raise ValueError("Facebook video status is invalid")
-        if remote.state in {FacebookVideoState.ERROR, FacebookVideoState.EXPIRED,
-                            FacebookVideoState.UPLOAD_FAILED}:
+        if (remote.state in {FacebookVideoState.ERROR, FacebookVideoState.EXPIRED,
+                             FacebookVideoState.UPLOAD_FAILED}
+                or remote.publish_status == "error"):
             status, phase = "FAILED", "FAILED"
         elif claim.phase == "PUBLISH_ACCEPTED":
             status, phase = "VERIFY_PENDING", "PUBLISH_ACCEPTED"
@@ -346,7 +347,7 @@ class FacebookPublicationRepository:
     ) -> FacebookPublicationResult:
         if (not isinstance(status, FacebookVideoStatus)
                 or not isinstance(remote, FacebookRemoteReel)
-                or status.state != FacebookVideoState.PUBLISHED
+                or status.state != FacebookVideoState.READY
                 or status.video_id != claim.remote_video_id
                 or status.page_id != claim.page_id
                 or status.bytes_transferred != claim.asset_size_bytes
@@ -616,6 +617,7 @@ class FacebookPublicationRepository:
             "uploading_status": remote.uploading_status,
             "processing_status": remote.processing_status,
             "publishing_status": remote.publishing_status,
+            "publish_status": remote.publish_status,
             "bytes_transferred": remote.bytes_transferred,
             "source_file_size": remote.source_file_size,
         }, sort_keys=True, separators=(",", ":"))
