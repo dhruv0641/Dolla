@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-041
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#153](https://github.com/dhruv0641/Dolla/issues/153)
 - **Branch:** `feature/TASK-042-normalize-video-profile`
+- **Implementation PR:** [#154](https://github.com/dhruv0641/Dolla/pull/154), merged to `develop` as `fb9b840bfa94ba6aa6e6626a360109debf06c9ea`
 - **Blockers:** None. Runtime FFmpeg/ffprobe availability remains fail-closed and must not be inferred from planning state.
 
 ## User Story
@@ -38,6 +39,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Profile fields are included in the path-free manifest and fingerprint and copied to final asset metadata. Bounded `ffprobe` requires one H.264 stream with exact dimensions/FPS/SAR and AAC for any audio before ingest.
 - Six focused tests include real local normalization from anamorphic 160×90 landscape (SAR 4:3) to square-pixel 180×320 portrait at 10 FPS and prove missing probe fails before ingest; 19 rendering/media/asset regressions and all 348 non-migration backend tests pass.
 - Independent Technical Reviewer accepted final head `b267605` with no blocker after checking cover/contain geometry, explicit scale-stage SAR reset, allocation bounds, exact output validation, fixed-filter safety, fingerprinting and downstream scope separation.
+- Both required checks and the post-merge `develop` check passed for [PR #154](https://github.com/dhruv0641/Dolla/pull/154); no direct protected-branch push occurred.
 - Compileall, project-plan validation and diff check pass. Semantic crop safety, rotation-specific fixtures, cross-build byte equality, production load isolation and downstream scene/audio/subtitle composition remain unverified and are not claimed.
 
 ## Tests and Verification
