@@ -12,7 +12,6 @@ The implementation was checked against Meta's current documentation on
 - [Reels Publishing API](https://developers.facebook.com/documentation/video-api/guides/reels-publishing)
 - [Page Video Reels reference](https://developers.facebook.com/docs/graph-api/reference/page/video_reels/)
 - [Video reference and status](https://developers.facebook.com/docs/graph-api/reference/video/)
-- [Page Post reference](https://developers.facebook.com/docs/graph-api/reference/pagepost)
 
 The injected transport must use a Page access token for the exact configured
 Page. Authorization evidence must include the `CREATE_CONTENT` Page task and
@@ -28,8 +27,12 @@ Transport adapters normalize Meta phase values to `completed`, `error`,
 `publish_status` value. They must not weaken an unrecognized value to a
 successful state. A Reel is locally `PUBLISHED` only after the exact video is
 `ready`, reports completed upload, processing and publishing phases, has
-`publish_status=published`, and a separately retrieved
-Page Reel/Post proof binds the expected Page, video, post and Facebook permalink.
+`publish_status=published`, and a separately retrieved Page Reel listing binds
+the expected Page and video. The stored public link is the canonical
+`https://www.facebook.com/reel/{video_id}` derived only after that verification;
+the generic Page Post edge is not treated as a Reel listing. An unexpected
+scheduled state fails closed for operator reconciliation because TASK-059 does
+not authorize scheduling.
 
 ## Local safety contract
 

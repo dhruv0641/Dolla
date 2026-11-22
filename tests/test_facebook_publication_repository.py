@@ -212,7 +212,7 @@ class FacebookPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         published_status = video_status(accepted, published=True)
         remote = FacebookRemoteReel(
             "video_1", "123456", "post_1",
-            "https://www.facebook.com/reel/12345", True,
+            "https://www.facebook.com/reel/video_1", True,
         )
         connection = FakeConnection([
             ("VERIFY_PENDING",),
@@ -255,6 +255,27 @@ class FacebookPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(claim.remote_post_id, "post_1")
         self.assertIn("b.owner_user_id = %s", connection.calls[0][0])
+
+    async def test_pre_receipt_published_evidence_has_an_exact_recovery_path(self):
+        request = publication_request()
+        unknown = claim_row(
+            request, status="PROCESSING", phase="VIDEO_READY",
+            video="video_1", session="secretref://meta/upload/session-1",
+        )
+        recovered = claim_row(
+            request, status="VERIFY_PENDING", phase="PUBLISH_ACCEPTED",
+            video="video_1", session="secretref://meta/upload/session-1", post="post_1",
+        )
+        connection = FakeConnection([
+            unknown, ("PROCESSING",), (request.publication_id,), recovered,
+        ])
+        claim = await FacebookPublicationRepository(FakePool(connection)).recover_publish(
+            request=request, receipt=FacebookPublishReceipt("video_1", True, "post_1"),
+        )
+        self.assertEqual(claim.phase, "PUBLISH_ACCEPTED")
+        recovery_query = connection.calls[2][0]
+        self.assertIn("last_error_code = 'PUBLISH_RECEIPT_UNKNOWN'", recovery_query)
+        self.assertIn("'UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY'", recovery_query)
 
     async def test_recovered_session_and_upload_are_exact_and_single_winner(self):
         request = publication_request()

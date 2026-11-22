@@ -247,6 +247,10 @@ BEGIN
       AND NEW.status = 'PUBLISH_REQUESTED' AND NEW.facebook_phase = 'PUBLISH_RESERVED') OR
     (OLD.status = 'PUBLISH_REQUESTED' AND OLD.facebook_phase = 'PUBLISH_RESERVED'
       AND NEW.status = 'VERIFY_PENDING' AND NEW.facebook_phase = 'PUBLISH_ACCEPTED') OR
+    (OLD.status = 'PROCESSING'
+      AND OLD.facebook_phase IN ('UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY')
+      AND OLD.last_error_code = 'PUBLISH_RECEIPT_UNKNOWN'
+      AND NEW.status = 'VERIFY_PENDING' AND NEW.facebook_phase = 'PUBLISH_ACCEPTED') OR
     (OLD.status = 'PUBLISH_REQUESTED' AND OLD.facebook_phase = 'PUBLISH_RESERVED'
       AND NEW.status = 'CANCELLED' AND NEW.facebook_phase = 'CANCELLED') OR
     (OLD.status = 'VERIFY_PENDING' AND OLD.facebook_phase = 'PUBLISH_ACCEPTED'
@@ -282,6 +286,8 @@ BEGIN
        OR NEW.last_remote_status->>'page_id' IS DISTINCT FROM NEW.channel_external_id_snapshot
        OR NEW.last_remote_status->>'video_status' IS DISTINCT FROM 'ready'
        OR NEW.last_remote_status->>'uploading_status' IS DISTINCT FROM 'completed'
+       OR NEW.last_remote_status->>'publishing_status' IS DISTINCT FROM 'not_started'
+       OR NEW.last_remote_status->>'publish_status' NOT IN ('draft','not_started')
        OR (NEW.last_remote_status->>'bytes_transferred')::bigint IS DISTINCT FROM NEW.asset_size_bytes
        OR NEW.uploaded_bytes IS DISTINCT FROM NEW.asset_size_bytes) THEN
     RAISE EXCEPTION 'Facebook publishable video evidence is invalid'
@@ -325,7 +331,8 @@ BEGIN
        OR NEW.last_remote_status->>'publish_status' IS DISTINCT FROM 'published'
        OR NEW.last_remote_status->'published' IS DISTINCT FROM 'true'::jsonb
        OR (NEW.last_remote_status->>'bytes_transferred')::bigint IS DISTINCT FROM NEW.asset_size_bytes
-       OR permalink_value !~ '^https://(www[.])?facebook[.]com/[A-Za-z0-9._/?=&-]+$'
+       OR permalink_value IS DISTINCT FROM
+          'https://www.facebook.com/reel/' || NEW.remote_upload_id
        OR NEW.remote_url IS DISTINCT FROM permalink_value
        OR NEW.last_verified_at IS NULL OR NEW.published_at IS NULL
        OR NEW.last_error_code IS NOT NULL OR NEW.last_error_message IS NOT NULL THEN

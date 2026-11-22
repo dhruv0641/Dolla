@@ -195,7 +195,7 @@ class Transport:
         self._call("reel")
         return FacebookRemoteReel(
             "video-1", self.claim.page_id, "post-1",
-            "https://www.facebook.com/reel/12345", True,
+            "https://www.facebook.com/reel/video-1", True,
         )
 
 
@@ -265,7 +265,7 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
         )
         fourth = await publisher.publish(self.request)
         self.assertEqual(fourth.status, "PUBLISHED")
-        self.assertEqual(fourth.remote_url, "https://www.facebook.com/reel/12345")
+        self.assertEqual(fourth.remote_url, "https://www.facebook.com/reel/video-1")
         self.assertEqual(transport.calls.count("reel"), 1)
 
     async def test_each_lost_mutation_response_is_ambiguous_and_not_retried(self) -> None:
@@ -381,6 +381,30 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(store.value.phase, "VIDEO_READY")
         self.assertNotIn("finish", transport.calls)
         self.assertEqual(store.errors[-1].code, "PUBLISH_RECEIPT_UNKNOWN")
+        recovered = await publisher.recover_publish(
+            request=self.request,
+            receipt=FacebookPublishReceipt("video-1", True, "post-1"),
+        )
+        self.assertEqual(recovered.phase, "PUBLISH_ACCEPTED")
+        result = await publisher.publish(self.request)
+        self.assertEqual(result.status, "PUBLISHED")
+        self.assertEqual(result.remote_url, "https://www.facebook.com/reel/video-1")
+
+    async def test_unexpected_scheduled_remote_state_never_finishes_reel(self) -> None:
+        base = replace(
+            self.claim, status="PROCESSING", phase="VIDEO_READY",
+            remote_video_id="video-1", upload_session_ref="secretref://meta/upload/session-1",
+        )
+        publisher, store, transport = self.publisher(Store(base), Transport(base))
+        transport.remote_status = replace(
+            status(base, FacebookVideoState.READY), publish_status="scheduled",
+        )
+        with self.assertRaises(FacebookError) as raised:
+            await publisher.publish(self.request)
+        self.assertTrue(raised.exception.ambiguous)
+        self.assertEqual(store.value.phase, "VIDEO_READY")
+        self.assertNotIn("finish", transport.calls)
+        self.assertEqual(store.errors[-1].code, "UNEXPECTED_SCHEDULED_REEL")
 
     async def test_remote_error_after_publish_becomes_terminal(self) -> None:
         base = replace(
@@ -403,7 +427,7 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
         base = replace(
             self.claim, status="PUBLISHED", phase="VERIFIED",
             remote_video_id="video-1", upload_session_ref="secretref://meta/upload/session-1",
-            remote_post_id="post-1", remote_url="https://www.facebook.com/reel/12345",
+            remote_post_id="post-1", remote_url="https://www.facebook.com/reel/video-1",
         )
         publisher, store, transport = self.publisher(Store(base), Transport(base))
         store.fail_assert_at = 1
@@ -431,6 +455,11 @@ class FacebookPublishingTests(unittest.IsolatedAsyncioTestCase):
             FacebookUploadSession("video-1", "https://rupload.facebook.com/raw")
         with self.assertRaises(ValueError):
             FacebookRemoteReel("video-1", "123456", "post-1", "https://evil.example/x", True)
+        with self.assertRaises(ValueError):
+            FacebookRemoteReel(
+                "video-1", "123456", "post-1",
+                "https://www.facebook.com/reel/different-video", True,
+            )
 
 
 if __name__ == "__main__":

@@ -397,7 +397,7 @@ class FacebookPublicationRepository:
         if not isinstance(session, FacebookUploadSession):
             raise ValueError("Facebook session recovery is invalid")
         return await self._recover(
-            request=request, expected_phase="START_RESERVED",
+            request=request, expected_phases={"START_RESERVED"},
             query="""UPDATE publication_jobs SET status = 'UPLOAD_STARTED',
                             facebook_phase = 'SESSION_CREATED', remote_upload_id = %s,
                             upload_session_ref = %s, last_error_code = NULL,
@@ -441,29 +441,35 @@ class FacebookPublicationRepository:
         if not isinstance(receipt, FacebookPublishReceipt):
             raise ValueError("Facebook publish recovery is invalid")
         return await self._recover(
-            request=request, expected_phase="PUBLISH_RESERVED",
+            request=request,
+            expected_phases={
+                "PUBLISH_RESERVED", "UPLOAD_ACCEPTED", "VIDEO_PROCESSING", "VIDEO_READY",
+            },
             query="""UPDATE publication_jobs SET status = 'VERIFY_PENDING',
                             facebook_phase = 'PUBLISH_ACCEPTED', remote_post_id = %s,
                             last_error_code = NULL, last_error_message = NULL
-                     WHERE id = %s AND request_fingerprint = %s
-                       AND status = 'PUBLISH_REQUESTED' AND facebook_phase = 'PUBLISH_RESERVED'
-                       AND remote_upload_id = %s AND remote_post_id IS NULL
+                     WHERE remote_upload_id = %s AND id = %s AND request_fingerprint = %s
+                       AND remote_post_id IS NULL
+                       AND ((status = 'PUBLISH_REQUESTED'
+                              AND facebook_phase = 'PUBLISH_RESERVED')
+                            OR (status = 'PROCESSING'
+                              AND facebook_phase IN
+                                ('UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY')
+                              AND last_error_code = 'PUBLISH_RECEIPT_UNKNOWN'))
                      RETURNING id""",
             params=(receipt.post_id, receipt.video_id),
         )
 
     async def _recover(
-        self, *, request: FacebookPublishRequest, expected_phase: str,
+        self, *, request: FacebookPublishRequest, expected_phases: set[str],
         query: str, params: tuple[object, ...],
     ) -> FacebookPublicationClaim:
-        claim = await self._recover_claim(request, expected_phase)
+        claim = await self._recover_claim(request, expected_phases)
         try:
             async with unit_of_work(self._pool) as connection:
                 await self._lock_owned(connection, claim)
                 cursor = await connection.execute(
-                    query, params + (claim.publication_id, claim.request_fingerprint)
-                    if expected_phase == "START_RESERVED"
-                    else (params[0], claim.publication_id, claim.request_fingerprint, params[1]),
+                    query, params + (claim.publication_id, claim.request_fingerprint),
                 )
                 if await cursor.fetchone() is None:
                     raise FacebookPublicationConflict("Facebook recovery state changed")
@@ -477,7 +483,7 @@ class FacebookPublicationRepository:
             raise RepositoryUnavailable("Facebook publication storage is unavailable") from exc
 
     async def _recover_claim(
-        self, request: FacebookPublishRequest, expected_phase: str,
+        self, request: FacebookPublishRequest, expected_phases: set[str],
     ) -> FacebookPublicationClaim:
         if not isinstance(request, FacebookPublishRequest):
             raise ValueError("Facebook recovery request is invalid")
@@ -492,7 +498,7 @@ class FacebookPublicationRepository:
                 claim = self._claim(row)
                 if (claim.publication_id != request.publication_id
                         or claim.request_fingerprint != request.fingerprint
-                        or claim.phase != expected_phase):
+                        or claim.phase not in expected_phases):
                     raise FacebookPublicationConflict("Facebook publication is not recoverable")
                 return claim
         except (FacebookPublicationConflict, RepositoryUnavailable):

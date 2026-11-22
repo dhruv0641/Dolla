@@ -31,7 +31,6 @@ _SECRET_REF = re.compile(r"^secretref://[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+$")
 _SAFE_REMOTE_ID = re.compile(r"^[A-Za-z0-9_-]{1,200}$")
 _SAFE_PAGE_ID = re.compile(r"^[0-9]{1,50}$")
 _SAFE_OWNER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,199}$")
-_PERMALINK = re.compile(r"^https://(?:www\.)?facebook\.com/[A-Za-z0-9._/-]+(?:\?[A-Za-z0-9_=&.-]+)?$")
 _BIDI = {"RLE", "LRE", "RLO", "LRO", "PDF", "RLI", "LRI", "FSI", "PDI"}
 
 
@@ -212,10 +211,11 @@ class FacebookRemoteReel:
     published: bool
 
     def __post_init__(self) -> None:
+        canonical_permalink = f"https://www.facebook.com/reel/{self.video_id}"
         if (_SAFE_REMOTE_ID.fullmatch(self.video_id or "") is None
                 or _SAFE_PAGE_ID.fullmatch(self.page_id or "") is None
                 or _SAFE_REMOTE_ID.fullmatch(self.post_id or "") is None
-                or _PERMALINK.fullmatch(self.permalink or "") is None
+                or self.permalink != canonical_permalink
                 or self.published is not True):
             raise ValueError("Facebook remote Reel evidence is invalid")
 
@@ -279,7 +279,7 @@ class FacebookPublicationClaim:
                 or (self.remote_post_id is not None
                     and _SAFE_REMOTE_ID.fullmatch(self.remote_post_id) is None)
                 or (self.remote_url is not None
-                    and _PERMALINK.fullmatch(self.remote_url) is None)):
+                    and self.remote_url != f"https://www.facebook.com/reel/{self.remote_video_id}")):
             raise ValueError("Facebook publication claim is invalid")
 
 
@@ -463,6 +463,14 @@ class FacebookPublisher:
             error = FacebookError(
                 "PUBLISH_RECEIPT_UNKNOWN",
                 "published Facebook Reel requires publish recovery evidence",
+                ambiguous=True,
+            )
+            await self._store.record_transport_failure(claim=claim, error=error)
+            raise error
+        if remote.publish_status == "scheduled":
+            error = FacebookError(
+                "UNEXPECTED_SCHEDULED_REEL",
+                "scheduled Facebook Reel requires operator reconciliation",
                 ambiguous=True,
             )
             await self._store.record_transport_failure(claim=claim, error=error)
