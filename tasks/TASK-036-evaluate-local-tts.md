@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-031
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **GitHub:** Issue [#135](https://github.com/dhruv0641/Dolla/issues/135); branch `feature/TASK-036-evaluate-local-tts`.
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
