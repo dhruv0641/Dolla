@@ -19,6 +19,12 @@ class MediaProbeTests(unittest.TestCase):
                 parse_probe(json.dumps({'format':{'duration':duration},'streams':[]}).encode())
         with self.assertRaises(MediaProbeError):
             parse_probe(b'not-json')
+        unsafe = {
+            'format': {'duration': '1', 'format_name': 'mp4\npath'},
+            'streams': [{'codec_type': 'video', 'codec_name': 'h264', 'width': 160, 'height': 90}],
+        }
+        with self.assertRaises(MediaProbeError):
+            parse_probe(json.dumps(unsafe).encode())
 
     def test_rotation_and_pixel_aspect_are_respected(self):
         raw={'format':{'duration':'2'},'streams':[{'codec_type':'video','codec_name':'h264','width':720,'height':480,'sample_aspect_ratio':'4:3','side_data_list':[{'rotation':90}]}]}

@@ -100,6 +100,17 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("require_render_final_same_content", sql)
         self.assertIn("render final asset is not registered for this job", sql)
 
+    def test_integrity_qa_reports_are_owner_visible_immutable_evidence(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0013_integrity_qa_reports.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE UNIQUE INDEX idx_qa_reports_asset_version", sql)
+        self.assertIn("WHERE version = 'integrity-v1'", sql)
+        self.assertIn("require_qa_report_asset_lineage", sql)
+        self.assertIn("asset_kind NOT IN ('FINAL_VIDEO', 'EXPORT_VARIANT')", sql)
+        self.assertIn("NEW.version <> 'integrity-v1'", sql)
+        self.assertIn("prevent_integrity_qa_report_mutation", sql)
+        self.assertIn("IF TG_OP = 'UPDATE' AND NEW.version = 'integrity-v1'", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

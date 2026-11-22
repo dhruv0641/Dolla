@@ -8,12 +8,17 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import stat
 import subprocess
 import tempfile
 import threading
 
 from .storage import StoredAssetFile
+
+
+_MEDIA_TOKEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._:+-]{0,63}$")
+_CONTAINER_TOKEN = re.compile(r"^[a-z0-9_]{1,32}$")
 
 
 class MediaProbeError(RuntimeError):
@@ -57,6 +62,9 @@ class MediaStream:
     width: int | None = None
     height: int | None = None
     display_aspect_ratio: float | None = None
+    frame_rate: float | None = None
+    video_profile: str | None = None
+    pixel_format: str | None = None
     sample_rate: int | None = None
     channels: int | None = None
 
@@ -69,6 +77,7 @@ class MediaReport:
     decode_verified: bool
     violations: tuple[str, ...]
     decoded_duration_seconds: float | None = None
+    container_names: tuple[str, ...] = ()
 
     @property
     def passed(self) -> bool:
@@ -88,19 +97,27 @@ def _positive(value) -> float:
     return number
 
 
-def parse_probe(payload: bytes) -> tuple[float, tuple[MediaStream, ...]]:
-    """Reject absent/invalid duration, streams and stream dimensions."""
+def _parse_probe_document(payload: bytes) -> tuple[float, tuple[MediaStream, ...], tuple[str, ...]]:
+    """Reject absent/invalid duration, streams, container and stream fields."""
     try:
         raw = json.loads(payload)
         duration = _positive(raw["format"]["duration"])
+        format_name = raw["format"].get("format_name")
+        if format_name is None:
+            containers: tuple[str, ...] = ()
+        elif (not isinstance(format_name, str) or len(format_name) > 200
+              or not all(_CONTAINER_TOKEN.fullmatch(part) for part in format_name.split(","))):
+            raise ValueError("invalid container")
+        else:
+            containers = tuple(format_name.split(","))
         streams = []
         if not isinstance(raw["streams"], list) or not 1 <= len(raw["streams"]) <= 64:
             raise ValueError("invalid stream count")
         for stream in raw["streams"]:
             kind, codec = stream["codec_type"], stream["codec_name"]
-            if kind not in {"video", "audio"}:
+            if kind not in {"video", "audio", "subtitle"}:
                 continue
-            if not isinstance(codec, str) or not codec or len(codec) > 64:
+            if not isinstance(codec, str) or _MEDIA_TOKEN.fullmatch(codec) is None:
                 raise ValueError("invalid codec")
             if kind == "video":
                 width, height = stream["width"], stream["height"]
@@ -110,6 +127,8 @@ def parse_probe(payload: bytes) -> tuple[float, tuple[MediaStream, ...]]:
                 if sar in {"N/A", "0:1"}:
                     sar = "1:1"
                 ratio = width / height * _positive(Fraction(sar.replace(":", "/")))
+                raw_rate = stream.get("avg_frame_rate")
+                rate = None if raw_rate is None else _positive(Fraction(raw_rate))
                 for side in stream.get("side_data_list", []):
                     if "rotation" in side:
                         rotation = float(side["rotation"])
@@ -117,18 +136,33 @@ def parse_probe(payload: bytes) -> tuple[float, tuple[MediaStream, ...]]:
                             raise ValueError("unsupported rotation")
                         if rotation % 180:
                             width, height, ratio = height, width, 1 / ratio
-                streams.append(MediaStream(kind, codec, width, height, ratio))
-            else:
+                profile, pixel_format = stream.get("profile"), stream.get("pix_fmt")
+                for value in (profile, pixel_format):
+                    if value is not None and (not isinstance(value, str) or _MEDIA_TOKEN.fullmatch(value) is None):
+                        raise ValueError("invalid video profile")
+                streams.append(MediaStream(
+                    kind, codec, width, height, ratio, rate,
+                    video_profile=profile, pixel_format=pixel_format,
+                ))
+            elif kind == "audio":
                 rate = _positive(stream["sample_rate"])
                 channels = stream["channels"]
                 if rate != int(rate) or rate > 768000 or type(channels) is not int or not 1 <= channels <= 64:
                     raise ValueError("invalid audio properties")
                 streams.append(MediaStream(kind, codec, sample_rate=int(rate), channels=channels))
+            else:
+                streams.append(MediaStream(kind, codec))
         if not streams:
             raise ValueError("no media streams")
-        return duration, tuple(streams)
+        return duration, tuple(streams), containers
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError, ZeroDivisionError, RecursionError) as exc:
         raise MediaProbeError("MEDIA_METADATA_INVALID") from exc
+
+
+def parse_probe(payload: bytes) -> tuple[float, tuple[MediaStream, ...]]:
+    """Backward-compatible public parser for duration and typed streams."""
+    duration, streams, _ = _parse_probe_document(payload)
+    return duration, streams
 
 
 def _run(args: list[str], *, timeout: float, output_limit: int) -> bytes:
@@ -238,11 +272,11 @@ class MediaProbeService:
                 options = ["-protocol_whitelist", "file", "-format_whitelist", demuxer, "-f", demuxer]
                 if demuxer == "mov":
                     options += ["-enable_drefs", "0", "-use_absolute_path", "0"]
-                payload = _run([self.ffprobe, "-v", "error", "-max_alloc", "268435456", *options, "-show_entries", "format=duration:stream=codec_type,codec_name,width,height,sample_aspect_ratio,sample_rate,channels:stream_side_data=rotation", "-of", "json", str(snapshot)], timeout=self.timeout, output_limit=self.output_limit)
-                duration, streams = parse_probe(payload)
+                payload = _run([self.ffprobe, "-v", "error", "-max_alloc", "268435456", *options, "-show_entries", "format=format_name,duration:stream=codec_type,codec_name,profile,pix_fmt,width,height,sample_aspect_ratio,avg_frame_rate,sample_rate,channels:stream_side_data=rotation", "-of", "json", str(snapshot)], timeout=self.timeout, output_limit=self.output_limit)
+                duration, streams, containers = _parse_probe_document(payload)
                 violations = _violations(duration, streams, policy)
                 if violations:
-                    return MediaReport(asset.sha256_hex, duration, streams, False, violations)
+                    return MediaReport(asset.sha256_hex, duration, streams, False, violations, container_names=containers)
                 progress = _run([self.ffmpeg, "-nostdin", "-max_alloc", "268435456", "-progress", "pipe:1", "-nostats", "-v", "error", "-xerror", "-err_detect", "explode", "-threads", "1", *options, "-i", str(snapshot), "-map", "0:v?", "-map", "0:a?", "-threads", "1", "-f", "null", "-"], timeout=self.timeout, output_limit=self.output_limit)
                 values = dict(line.split("=", 1) for line in progress.decode("ascii", errors="replace").splitlines() if "=" in line)
                 try:
@@ -262,4 +296,7 @@ class MediaProbeService:
             decoded_violations.append("DECODE_DURATION_MISMATCH")
         if policy.expected_duration_seconds is not None and abs(decoded_duration - policy.expected_duration_seconds) > policy.duration_tolerance_seconds:
             decoded_violations.append("DECODE_EXPECTED_DURATION_MISMATCH")
-        return MediaReport(asset.sha256_hex, duration, streams, True, tuple(decoded_violations), decoded_duration)
+        return MediaReport(
+            asset.sha256_hex, duration, streams, True, tuple(decoded_violations),
+            decoded_duration, containers,
+        )
