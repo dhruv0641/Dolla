@@ -5,9 +5,11 @@
 - **Priority:** P2
 - **Dependencies:** TASK-011, TASK-045, TASK-050, TASK-072
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#180](https://github.com/dhruv0641/Dolla/issues/180)
+- **Branch:** `feature/TASK-057-youtube-publisher-verification`
+- **Blockers:** No blocker for disabled-by-default local implementation. Real OAuth/account connection, upload and publication require separate explicit authorization and remain out of scope for development verification.
 
 ## User Story
 As a FLOW AI Content OS operator, I want official youtube publisher and verification, so the platform can progress safely through a traceable production lifecycle.
@@ -23,7 +25,7 @@ Deliver official youtube publisher and verification as an independently verifiab
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+Typed official YouTube authorization/transport contracts, owner-scoped publication repository, resumable upload and verification service, migration 0018, fake-transport tests and operator documentation. Persist credential references only; validate remote responses and never treat upload acceptance as proof of publication.
 
 ## Acceptance Criteria
 - [ ] Capability is implemented behind documented interfaces and configuration.
