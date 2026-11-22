@@ -25,12 +25,16 @@ Deliver facebook page reels publisher and verification as an independently verif
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+Typed official Facebook Page authorization/transport contracts, owner-scoped
+publication repository, three-barrier Page Reel service, migration 0020, fake
+transport/repository tests, disabled-by-default configuration and operator
+documentation. Persist only credential/session references; never treat an upload
+or publish acknowledgment as publication proof.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +43,22 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation evidence
+- Added a disabled-by-default, transport-injected Facebook Page Reels workflow
+  based on Meta's current initialize, `rupload`, status and finish contract.
+- Authorization binds the exact numeric Page ID, current owner-scoped channel,
+  opaque credential reference, `CREATE_CONTENT` task and the three documented
+  Page permissions. Every mutation performs a fresh pre-network recheck.
+- Claims bind the exact approved `FACEBOOK_REELS_V1` MP4, hash, byte size,
+  render version, approval, title/description/public state and AI disclosure.
+- Migration 0020 enforces immutable claims and remote identities, separate
+  `START_RESERVED`, `UPLOAD_RESERVED` and `PUBLISH_RESERVED` winners, bounded
+  status observations, explicit recovery/cancellation and exact final Page,
+  video, post, byte, phase and permalink proof.
+- Local verification: 101 cross-platform publishing/config/migration tests pass;
+  all 20 migrations parse as PostgreSQL, compileall, dependency validation and
+  diff hygiene pass. Full-suite and independent-review evidence remain pending.
+- External limit: no Facebook Login, Page connection, token resolution, upload
+  session, binary transfer, publish request or public action was performed. Live
+  PostgreSQL and Meta Graph/rupload behavior remain unverified.

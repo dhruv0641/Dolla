@@ -1,5 +1,25 @@
 """Official-platform publishing boundaries."""
 
+from flowx_os.publishing.facebook import (
+    FACEBOOK_CREATE_CONTENT_TASK,
+    FACEBOOK_PAGES_MANAGE_POSTS_SCOPE,
+    FACEBOOK_PAGES_READ_ENGAGEMENT_SCOPE,
+    FACEBOOK_PAGES_SHOW_LIST_SCOPE,
+    FacebookAuthorization,
+    FacebookError,
+    FacebookPolicy,
+    FacebookPublicationClaim,
+    FacebookPublicationResult,
+    FacebookPublishReceipt,
+    FacebookPublisher,
+    FacebookPublishRequest,
+    FacebookRemoteReel,
+    FacebookUploadReceipt,
+    FacebookUploadSession,
+    FacebookVideoState,
+    FacebookVideoStatus,
+)
+
 from flowx_os.publishing.instagram import (
     INSTAGRAM_BASIC_SCOPE,
     INSTAGRAM_PUBLISH_SCOPE,
@@ -34,6 +54,13 @@ from flowx_os.publishing.youtube import (
 )
 
 __all__ = [
+    "FACEBOOK_CREATE_CONTENT_TASK", "FACEBOOK_PAGES_MANAGE_POSTS_SCOPE",
+    "FACEBOOK_PAGES_READ_ENGAGEMENT_SCOPE", "FACEBOOK_PAGES_SHOW_LIST_SCOPE",
+    "FacebookAuthorization", "FacebookError", "FacebookPolicy",
+    "FacebookPublicationClaim", "FacebookPublicationResult", "FacebookPublishReceipt",
+    "FacebookPublisher", "FacebookPublishRequest", "FacebookRemoteReel",
+    "FacebookUploadReceipt", "FacebookUploadSession", "FacebookVideoState",
+    "FacebookVideoStatus",
     "INSTAGRAM_BASIC_SCOPE", "INSTAGRAM_PUBLISH_SCOPE", "InstagramAccountType",
     "InstagramAuthorization", "InstagramContainer", "InstagramContainerState",
     "InstagramContainerStatus", "InstagramError", "InstagramPolicy",
