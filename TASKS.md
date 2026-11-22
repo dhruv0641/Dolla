@@ -94,8 +94,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-12: Social Publishing
 
-- **TASK-057 Official YouTube publisher and verification** — IN_PROGRESS · Publishing Integration Engineer · 12h · deps: TASK-011, TASK-045, TASK-050, TASK-072 · Issue [#180](https://github.com/dhruv0641/Dolla/issues/180) · Branch `feature/TASK-057-youtube-publisher-verification`
-- **TASK-058 Instagram Reels publisher and verification** — BACKLOG · Publishing Integration Engineer · 16h · deps: TASK-057
+- **TASK-057 Official YouTube publisher and verification** — DONE · Publishing Integration Engineer · 12h · deps: TASK-011, TASK-045, TASK-050, TASK-072 · Issue [#180](https://github.com/dhruv0641/Dolla/issues/180) · PR [#181](https://github.com/dhruv0641/Dolla/pull/181) merged to `develop` as `5fd15e0`; 51 focused/473 full-suite tests, independent review and required/post-merge checks passed; no live OAuth/upload/publication claimed
+- **TASK-058 Instagram Reels publisher and verification** — READY · Publishing Integration Engineer · 16h · deps: TASK-057
 - **TASK-059 Facebook Page Reels publisher and verification** — BACKLOG · Publishing Integration Engineer · 4h · deps: TASK-058
 - **TASK-060 Independent platform state and reconciliation** — BACKLOG · Publishing Integration Engineer · 6h · deps: TASK-059
 - **TASK-061 Approval, schedule and duplicate prevention** — BACKLOG · Publishing Integration Engineer · 8h · deps: TASK-060
@@ -129,13 +129,13 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 61 (TASK-001 through TASK-056 and TASK-072 through TASK-076).
+- DONE: 62 (TASK-001 through TASK-057 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-057).
+- IN_PROGRESS: 0.
 - IN_REVIEW: 0.
-- READY: 0.
+- READY: 1 (TASK-058).
 - BLOCKED: 0.
-- BACKLOG: 14.
+- BACKLOG: 13.
 
 ## GitHub delivery references
 
