@@ -137,3 +137,5 @@ TASK-039 implementation PR #145 merged to `develop` as `015abc4` after independe
 TASK-039 tracker PR #146 merged as `310ce04`, issue #144 closed and post-merge validation passed. TASK-040 started on issue #147 for owner-scoped local audio inventory, bounded preview delivery and explicit management controls; raw paths, retired media and external services are excluded.
 
 TASK-040 implementation is independently reviewed with no blocker: authenticated audio inventory omits storage details, previews verify complete managed-file integrity before returning bounded byte ranges, and operator retirement uses recoverable archived-content tombstones. Twenty-three focused API/catalog/preview tests and 342 non-migration backend tests pass. PostgreSQL, production storage races and live browser playback remain unverified.
+
+TASK-040 implementation PR [#148](https://github.com/dhruv0641/Dolla/pull/148) passed both required checks and merged to protected `develop` as `f8a4456`; the post-merge validation also passed. The task is DONE pending this tracker-only closeout PR and issue closure. No external service, paid generation, account connection or publishing action occurred.
