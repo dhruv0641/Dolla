@@ -171,6 +171,7 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("qa_decision = 'FAIL' OR jsonb_array_length(qa_blockers) > 0", sql)
         self.assertIn("NEW.approval_scope, COALESCE(NEW.revision_target, ''), NEW.reason", sql)
         self.assertIn("content_owner IS DISTINCT FROM NEW.reviewer_user_id", sql)
+        self.assertIn("NEW.reason IS DISTINCT FROM btrim(NEW.reason)", sql)
         self.assertIn("UPDATE content_items SET status = next_status", sql)
         self.assertIn("prevent_human_review_mutation", sql)
         self.assertIn("RAISE EXCEPTION 'human review decisions are immutable'", sql)

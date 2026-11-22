@@ -47,6 +47,7 @@ BEGIN
       USING ERRCODE = 'check_violation';
   END IF;
   IF NEW.reviewer_user_id !~ '^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,199}$'
+     OR NEW.reason IS DISTINCT FROM btrim(NEW.reason)
      OR NEW.reason ~ '[[:cntrl:]]'
      OR NEW.reason ~* '(password|secret|token|credential|api[_-]?key|authorization|cookie)[[:space:]]*[:=][[:space:]]*[^[:space:]]+' THEN
     RAISE EXCEPTION 'human review identity or reason is invalid'

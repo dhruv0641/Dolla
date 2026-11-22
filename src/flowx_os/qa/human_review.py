@@ -87,4 +87,3 @@ class HumanReviewRecord:
     request: HumanReviewRequest
     next_status: ContentStatus
     created_at: datetime
-

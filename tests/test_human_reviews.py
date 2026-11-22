@@ -163,7 +163,6 @@ class HumanReviewTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertNotEqual(request.fingerprint, changed_reason.fingerprint)
 
-
 if __name__ == "__main__":
     unittest.main()
 

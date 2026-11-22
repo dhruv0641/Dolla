@@ -187,4 +187,3 @@ class HumanReviewRepository:
             )
         except Exception as exc:
             raise RepositoryUnavailable("stored human review decision is invalid") from exc
-
