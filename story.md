@@ -121,3 +121,5 @@ Remaining gates include reconciliation of the old `sent` image job, a verified a
 - 2026-11-18: Dependency readiness sweep after TASK-076 found 28 tasks done, 2 blocked, and 46 backlog tasks with unfinished prerequisites; none are currently dependency-ready. TASK-021 and TASK-054 await an authorized Flow MCP server/manifest. GOAL-002 remains active; see `docs/IMPLEMENTATION_PLAN.md` for the timestamped record.
 
 TASK-035 asset search and retention began on issue [#132](https://github.com/dhruv0641/Dolla/issues/132) after TASK-034 closed. Owner-scoped search and explicit retention safeguards passed 326 local tests, independent review and required PR checks; implementation PR #133 merged as `31ace2c`.
+
+TASK-036 local TTS evaluation is IN_REVIEW on issue [#135](https://github.com/dhruv0641/Dolla/issues/135). The provider-neutral evaluator and bounded probe tests are complete; 330 backend tests pass locally. No local TTS engine, synthesis operation or external service is claimed.

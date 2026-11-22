@@ -54,14 +54,14 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-07: Scene and Media Management
 
 - **TASK-031 Versioned storyboard and scene timeline** — DONE · Media Pipeline Engineer · 12h · deps: TASK-006, TASK-019, TASK-025, TASK-030 · Issue [#119](https://github.com/dhruv0641/Dolla/issues/119) closed by tracker PR [#121](https://github.com/dhruv0641/Dolla/pull/121); implementation PR [#120](https://github.com/dhruv0641/Dolla/pull/120) merged as `6b6aa07`; 281 tests and required CI passed; independent review passed; live PostgreSQL unverified
-- **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
+- **TASK-032 Asset storage, hashes and lineage** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135) · Issue [#122](https://github.com/dhruv0641/Dolla/issues/122) closed by tracker PR [#124](https://github.com/dhruv0641/Dolla/pull/124); implementation PR [#123](https://github.com/dhruv0641/Dolla/pull/123) merged as `1454b2e`; 297 tests, independent review and required CI passed; live PostgreSQL unverified
 - **TASK-033 Scene jobs and bounded retries** — DONE · Media Pipeline Engineer · 4h · deps: TASK-032 · Issue [#125](https://github.com/dhruv0641/Dolla/issues/125) · implementation PR [#126](https://github.com/dhruv0641/Dolla/pull/126) merged to `develop` as `c034303`; tracker PR [#127](https://github.com/dhruv0641/Dolla/pull/127) merged as `ab9f400` and closed issue #125; 307 tests, independent review, required checks and post-merge validations passed
 - **TASK-034 Media probing and validation** — DONE · Media Pipeline Engineer · 6h · deps: TASK-033 · Issue [#129](https://github.com/dhruv0641/Dolla/issues/129), implementation PR [#130](https://github.com/dhruv0641/Dolla/pull/130); tracker closeout [#131](https://github.com/dhruv0641/Dolla/pull/131)
 - **TASK-035 Asset search and retention** — DONE · Media Pipeline Engineer · 8h · deps: TASK-034 · Issue [#132](https://github.com/dhruv0641/Dolla/issues/132); PR [#133](https://github.com/dhruv0641/Dolla/pull/133); tracker PR [#134](https://github.com/dhruv0641/Dolla/pull/134)
 
 ## EPIC-08: Local Audio and Voiceover
 
-- **TASK-036 Evaluate local TTS** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-031
+- **TASK-036 Evaluate local TTS** — IN_REVIEW · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135)
 - **TASK-037 Voice profiles and synthesis** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-036
 - **TASK-038 Timing, normalization and zero-second narration** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-037
 - **TASK-039 Captions and subtitle alignment** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-038
@@ -132,10 +132,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - DONE: 46 (TASK-001 through TASK-025, TASK-026 through TASK-035, TASK-051 through TASK-056, and TASK-072 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 0.
+- IN_REVIEW: 1 (TASK-036; local implementation and verification complete; PR/CI pending).
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 30.
+- BACKLOG: 29.
 
 ## GitHub delivery references
 

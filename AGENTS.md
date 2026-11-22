@@ -38,3 +38,12 @@ Statuses follow `TASKS.md`. Mark DONE only after implementation, verified accept
 
 ## Context recovery
 Repository is source of truth. After interruption inspect state and statuses; resume last verified checkpoint. If code/tests conflict with docs, investigate and record discrepancy.
+
+## Compact three-role execution
+Use one agent and switch roles sequentially; do not create three agents for this protocol.
+
+- **Head Man — Planner:** read only `AGENTS.md`, the active task specification and the latest `docs/IMPLEMENTATION_PLAN.md` entry; select one unblocked task and state its dependencies and acceptance evidence.
+- **Ponytail — Builder:** implement only that task, inspect files with targeted `rg` searches, reuse existing interfaces, avoid unrelated changes and run focused tests first.
+- **Caveman — Reviewer:** inspect the diff independently, check security, ownership, idempotency, failure recovery and acceptance criteria, then run the focused tests and project validator.
+
+Keep context small: do not repeatedly print completed task history or whole tracker files; use bounded searches and summaries. Run the full suite once before the task PR. Keep commentary concise and record detailed evidence in the task file and `docs/IMPLEMENTATION_PLAN.md`. Never invoke paid services, connect accounts, publish content or invent unavailable tools as part of this protocol.
