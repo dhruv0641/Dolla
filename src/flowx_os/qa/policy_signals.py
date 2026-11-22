@@ -151,6 +151,8 @@ class ContentSignalReport(BaseModel):
 
     @model_validator(mode="after")
     def envelope_is_canonical(self) -> "ContentSignalReport":
+        if self.review.context_fingerprint != self.review_context_fingerprint:
+            raise ValueError("review result context fingerprint does not match the report")
         if tuple(signal.domain for signal in self.signals) != tuple(SignalDomain):
             raise ValueError("signals must contain policy, factuality and copyright in order")
         order = {code: index for index, code in enumerate(SignalFindingCode)}

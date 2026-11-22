@@ -195,6 +195,18 @@ class PolicySignalTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             ContentSignalReport.model_validate(payload)
 
+    def test_nested_review_context_fingerprint_cannot_contradict_report(self):
+        context = review_context()
+        result = review(context)
+        report = PolicySignalService().evaluate(
+            av_report=av_report(), context=context, review=result,
+            rights_authority_refs=("rights:original-work",),
+        )
+        payload = report.model_dump(mode="python")
+        payload["review"]["context_fingerprint"] = "e" * 64
+        with self.assertRaisesRegex(ValidationError, "does not match"):
+            ContentSignalReport.model_validate(payload)
+
     def test_prerequisite_and_content_binding_fail_closed(self):
         context = review_context()
         report = av_report()

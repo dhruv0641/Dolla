@@ -79,7 +79,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-046 Deterministic integrity checks** — DONE · QA and Security Engineer · 6h · deps: TASK-034, TASK-045 · Issue [#165](https://github.com/dhruv0641/Dolla/issues/165) · implementation PR [#166](https://github.com/dhruv0641/Dolla/pull/166) merged as `1fed3c8`; 18 focused/390 total tests, independent review, required checks and post-merge CI passed; live PostgreSQL unverified
 - **TASK-047 Visual and audio evaluation** — DONE · QA and Security Engineer · 8h · deps: TASK-046 · Issue [#168](https://github.com/dhruv0641/Dolla/issues/168) · PR [#169](https://github.com/dhruv0641/Dolla/pull/169) merged as `d76343c`; 12 task-specific/34 focused/404 full-suite tests, independent review and required/post-merge checks passed; production calibration/live PostgreSQL unverified
-- **TASK-048 Policy, factuality and copyright signals** — IN_REVIEW · QA and Security Engineer · 12h · deps: TASK-047 · Issue [#171](https://github.com/dhruv0641/Dolla/issues/171) · Branch `feature/TASK-048-policy-factuality-copyright-signals` · 14 task-specific/39 focused/419 full-suite tests passed; independent correction re-review pending
+- **TASK-048 Policy, factuality and copyright signals** — IN_REVIEW · QA and Security Engineer · 12h · deps: TASK-047 · Issue [#171](https://github.com/dhruv0641/Dolla/issues/171) · Branch `feature/TASK-048-policy-factuality-copyright-signals` · 15 task-specific/40 focused/420 full-suite tests passed; independent final re-review pending
 - **TASK-049 Scene retry limits and spend gate** — BACKLOG · QA and Security Engineer · 16h · deps: TASK-048
 - **TASK-050 Human review and approvals** — BACKLOG · QA and Security Engineer · 4h · deps: TASK-049
 
