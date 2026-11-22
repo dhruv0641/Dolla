@@ -125,3 +125,5 @@ TASK-035 asset search and retention began on issue [#132](https://github.com/dhr
 TASK-036 local TTS evaluation implementation PR #136 and tracker PR #137 are merged; issue #135 is closed and post-merge validation passed. TASK-037 started on issue #138 with dependency TASK-036 satisfied. No local TTS engine, synthesis operation or external service is claimed at kickoff.
 
 TASK-037 implementation PR #139 merged to `develop` as `22ea8e4` after independent review and required/post-merge checks passed. Immutable owner-scoped profiles, license/consent/exact-engine gates, replay-safe claims, bounded PCM WAV validation and narration asset lineage pass 11 focused tests and 331 non-migration backend tests. No concrete local engine or live synthesis is claimed; PostgreSQL runtime remains unverified.
+
+TASK-037 tracker PR #140 merged as `d5ac3aa`, issue #138 closed and post-merge validation passed. TASK-038 started on issue #141 to define zero-millisecond narration timing and bounded local audio normalization; no external provider or paid action is authorized.

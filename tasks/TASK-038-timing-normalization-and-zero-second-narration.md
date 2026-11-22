@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-037
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#141](https://github.com/dhruv0641/Dolla/issues/141)
+- **Branch:** `feature/TASK-038-audio-timing-normalization`
+- **Blockers:** No code blocker. Live normalization may use local FFmpeg only; no external synthesis or paid operation is authorized.
 
 ## User Story
 As a FLOW AI Content OS operator, I want timing, normalization and zero-second narration, so the platform can progress safely through a traceable production lifecycle.
