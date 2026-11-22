@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034, TASK-045
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None. TASK-034 and TASK-045 are DONE; the Head Man must select and scope this task before implementation begins.
+- **GitHub issue:** [#165](https://github.com/dhruv0641/Dolla/issues/165)
+- **Branch:** `feature/TASK-046-deterministic-integrity-checks`
+- **Blockers:** None for local implementation. Live environment evidence must be reported separately if unavailable.
 
 ## User Story
 As a FLOW AI Content OS operator, I want deterministic integrity checks, so the platform can progress safely through a traceable production lifecycle.
