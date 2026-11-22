@@ -5,9 +5,9 @@
 - **Priority:** P1
 - **Dependencies:** TASK-047
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** None for bounded local implementation; unavailable provider or human evidence must fail closed and be reported explicitly.
 
 ## User Story
 As a FLOW AI Content OS operator, I want policy, factuality and copyright signals, so the platform can progress safely through a traceable production lifecycle.
