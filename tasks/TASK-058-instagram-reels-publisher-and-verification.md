@@ -53,10 +53,10 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Final `PUBLISHED` requires the exact container to report `PUBLISHED` and exact
   media/account/type/permalink proof. Ambiguous mutations require operator recovery
   or cancellation and are never retried blindly.
-- Verification: 78 focused Instagram/YouTube/config/migration tests passed; the
-  pre-review complete 496-test suite passed; all 19 migrations parsed; compileall,
-  dependency validation and diff hygiene passed. Final full-suite evidence follows
-  the independent correction re-review.
+- Verification: 78 local focused and 53 independently rerun focused tests passed;
+  the final complete 500-test suite passed; all 19 migrations parsed; compileall,
+  dependency validation and diff hygiene passed. Caveman accepted exact
+  implementation commit `b62678c70249936b117093d87773408c7cbf4244` with no blocker.
 - External limit: no Meta OAuth, account connection, public media hosting,
   container creation, publish request or public action was performed. Live
   PostgreSQL and Meta HTTP behavior remain unverified.
