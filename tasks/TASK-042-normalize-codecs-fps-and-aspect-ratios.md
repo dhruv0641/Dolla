@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-041
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#153](https://github.com/dhruv0641/Dolla/issues/153)
+- **Branch:** `feature/TASK-042-normalize-video-profile`
+- **Blockers:** None. Runtime FFmpeg/ffprobe availability remains fail-closed and must not be inferred from planning state.
 
 ## User Story
 As a FLOW AI Content OS operator, I want normalize codecs, fps and aspect ratios, so the platform can progress safely through a traceable production lifecycle.
@@ -26,9 +28,17 @@ Deliver normalize codecs, fps and aspect ratios as an independently verifiable c
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+
+## Acceptance Evidence
+- `RenderPolicy` now declares bounded even output dimensions, a pixel-count ceiling, integer 1–60 FPS and explicit `COVER`/`CONTAIN` geometry while keeping fixed H.264/AAC/yuv420p codecs.
+- The fixed FFmpeg filter scales without distortion, center-crops or pads, sets square pixels, enforces constant FPS and rebases video timestamps. Callers cannot inject filters or codec names.
+- Profile fields are included in the path-free manifest and fingerprint and copied to final asset metadata. Bounded `ffprobe` requires one H.264 stream with exact dimensions/FPS/SAR and AAC for any audio before ingest.
+- Six focused tests include real local normalization from anamorphic 160×90 landscape (SAR 4:3) to square-pixel 180×320 portrait at 10 FPS and prove missing probe fails before ingest; 19 rendering/media/asset regressions and all 348 non-migration backend tests pass.
+- Independent Technical Reviewer accepted final head `b267605` with no blocker after checking cover/contain geometry, explicit scale-stage SAR reset, allocation bounds, exact output validation, fixed-filter safety, fingerprinting and downstream scope separation.
+- Compileall, project-plan validation and diff check pass. Semantic crop safety, rotation-specific fixtures, cross-build byte equality, production load isolation and downstream scene/audio/subtitle composition remain unverified and are not claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.

@@ -1,4 +1,5 @@
 import hashlib
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 import shutil
@@ -15,6 +16,7 @@ from flowx_os.domain.assets import AssetKind, AssetMetadata
 from flowx_os.rendering import (
     FfmpegRenderWorker, RenderError, RenderPolicy, RenderRequest, build_render_manifest,
 )
+from flowx_os.rendering.worker import _video_filter
 
 
 REQUEST_ID = UUID("bd949446-563c-41f5-8cbf-1db3b8eb188a")
@@ -63,6 +65,28 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
             RenderPolicy(timeout_seconds=float("nan"))
         with self.assertRaises(ValueError):
             RenderPolicy(video_codec="copy")  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            RenderPolicy(target_width=181)
+        with self.assertRaises(ValueError):
+            RenderPolicy(frame_rate=0)
+
+    def test_profile_filter_is_fixed_and_manifest_binds_geometry(self):
+        cover = RenderPolicy(target_width=180, target_height=320, frame_rate=24, fit_mode="COVER")
+        contain = RenderPolicy(target_width=320, target_height=180, frame_rate=30, fit_mode="CONTAIN")
+        self.assertEqual(
+            _video_filter(cover),
+            "scale=180:320:force_original_aspect_ratio=increase:force_divisible_by=2:reset_sar=1,"
+            "crop=180:320,setsar=1,fps=24,setpts=PTS-STARTPTS",
+        )
+        self.assertIn("reset_sar=1,pad=320:180:(ow-iw)/2:(oh-ih)/2:color=black", _video_filter(contain))
+        source = type("Source", (), {
+            "asset_id": SOURCE_ID, "storage_uri": f"managed://assets/{SOURCE_ID.hex}/payload",
+            "sha256_hex": "d" * 64, "mime_type": "video/mp4", "size_bytes": 120,
+        })()
+        first = build_render_manifest(request(), [record(source)], cover)
+        changed = build_render_manifest(request(), [record(source)], contain)
+        self.assertEqual((first.target_width, first.target_height, first.frame_rate, first.fit_mode), (180, 320, 24, "COVER"))
+        self.assertNotEqual(first.fingerprint, changed.fingerprint)
 
     def test_manifest_is_stable_path_free_and_database_normalized(self):
         source = type("Source", (), {
@@ -109,19 +133,28 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
             subprocess.run(
                 ["ffmpeg", "-nostdin", "-v", "error", "-f", "lavfi", "-i",
                  "color=c=blue:s=160x90:r=10", "-t", "0.25", "-c:v", "libx264",
-                 "-pix_fmt", "yuv420p", "-an", str(raw)],
+                 "-vf", "setsar=4/3", "-pix_fmt", "yuv420p", "-an", str(raw)],
                 check=True, timeout=20,
             )
             source = ManagedAssetStore(root).store(asset_id=SOURCE_ID, source_path=raw, mime_type="video/mp4")
             ingest = RecordingIngest()
-            result = await FfmpegRenderWorker(storage_root=root, asset_ingest=ingest).render(
+            policy = RenderPolicy(target_width=180, target_height=320, frame_rate=10, fit_mode="COVER")
+            result = await FfmpegRenderWorker(storage_root=root, asset_ingest=ingest, policy=policy).render(
                 request=request(), sources=[source], source_records=[record(source)],
             )
+
+            normalized = root / "normalized.mp4"
+            normalized.write_bytes(ingest.payload)
+            probed = json.loads(subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries",
+                 "stream=codec_type,codec_name,width,height,sample_aspect_ratio,avg_frame_rate",
+                 "-of", "json", str(normalized)], check=True, capture_output=True, timeout=20,
+            ).stdout)
 
             rejected = RecordingIngest()
             with self.assertRaises(RenderError) as caught:
                 await FfmpegRenderWorker(
-                    storage_root=root, asset_ingest=rejected, ffprobe="missing-flowx-ffprobe",
+                    storage_root=root, asset_ingest=rejected, ffprobe="missing-flowx-ffprobe", policy=policy,
                 ).render(request=request(), sources=[source], source_records=[record(source)])
 
         self.assertEqual(result.output_asset_id, OUTPUT_ID)
@@ -130,6 +163,10 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ingest.payload[4:8], b"ftyp")
         self.assertEqual(ingest.calls[0]["kind"], AssetKind.FINAL_VIDEO)
         self.assertEqual(ingest.calls[0]["media_metadata"]["render_fingerprint"], result.manifest.fingerprint)
+        video = next(item for item in probed["streams"] if item["codec_type"] == "video")
+        self.assertEqual((video["codec_name"], video["width"], video["height"]), ("h264", 180, 320))
+        self.assertEqual(video["sample_aspect_ratio"], "1:1")
+        self.assertEqual(video["avg_frame_rate"], "10/1")
         self.assertEqual(caught.exception.code, "OUTPUT_MEDIA_INVALID")
         self.assertEqual(rejected.calls, [])
 

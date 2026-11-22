@@ -70,7 +70,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-09: Automated Video Editing
 
 - **TASK-041 FFmpeg render worker and manifests** — DONE · Media Pipeline Engineer · 4h · deps: TASK-032, TASK-036 · Issue [#150](https://github.com/dhruv0641/Dolla/issues/150) · implementation PR [#151](https://github.com/dhruv0641/Dolla/pull/151) merged as `f23b176`; 5 focused, 21 regression and 347 backend tests, independent review and required/post-merge CI passed
-- **TASK-042 Normalize codecs, fps and aspect ratios** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-041
+- **TASK-042 Normalize codecs, fps and aspect ratios** — IN_REVIEW · Media Pipeline Engineer · 6h · deps: TASK-041 · Issue [#153](https://github.com/dhruv0641/Dolla/issues/153) · Branch `feature/TASK-042-normalize-video-profile` · 6 focused, 19 regression and 348 backend tests pass; independent final-head review found no blocker
 - **TASK-043 Compose scenes, audio and subtitles** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-042
 - **TASK-044 Platform export variants** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-043
 - **TASK-045 Render versions and artifacts** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-044

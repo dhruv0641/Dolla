@@ -13,6 +13,7 @@ import stat
 import tempfile
 from typing import Literal, Sequence
 from uuid import UUID
+from fractions import Fraction
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -73,6 +74,10 @@ class RenderPolicy:
     audio_codec: Literal["aac"] = "aac"
     pixel_format: Literal["yuv420p"] = "yuv420p"
     preset: Literal["medium"] = "medium"
+    target_width: int = 1080
+    target_height: int = 1920
+    frame_rate: int = 30
+    fit_mode: Literal["COVER", "CONTAIN"] = "COVER"
 
     def __post_init__(self) -> None:
         if (isinstance(self.timeout_seconds, bool) or not math.isfinite(self.timeout_seconds)
@@ -87,6 +92,15 @@ class RenderPolicy:
             "libx264", "aac", "yuv420p", "medium",
         ):
             raise ValueError("render codec policy is unsupported")
+        for value in (self.target_width, self.target_height):
+            if type(value) is not int or not 16 <= value <= 7_680 or value % 2:
+                raise ValueError("render dimensions must be bounded even integers")
+        if self.target_width * self.target_height > 8_294_400:
+            raise ValueError("render pixel count exceeds the configured limit")
+        if type(self.frame_rate) is not int or not 1 <= self.frame_rate <= 60:
+            raise ValueError("render frame rate is invalid")
+        if self.fit_mode not in {"COVER", "CONTAIN"}:
+            raise ValueError("render fit mode is invalid")
 
 
 class RenderInputManifest(BaseModel):
@@ -114,6 +128,10 @@ class RenderManifest(BaseModel):
     audio_codec: Literal["aac"] = "aac"
     pixel_format: Literal["yuv420p"] = "yuv420p"
     preset: Literal["medium"] = "medium"
+    target_width: int = Field(ge=16, le=7680, multiple_of=2)
+    target_height: int = Field(ge=16, le=7680, multiple_of=2)
+    frame_rate: int = Field(ge=1, le=60)
+    fit_mode: Literal["COVER", "CONTAIN"]
     fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     def inputs_manifest(self) -> dict[str, list[str]]:
@@ -152,6 +170,10 @@ def _manifest_payload(
         "audio_codec": policy.audio_codec,
         "pixel_format": policy.pixel_format,
         "preset": policy.preset,
+        "target_width": policy.target_width,
+        "target_height": policy.target_height,
+        "frame_rate": policy.frame_rate,
+        "fit_mode": policy.fit_mode,
     }
 
 
@@ -252,21 +274,49 @@ def _inspect_output(path: Path, *, max_bytes: int) -> tuple[str, int]:
         raise RenderError("OUTPUT_UNAVAILABLE", "render output is unavailable") from exc
 
 
-def _validate_output_media(path: Path, *, ffprobe: str, timeout: float, output_limit: int) -> None:
+def _validate_output_media(
+    path: Path, *, ffprobe: str, timeout: float, output_limit: int, policy: RenderPolicy,
+) -> None:
     try:
         raw = _run(
             [ffprobe, "-v", "error", "-protocol_whitelist", "file", "-format_whitelist", "mov,mp4,m4a,3gp,3g2,mj2",
-             "-f", "mov", "-show_entries", "format=duration:stream=codec_type", "-of", "json", str(path)],
+             "-f", "mov", "-show_entries",
+             "format=duration:stream=codec_type,codec_name,width,height,sample_aspect_ratio,avg_frame_rate",
+             "-of", "json", str(path)],
             timeout=timeout, output_limit=output_limit,
         )
         payload = json.loads(raw)
         duration = float(payload["format"]["duration"])
         streams = payload["streams"]
-        if (not math.isfinite(duration) or duration <= 0 or not isinstance(streams, list)
-                or not any(item.get("codec_type") == "video" for item in streams if isinstance(item, dict))):
+        videos = [item for item in streams if isinstance(item, dict) and item.get("codec_type") == "video"]
+        audios = [item for item in streams if isinstance(item, dict) and item.get("codec_type") == "audio"]
+        if not math.isfinite(duration) or duration <= 0 or len(videos) != 1:
             raise ValueError("video stream or duration missing")
-    except (MediaProbeError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        video = videos[0]
+        rate = float(Fraction(video["avg_frame_rate"]))
+        if (video.get("codec_name") != "h264" or video.get("width") != policy.target_width
+                or video.get("height") != policy.target_height
+                or video.get("sample_aspect_ratio") not in {"1:1", None}
+                or not math.isfinite(rate) or abs(rate - policy.frame_rate) > 0.001
+                or any(item.get("codec_name") != "aac" for item in audios)):
+            raise ValueError("normalized media profile mismatch")
+    except (MediaProbeError, ValueError, TypeError, KeyError, ZeroDivisionError, json.JSONDecodeError) as exc:
         raise RenderError("OUTPUT_MEDIA_INVALID", "render output failed media validation") from exc
+
+
+def _video_filter(policy: RenderPolicy) -> str:
+    width, height = policy.target_width, policy.target_height
+    if policy.fit_mode == "COVER":
+        geometry = (
+            f"scale={width}:{height}:force_original_aspect_ratio=increase:force_divisible_by=2:reset_sar=1,"
+            f"crop={width}:{height}"
+        )
+    else:
+        geometry = (
+            f"scale={width}:{height}:force_original_aspect_ratio=decrease:force_divisible_by=2:reset_sar=1,"
+            f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black"
+        )
+    return f"{geometry},setsar=1,fps={policy.frame_rate},setpts=PTS-STARTPTS"
 
 
 class FfmpegRenderWorker:
@@ -305,10 +355,11 @@ class FfmpegRenderWorker:
                 )
                 await asyncio.to_thread(
                     _run,
-                    [self._ffmpeg, "-nostdin", "-v", "error", "-xerror", "-threads", "1",
+                    [self._ffmpeg, "-nostdin", "-v", "error", "-xerror", "-max_alloc", "268435456", "-threads", "1",
                      "-protocol_whitelist", "file", "-format_whitelist", demuxer[1], "-f", demuxer[0],
                      "-i", str(snapshot), "-map", "0:v:0", "-map", "0:a?", "-map_metadata", "-1",
-                     "-map_chapters", "-1", "-c:v", self._policy.video_codec, "-preset", self._policy.preset,
+                     "-map_chapters", "-1", "-vf", _video_filter(self._policy),
+                     "-c:v", self._policy.video_codec, "-preset", self._policy.preset,
                      "-pix_fmt", self._policy.pixel_format, "-c:a", self._policy.audio_codec,
                      "-fflags", "+bitexact", "-flags:v", "+bitexact", "-flags:a", "+bitexact",
                      "-movflags", "+faststart", "-fs", str(self._policy.max_output_bytes),
@@ -321,6 +372,7 @@ class FfmpegRenderWorker:
                 await asyncio.to_thread(
                     _validate_output_media, output, ffprobe=self._ffprobe,
                     timeout=self._policy.timeout_seconds, output_limit=self._policy.tool_output_limit,
+                    policy=self._policy,
                 )
                 await self._ingest.ingest(
                     asset_id=request.output_asset_id, source_path=output, mime_type="video/mp4",
@@ -335,6 +387,10 @@ class FfmpegRenderWorker:
                         "input_sha256": [item.sha256_hex for item in manifest.inputs],
                         "output_sha256_pre_ingest": output_hash,
                         "deterministic_command": True,
+                        "target_width": self._policy.target_width,
+                        "target_height": self._policy.target_height,
+                        "frame_rate": self._policy.frame_rate,
+                        "fit_mode": self._policy.fit_mode,
                     },
                 )
         except RenderError:
