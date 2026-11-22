@@ -153,3 +153,5 @@ TASK-041 tracker PR [#152](https://github.com/dhruv0641/Dolla/pull/152) merged a
 TASK-042 now binds bounded dimensions, pixel count, FPS and `COVER`/`CONTAIN` geometry into the path-free render manifest and fingerprint. The fixed filter produces H.264/AAC/yuv420p square-pixel output, and `ffprobe` verifies exact dimensions/FPS/SAR/codecs before ingest. Six focused, 19 regression and 348 backend tests pass; independent review is pending.
 
 Caveman accepted TASK-042 final head `b267605` with no blocker after explicit scale-stage SAR normalization and an FFmpeg allocation ceiling were added. The real fixture now exercises anamorphic SAR 4:3 input; all 348 final-head non-migration tests, compileall, project-plan validation and diff check pass.
+
+TASK-042 implementation PR [#154](https://github.com/dhruv0641/Dolla/pull/154) passed both required checks and merged to protected `develop` as `fb9b840`; post-merge validation also passed. TASK-042 is DONE pending tracker-only closeout and issue closure, making TASK-043 dependency-ready.
