@@ -5,8 +5,10 @@
 - **Priority:** P1
 - **Dependencies:** TASK-047
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
+- **GitHub issue:** [#171](https://github.com/dhruv0641/Dolla/issues/171)
+- **Branch:** `feature/TASK-048-policy-factuality-copyright-signals`
 - **Blockers:** None for bounded local implementation; unavailable provider or human evidence must fail closed and be reported explicitly.
 
 ## User Story
@@ -23,7 +25,7 @@ Deliver policy, factuality and copyright signals as an independently verifiable 
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+QA signal contracts and service, owner-scoped persistence/migration if needed, focused tests and operator documentation. Reuse TASK-017 source evidence and TASK-047 QA report boundaries; select exact paths after targeted repository inspection.
 
 ## Acceptance Criteria
 - [ ] Capability is implemented behind documented interfaces and configuration.
