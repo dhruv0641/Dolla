@@ -45,6 +45,7 @@ class Settings:
     youtube_credentials_ref: str | None
     youtube_publishing_enabled: bool
     meta_credentials_ref: str | None
+    instagram_publishing_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -102,6 +103,9 @@ class Settings:
         youtube_enabled = env.get("FLOWX_YOUTUBE_PUBLISHING_ENABLED", "false").strip().lower()
         if youtube_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_YOUTUBE_PUBLISHING_ENABLED must be true or false.")
+        instagram_enabled = env.get("FLOWX_INSTAGRAM_PUBLISHING_ENABLED", "false").strip().lower()
+        if instagram_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_INSTAGRAM_PUBLISHING_ENABLED must be true or false.")
 
         return cls(
             environment=environment,
@@ -113,4 +117,5 @@ class Settings:
             youtube_credentials_ref=_secret_ref(env, "FLOWX_YOUTUBE_CREDENTIALS_REF"),
             youtube_publishing_enabled=youtube_enabled == "true",
             meta_credentials_ref=_secret_ref(env, "FLOWX_META_CREDENTIALS_REF"),
+            instagram_publishing_enabled=instagram_enabled == "true",
         )

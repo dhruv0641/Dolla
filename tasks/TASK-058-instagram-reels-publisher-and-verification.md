@@ -28,9 +28,9 @@ Deliver instagram reels publisher and verification as an independently verifiabl
 Typed official Instagram authorization/transport contracts, owner-scoped publication repository, container creation/publish verification service, migration 0019, fake-transport tests and operator documentation. Persist credential references only; never treat container creation or publish-request acceptance as proof of publication.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +39,23 @@ Typed official Instagram authorization/transport contracts, owner-scoped publica
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation evidence
+- Added disabled-by-default, transport-injected Instagram Login contracts and a
+  professional-account authorization gate using current official Meta scopes.
+- Claims bind the exact approved `INSTAGRAM_REELS_V1` artifact, immutable account
+  and credential references, source reference, caption/feed/AI disclosure metadata
+  and human approval. Raw tokens and public media URLs are not persisted.
+- Migration `0019` distinguishes YouTube and Instagram contracts, preserves new
+  YouTube claims after the discriminator, and enforces separate single-winner
+  `CONTAINER_RESERVED` and `PUBLISH_RESERVED` barriers plus immutable recovery,
+  terminal state and final remote-proof rules.
+- Final `PUBLISHED` requires the exact container to report `PUBLISHED` and exact
+  media/account/type/permalink proof. Ambiguous mutations require operator recovery
+  or cancellation and are never retried blindly.
+- Verification: 74 focused Instagram/YouTube/config/migration tests passed; the
+  complete 496-test suite passed; all 19 migrations parsed; compileall, dependency
+  validation and diff hygiene passed.
+- External limit: no Meta OAuth, account connection, public media hosting,
+  container creation, publish request or public action was performed. Live
+  PostgreSQL and Meta HTTP behavior remain unverified.

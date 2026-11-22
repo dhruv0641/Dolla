@@ -204,6 +204,26 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("failed YouTube publication requires an error code", sql)
         self.assertIn("YouTube publication evidence is immutable", sql)
 
+    def test_instagram_reels_have_two_mutation_barriers_and_remote_proof(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0019_instagram_reels_publication_verification.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("publication_contract = 'INSTAGRAM_REELS_V1'", sql)
+        self.assertIn("media_source_ref_snapshot", sql)
+        self.assertIn("INSTAGRAM_REELS_V1", sql)
+        self.assertIn("require_instagram_publication_claim", sql)
+        self.assertIn("rd.decision", sql)
+        self.assertIn("CONTAINER_RESERVED", sql)
+        self.assertIn("PUBLISH_RESERVED", sql)
+        self.assertIn("MEDIA_ID_UNKNOWN", sql)
+        self.assertIn("Instagram remote identities are immutable once observed", sql)
+        self.assertIn("Instagram publishable container evidence is invalid", sql)
+        self.assertIn("Instagram unknown media evidence is invalid", sql)
+        self.assertIn("container_state IS DISTINCT FROM 'PUBLISHED'", sql)
+        self.assertIn("owner_id IS DISTINCT FROM NEW.channel_external_id_snapshot", sql)
+        self.assertIn("media_type_value IS DISTINCT FROM 'VIDEO'", sql)
+        self.assertIn("terminal Instagram publication state is immutable", sql)
+        self.assertIn("Instagram publication evidence is immutable", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

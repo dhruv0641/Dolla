@@ -16,6 +16,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(settings.storage_root, Path("./data"))
         self.assertIsNone(settings.database_credentials_ref)
         self.assertFalse(settings.youtube_publishing_enabled)
+        self.assertFalse(settings.instagram_publishing_enabled)
 
     def test_secret_references_are_retained_as_references(self) -> None:
         settings = Settings.from_env(
@@ -54,6 +55,12 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(enabled.youtube_publishing_enabled)
         with self.assertRaises(ConfigurationError):
             Settings.from_env({"FLOWX_YOUTUBE_PUBLISHING_ENABLED": "yes"})
+
+    def test_instagram_publishing_requires_explicit_boolean_enablement(self) -> None:
+        enabled = Settings.from_env({"FLOWX_INSTAGRAM_PUBLISHING_ENABLED": "true"})
+        self.assertTrue(enabled.instagram_publishing_enabled)
+        with self.assertRaises(ConfigurationError):
+            Settings.from_env({"FLOWX_INSTAGRAM_PUBLISHING_ENABLED": "yes"})
 
     def test_empty_storage_path_is_rejected(self) -> None:
         with self.assertRaisesRegex(ConfigurationError, "FLOWX_STORAGE_ROOT"):
