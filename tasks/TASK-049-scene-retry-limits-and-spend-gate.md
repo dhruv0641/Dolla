@@ -5,9 +5,9 @@
 - **Priority:** P1
 - **Dependencies:** TASK-048
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** None for bounded local implementation; live spend/account state and paid retry execution must remain unavailable without explicit authorization.
 
 ## User Story
 As a FLOW AI Content OS operator, I want scene retry limits and spend gate, so the platform can progress safely through a traceable production lifecycle.
