@@ -132,4 +132,4 @@ TASK-038 implementation PR #142 merged to `develop` as `0aa9826` after independe
 
 TASK-038 tracker PR #143 merged as `781315e`, issue #141 closed and post-merge validation passed. TASK-039 started on issue #144 for deterministic local caption cues and subtitle alignment; external transcription and unsupported word-level timing claims are excluded.
 
-TASK-039 implementation is independently reviewed with no blocker: approved storyboard narration is preserved in scene-bounded cues and rendered as safe, bounded UTF-8 SRT bound to the normalized zero-start narration asset. Four focused caption tests and 338 non-migration backend tests pass. Alignment remains an explicit scene estimate with word-level verification false.
+TASK-039 implementation PR #145 merged to `develop` as `015abc4` after independent review and required/post-merge checks passed. Approved storyboard narration is preserved in scene-bounded cues and rendered as safe, bounded UTF-8 SRT bound to the normalized zero-start narration asset. Four focused caption tests and 338 non-migration backend tests pass. Alignment remains an explicit scene estimate with word-level verification false.
