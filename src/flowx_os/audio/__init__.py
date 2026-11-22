@@ -22,6 +22,15 @@ from .synthesis import (
     inspect_pcm_wav,
     synthesis_fingerprint,
 )
+from .normalization import (
+    AudioNormalizationError,
+    AudioNormalizationPolicy,
+    AudioNormalizationRequest,
+    AudioNormalizationResult,
+    AudioNormalizationService,
+    NarrationTiming,
+    normalization_fingerprint,
+)
 
 __all__ = [
     "LocalTtsProvider", "SynthesisClaim", "SynthesisPolicy", "SynthesisRequest",
@@ -29,4 +38,7 @@ __all__ = [
     "TtsEvaluator", "TtsSynthesisError", "VoiceConsentStatus", "VoiceLicenseStatus",
     "VoiceProfile", "VoiceSource", "VoiceSynthesisService", "WavEvidence",
     "inspect_pcm_wav", "synthesis_fingerprint",
+    "AudioNormalizationError", "AudioNormalizationPolicy", "AudioNormalizationRequest",
+    "AudioNormalizationResult", "AudioNormalizationService", "NarrationTiming",
+    "normalization_fingerprint",
 ]
