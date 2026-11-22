@@ -139,6 +139,23 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("policy signal QA review disposition is invalid", sql)
         self.assertIn("prevent_policy_signal_report_mutation", sql)
 
+    def test_scene_retry_decisions_require_immutable_spend_gate_evidence(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0016_scene_retry_spend_gate.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("retry_gate_decision", sql)
+        self.assertIn("retry_credit_reservation_id", sql)
+        self.assertIn("idx_generation_jobs_retry_reservation", sql)
+        self.assertIn("require_scene_retry_spend_gate", sql)
+        self.assertIn("reservation_state IS DISTINCT FROM 'RESERVED'", sql)
+        self.assertIn("reservation_owner IS DISTINCT FROM scene_owner", sql)
+        self.assertIn("prevent_scene_retry_gate_mutation", sql)
+        self.assertIn("attempt_index < retry_max_attempts", sql)
+        self.assertIn("IF TG_OP = 'DELETE' AND OLD.retry_gate_decision IS NOT NULL", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON generation_jobs", sql)
+        self.assertIn("require_scene_retry_claim_gate", sql)
+        self.assertIn("prior_reservation IS DISTINCT FROM NEW.credit_reservation_id", sql)
+        self.assertIn("NEW.attempt_index > prior_max_attempts", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
