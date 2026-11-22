@@ -15,3 +15,5 @@ Width, height, FPS and fit mode are recorded in both the path-free command manif
 Before ingest, bounded `ffprobe` evidence must report exactly one H.264 video stream with the requested dimensions, frame rate and square sample aspect; every emitted audio stream must be AAC. The complete managed input is still snapshot-hashed, FFmpeg and ffprobe remain protocol/container restricted, and output size/runtime/diagnostics remain capped.
 
 Normalization cannot determine whether a crop removes semantically important content. Selection of `COVER` versus `CONTAIN` is an editorial policy decision. Full-frame decode/integrity scoring belongs to TASK-046; multi-scene/audio/subtitle composition belongs to TASK-043. Cross-version FFmpeg byte equality and production workload isolation are not claimed.
+
+The installed FFmpeg build must expose the scale filter's `reset_sar` option. An older/incomplete build fails closed as a render-tool failure; the worker never falls back to a stretching transform.
