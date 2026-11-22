@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-047
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#171](https://github.com/dhruv0641/Dolla/issues/171)
 - **Branch:** `feature/TASK-048-policy-factuality-copyright-signals`
+- **Implementation PR:** [#172](https://github.com/dhruv0641/Dolla/pull/172), merged to protected `develop` as `446e10e942d89da060d657638df927965272c339`
 - **Blockers:** None for bounded local implementation; unavailable provider or human evidence must fail closed and be reported explicitly.
 
 ## User Story
@@ -54,3 +55,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Live PostgreSQL execution, live policy/fact-check/rights providers, rights-record authenticity, current platform-rule completeness and human/legal judgment remain unverified and are not claimed.
 - Initial independent review of commit `6eb2454a4da17367ff4c4c8c9cc9d28adebd78af` found cross-context review-result rebinding and a database path to PASS with unavailable copyright authority. Re-review of correction commit `f429d940b70340b440e27b8dcb77dbfaeffabdf6` confirmed both closed and found one remaining model-layer nested/top-level context mismatch. The final correction binds every `HumanReviewResult` at the source workflow, rechecks it at QA and in the strict report model, and makes migration 0015 require context, authority/finding/state/disposition consistency, canonical codes/severity/order and unique bounded references. Regressions cover cross-context reuse, nested provenance tampering and a rights flag without authority.
 - Independent Technical Reviewer found no blocker on exact final commit `064d1c14275737c3fe258e1e79a27e0c00ec0ded`. Independently verified: 15 task-specific tests, 25 review-agent/migration regressions, project validation and diff hygiene. Residual boundaries are live PostgreSQL execution, provider authority, rights-record authenticity, current policy completeness and human/legal judgment.
+- Both required PR checks passed on reviewed head `66dbe8d761b06c9d4da080307bac295e8729b5e6`; PR #172 merged only to protected `develop`, and post-merge validation passed on `446e10e942d89da060d657638df927965272c339`.
