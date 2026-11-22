@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034, TASK-045
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#165](https://github.com/dhruv0641/Dolla/issues/165)
 - **Branch:** `feature/TASK-046-deterministic-integrity-checks`
+- **Implementation PR:** [#166](https://github.com/dhruv0641/Dolla/pull/166), merged to protected `develop` as `1fed3c8dd7363d0211be6e6d80bdd578c133ab31`
 - **Blockers:** None for local implementation. Live environment evidence must be reported separately if unavailable.
 
 ## User Story
@@ -52,3 +53,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Compileall, diff hygiene, and project validation (15 epics, 76 tasks, no cycles) pass.
 - Live PostgreSQL trigger/locking execution and production media-volume behavior remain unverified and are not claimed.
 - Independent Technical Reviewer: no blocker on exact implementation commit `f77078849fd090b6cd0a5478b67a4d6c3ab0eab8`; 18/18 focused tests, 13/13 migration tests and the project validator independently passed. Residual boundaries are live PostgreSQL execution, structural rather than decoded subtitle verification, and managed hard-link rejection (bytes/path remain snapshot-hash verified).
+- GitHub delivery: both required PR checks passed on reviewed head `bc882819d79ec49f4e9f0531b6003ceba30edb33`; PR #166 merged only to `develop`, and post-merge validation passed on `1fed3c8dd7363d0211be6e6d80bdd578c133ab31`.
