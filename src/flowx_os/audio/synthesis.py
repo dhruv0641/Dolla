@@ -78,7 +78,7 @@ class VoiceProfile(BaseModel):
         if value is None:
             return None
         normalized = unicodedata.normalize("NFC", value).strip()
-        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:/\\-"
+        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:/-"
         if not normalized or len(normalized) > 500 or any(char not in allowed for char in normalized):
             raise ValueError("voice evidence/configuration reference is invalid")
         return normalized

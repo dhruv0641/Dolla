@@ -20,6 +20,9 @@ CREATE TABLE voice_profiles (
     created_at timestamptz NOT NULL DEFAULT now(),
     CHECK (license_status <> 'VERIFIED' OR license_reference IS NOT NULL),
     CHECK (consent_status <> 'VERIFIED' OR consent_reference IS NOT NULL),
+    CHECK (license_reference IS NULL OR license_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,499}$'),
+    CHECK (consent_reference IS NULL OR consent_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,499}$'),
+    CHECK (config_ref IS NULL OR config_ref ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,499}$'),
     UNIQUE (brand_id, name),
     UNIQUE (id, brand_id)
 );
