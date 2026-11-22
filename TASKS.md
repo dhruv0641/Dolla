@@ -64,7 +64,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-036 Evaluate local TTS** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135) closed · implementation PR [#136](https://github.com/dhruv0641/Dolla/pull/136) merged as `1b79dd5`; tracker closeout PR [#137](https://github.com/dhruv0641/Dolla/pull/137) merged as `586f170`; 330 tests, independent review and post-merge validation passed
 - **TASK-037 Voice profiles and synthesis** — DONE · Media Pipeline Engineer · 4h · deps: TASK-036 · Issue [#138](https://github.com/dhruv0641/Dolla/issues/138) · implementation PR [#139](https://github.com/dhruv0641/Dolla/pull/139) merged as `22ea8e4`; 11 focused and 331 non-migration backend tests, independent review and required/post-merge CI passed
 - **TASK-038 Timing, normalization and zero-second narration** — DONE · Media Pipeline Engineer · 6h · deps: TASK-037 · Issue [#141](https://github.com/dhruv0641/Dolla/issues/141) · implementation PR [#142](https://github.com/dhruv0641/Dolla/pull/142) merged as `0aa9826`; 3 real normalization and 334 backend tests, independent review and required/post-merge CI passed
-- **TASK-039 Captions and subtitle alignment** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-038
+- **TASK-039 Captions and subtitle alignment** — IN_PROGRESS · Media Pipeline Engineer · 8h · deps: TASK-038 · Issue [#144](https://github.com/dhruv0641/Dolla/issues/144) · Branch `feature/TASK-039-caption-subtitle-alignment`
 - **TASK-040 Audio preview and management** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-039
 
 ## EPIC-09: Automated Video Editing

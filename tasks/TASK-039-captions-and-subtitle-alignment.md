@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-038
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#144](https://github.com/dhruv0641/Dolla/issues/144)
+- **Branch:** `feature/TASK-039-caption-subtitle-alignment`
+- **Blockers:** No code blocker. Caption generation must remain deterministic/local and must not claim transcription or word-level alignment without evidence.
 
 ## User Story
 As a FLOW AI Content OS operator, I want captions and subtitle alignment, so the platform can progress safely through a traceable production lifecycle.
