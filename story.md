@@ -122,4 +122,6 @@ Remaining gates include reconciliation of the old `sent` image job, a verified a
 
 TASK-035 asset search and retention began on issue [#132](https://github.com/dhruv0641/Dolla/issues/132) after TASK-034 closed. Owner-scoped search and explicit retention safeguards passed 326 local tests, independent review and required PR checks; implementation PR #133 merged as `31ace2c`.
 
-TASK-036 local TTS evaluation implementation PR #136 merged as `1b79dd5`; issue #135 closeout is pending. The provider-neutral evaluator and bounded probe tests are complete; 330 backend tests pass locally. No local TTS engine, synthesis operation or external service is claimed.
+TASK-036 local TTS evaluation implementation PR #136 and tracker PR #137 are merged; issue #135 is closed and post-merge validation passed. TASK-037 started on issue #138 with dependency TASK-036 satisfied. No local TTS engine, synthesis operation or external service is claimed at kickoff.
+
+TASK-037 is in independent-review-complete implementation state: immutable owner-scoped profiles, license/consent/exact-engine gates, replay-safe claims, bounded PCM WAV validation and narration asset lineage pass 11 focused tests and 331 non-migration backend tests. No concrete local engine or live synthesis is claimed; PostgreSQL runtime and local migration parsing remain unverified.

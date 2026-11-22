@@ -77,6 +77,17 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("retry_scheduled boolean NOT NULL DEFAULT false", sql)
         self.assertIn("CHECK (NOT retry_scheduled OR status = 'FAILED')", sql)
 
+    def test_voice_profiles_and_synthesis_are_evidence_gated_and_idempotent(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0011_voice_profiles_and_synthesis.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE voice_profiles", sql)
+        self.assertIn("source = 'LOCAL_BUILTIN'", sql)
+        self.assertIn("license_status <> 'VERIFIED' OR license_reference IS NOT NULL", sql)
+        self.assertIn("request_fingerprint char(64) NOT NULL UNIQUE", sql)
+        self.assertIn("completed_asset_id = asset_id", sql)
+        self.assertIn("CREATE TRIGGER voice_profile_immutable", sql)
+        self.assertIn("OLD.active = false AND NEW.active = true", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
