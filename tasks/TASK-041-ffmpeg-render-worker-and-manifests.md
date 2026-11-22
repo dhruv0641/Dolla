@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-032, TASK-036
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#150](https://github.com/dhruv0641/Dolla/issues/150)
+- **Branch:** `feature/TASK-041-ffmpeg-render-worker`
+- **Blockers:** None. Local FFmpeg availability is runtime-dependent and must fail closed without claiming a render.
 
 ## User Story
 As a FLOW AI Content OS operator, I want ffmpeg render worker and manifests, so the platform can progress safely through a traceable production lifecycle.
