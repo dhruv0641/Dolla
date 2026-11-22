@@ -159,3 +159,5 @@ TASK-042 implementation PR [#154](https://github.com/dhruv0641/Dolla/pull/154) p
 TASK-042 tracker PR [#155](https://github.com/dhruv0641/Dolla/pull/155) merged as `396756d`, post-merge validation passed and issue #153 closed. TASK-043 began on issue [#156](https://github.com/dhruv0641/Dolla/issues/156) for ordered scene, zero-start narration and validated subtitle composition through the local bounded worker.
 
 TASK-043 now verifies complete owner/content/scene/storyboard/audio lineage, concatenates normalized scene intervals in manifest order, pads/trims narration from 0:00 and muxes generated SRT as selectable `mov_text`. Real local evidence confirms red→blue scene order, AAC start time zero, subtitle presence, duration and tamper rejection. Four focused, 17 regression and 352 backend tests pass; independent review is pending.
+
+Caveman accepted TASK-043 final head `cb45c7e` with no blocker. The durable split is replayable: normalized input IDs stay in `inputs_manifest`, while the path-free `command_manifest` records roles, input positions and the complete scene timeline. Final-head 352-test suite, compileall, project-plan validation and diff check pass.

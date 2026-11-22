@@ -36,7 +36,9 @@ Relevant application service, tests, migration (if needed), configuration and do
 - `MediaCompositionService` accepts a strict contiguous 1–30-scene timeline, normalized narration and generated captions with exact content/scene/storyboard/audio lineage and valid upstream fingerprints.
 - All distinct managed inputs are completely snapshot-hashed under an aggregate byte limit. The fixed graph normalizes/pads/trims each scene, concatenates manifest order, anchors narration at 0:00, and muxes SRT through a separate restricted input as selectable `mov_text` rather than interpolating paths/text into filters.
 - The path-free manifest and fingerprint bind ordered roles, UUIDs, hashes, scene timing, storyboard/render versions and output policy. Bounded `ffprobe` requires exact H.264 profile, one AAC track, one `mov_text` track and duration within 250 ms before ingest.
+- The normalized `inputs_manifest` stores ordered asset IDs, while `command_manifest` stores roles/positions and the complete scene timeline so the database split is replayable without filesystem paths.
 - Four focused composition tests include real red→blue scene-order evidence, zero-start AAC, subtitle-stream verification and tamper-before-ingest rejection; 17 render/caption/audio regressions and all 352 non-migration backend tests pass.
+- Independent Technical Reviewer accepted final head `cb45c7e` with no blocker after checking lineage, exact-set/order, filter construction, subtitle isolation, resource limits, output validation, tamper cleanup, idempotency and split-manifest replayability.
 - Compileall, project-plan validation and diff check pass. Editorial transitions, music mixing, burned-in styling, PostgreSQL orchestration and production isolation remain unverified or downstream and are not claimed.
 
 ## Tests and Verification
