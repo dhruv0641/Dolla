@@ -5,8 +5,10 @@
 - **Priority:** P1
 - **Dependencies:** TASK-048
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
+- **GitHub issue:** [#174](https://github.com/dhruv0641/Dolla/issues/174)
+- **Branch:** `feature/TASK-049-scene-retry-limits-spend-gate`
 - **Blockers:** None for bounded local implementation; live spend/account state and paid retry execution must remain unavailable without explicit authorization.
 
 ## User Story
@@ -23,7 +25,7 @@ Deliver scene retry limits and spend gate as an independently verifiable capabil
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+QA retry-decision service, existing scene retry and credit-reservation contracts, idempotent persistence/migration if needed, focused tests and operator documentation. Reuse rather than bypass TASK-027 through TASK-030 and TASK-033; select exact paths after targeted inspection.
 
 ## Acceptance Criteria
 - [ ] Capability is implemented behind documented interfaces and configuration.
