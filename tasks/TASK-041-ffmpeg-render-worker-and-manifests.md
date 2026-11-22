@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-032, TASK-036
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#150](https://github.com/dhruv0641/Dolla/issues/150)
 - **Branch:** `feature/TASK-041-ffmpeg-render-worker`
+- **Implementation PR:** [#151](https://github.com/dhruv0641/Dolla/pull/151), merged to `develop` as `f23b176d62875d0b7b7e98c783a3597da7addd00`
 - **Blockers:** None. Local FFmpeg availability is runtime-dependent and must fail closed without claiming a render.
 
 ## User Story
@@ -38,6 +39,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - `RenderManifest` produces migration-0010-compatible `inputs_manifest` JSON and a path-free declarative `command_manifest`; its SHA-256 fingerprint binds ordered input evidence, request/version/output identity and codec policy.
 - Five focused worker tests include real FFmpeg output and tamper rejection; 21 render/asset/probe/audio regression tests and the full 347-test non-migration backend suite pass.
 - Independent Technical Reviewer accepted final head `9f45402` with no blocker after checking security, ownership, manifests, FFmpeg/probe constraints, idempotency, failure handling and task boundaries; the missing-probe regression proves ingest is not called after output validation failure.
+- Both required checks and the post-merge `develop` check passed for [PR #151](https://github.com/dhruv0641/Dolla/pull/151); no direct protected-branch push occurred.
 - Compileall, project-plan validation and diff check pass. Cross-build byte determinism, production volumes and PostgreSQL render-job orchestration remain unverified and are not claimed; multi-input composition belongs to TASK-043.
 
 ## Tests and Verification
