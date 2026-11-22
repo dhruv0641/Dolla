@@ -38,6 +38,7 @@ QA retry-decision service, existing scene retry and credit-reservation contracts
 - `python -m compileall -q src tests`, `python scripts/validate_project_plan.py`, and `git diff --check` passed; all 16 migrations parse through the migration test.
 - Evidence covers job and reservation ownership preflight before approval, exact approval/reservation/account binding, account → reservation → prior job/scene lock order, bounded attempts, stale/malformed spend denial, idempotent replay, direct-SQL gate shape and complete decided-row immutability.
 - Live PostgreSQL concurrency, real approval-provider behavior, actual retry execution and paid Flow generation remain unverified and unauthorized.
+- Independent Technical Reviewer accepted exact implementation commit `424943d90e7d3cf177060a3a663015828eb849ae` with no blocker after confirming full decided-row immutability, account → reservation → prior-job lock order, owner preflights, direct-SQL account/reservation binding, exact next-attempt reservation and fail-closed replay. Reviewer verification: 27 focused retry/generation/policy tests, 16 migration/parser tests, project validator and diff check passed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
