@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-043
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#159](https://github.com/dhruv0641/Dolla/issues/159)
+- **Branch:** `feature/TASK-044-platform-export-variants`
+- **Blockers:** None. Export is local-only; publishing, channel connections and upload APIs remain explicitly out of scope.
 
 ## User Story
 As a FLOW AI Content OS operator, I want platform export variants, so the platform can progress safely through a traceable production lifecycle.

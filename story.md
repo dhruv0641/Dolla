@@ -163,3 +163,5 @@ TASK-043 now verifies complete owner/content/scene/storyboard/audio lineage, con
 Caveman accepted TASK-043 final head `cb45c7e` with no blocker. The durable split is replayable: normalized input IDs stay in `inputs_manifest`, while the path-free `command_manifest` records roles, input positions and the complete scene timeline. Final-head 352-test suite, compileall, project-plan validation and diff check pass.
 
 TASK-043 implementation PR [#157](https://github.com/dhruv0641/Dolla/pull/157) passed both required checks and merged to protected `develop` as `4855be4`; post-merge validation also passed. TASK-043 is DONE pending tracker-only closeout and issue closure, making TASK-044 dependency-ready.
+
+TASK-043 tracker PR [#158](https://github.com/dhruv0641/Dolla/pull/158) merged as `652bb64`, post-merge validation passed and issue #156 closed. TASK-044 began on issue [#159](https://github.com/dhruv0641/Dolla/issues/159) for allowlisted local platform export variants; publishing, account connection and uploads are excluded.
