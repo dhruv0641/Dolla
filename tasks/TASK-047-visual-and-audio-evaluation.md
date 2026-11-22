@@ -5,9 +5,9 @@
 - **Priority:** P1
 - **Dependencies:** TASK-046
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** None. TASK-046 is DONE; the Head Man must select and scope this task before implementation begins.
 
 ## User Story
 As a FLOW AI Content OS operator, I want visual and audio evaluation, so the platform can progress safely through a traceable production lifecycle.
