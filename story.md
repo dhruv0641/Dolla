@@ -129,3 +129,7 @@ TASK-037 implementation PR #139 merged to `develop` as `22ea8e4` after independe
 TASK-037 tracker PR #140 merged as `d5ac3aa`, issue #138 closed and post-merge validation passed. TASK-038 started on issue #141 to define zero-millisecond narration timing and bounded local audio normalization; no external provider or paid action is authorized.
 
 TASK-038 implementation PR #142 merged to `develop` as `0aa9826` after independent review and required/post-merge checks passed. Managed narration begins at exactly 0 ms, shorter audio is padded to the content duration, longer audio fails closed, and bounded local FFmpeg produces verified PCM WAV lineage. Three real/local normalization tests and 334 non-migration backend tests pass. Loudness values remain filter targets rather than measured final-render conformance.
+
+TASK-038 tracker PR #143 merged as `781315e`, issue #141 closed and post-merge validation passed. TASK-039 started on issue #144 for deterministic local caption cues and subtitle alignment; external transcription and unsupported word-level timing claims are excluded.
+
+TASK-039 implementation is independently reviewed with no blocker: approved storyboard narration is preserved in scene-bounded cues and rendered as safe, bounded UTF-8 SRT bound to the normalized zero-start narration asset. Four focused caption tests and 338 non-migration backend tests pass. Alignment remains an explicit scene estimate with word-level verification false.

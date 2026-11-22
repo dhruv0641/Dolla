@@ -31,6 +31,17 @@ from .normalization import (
     NarrationTiming,
     normalization_fingerprint,
 )
+from .captions import (
+    CaptionAlignmentError,
+    CaptionAlignmentService,
+    CaptionCue,
+    CaptionPolicy,
+    CaptionRequest,
+    CaptionResult,
+    build_caption_cues,
+    caption_fingerprint,
+    render_srt,
+)
 
 __all__ = [
     "LocalTtsProvider", "SynthesisClaim", "SynthesisPolicy", "SynthesisRequest",
@@ -41,4 +52,7 @@ __all__ = [
     "AudioNormalizationError", "AudioNormalizationPolicy", "AudioNormalizationRequest",
     "AudioNormalizationResult", "AudioNormalizationService", "NarrationTiming",
     "normalization_fingerprint",
+    "CaptionAlignmentError", "CaptionAlignmentService", "CaptionCue", "CaptionPolicy",
+    "CaptionRequest", "CaptionResult", "build_caption_cues", "caption_fingerprint",
+    "render_srt",
 ]
