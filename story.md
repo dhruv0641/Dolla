@@ -165,3 +165,5 @@ Caveman accepted TASK-043 final head `cb45c7e` with no blocker. The durable spli
 TASK-043 implementation PR [#157](https://github.com/dhruv0641/Dolla/pull/157) passed both required checks and merged to protected `develop` as `4855be4`; post-merge validation also passed. TASK-043 is DONE pending tracker-only closeout and issue closure, making TASK-044 dependency-ready.
 
 TASK-043 tracker PR [#158](https://github.com/dhruv0641/Dolla/pull/158) merged as `652bb64`, post-merge validation passed and issue #156 closed. TASK-044 began on issue [#159](https://github.com/dhruv0641/Dolla/issues/159) for allowlisted local platform export variants; publishing, account connection and uploads are excluded.
+
+TASK-044 now exposes only versioned YouTube Shorts, Instagram Reels and Facebook Reels local product profiles. Each verified composed source is fully hashed, transformed through fixed H.264/AAC/mov_text settings, probed before `EXPORT_VARIANT` ingest and marked `publishing_performed: false`. Real outputs for all three profiles pass; 4 focused, 20 regression and 356 backend tests pass. Independent review is pending.

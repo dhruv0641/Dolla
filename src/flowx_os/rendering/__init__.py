@@ -17,6 +17,16 @@ from flowx_os.rendering.composition import (
     SceneCompositionInput,
     build_composition_manifest,
 )
+from flowx_os.rendering.exports import (
+    EXPORT_PROFILES,
+    ExportManifest,
+    ExportProfile,
+    ExportProfileId,
+    ExportRequest,
+    ExportResult,
+    PlatformExportService,
+    build_export_manifest,
+)
 
 __all__ = [
     "FfmpegRenderWorker",
@@ -32,4 +42,12 @@ __all__ = [
     "MediaCompositionService",
     "SceneCompositionInput",
     "build_composition_manifest",
+    "EXPORT_PROFILES",
+    "ExportManifest",
+    "ExportProfile",
+    "ExportProfileId",
+    "ExportRequest",
+    "ExportResult",
+    "PlatformExportService",
+    "build_export_manifest",
 ]
