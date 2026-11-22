@@ -65,7 +65,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-037 Voice profiles and synthesis** — DONE · Media Pipeline Engineer · 4h · deps: TASK-036 · Issue [#138](https://github.com/dhruv0641/Dolla/issues/138) · implementation PR [#139](https://github.com/dhruv0641/Dolla/pull/139) merged as `22ea8e4`; 11 focused and 331 non-migration backend tests, independent review and required/post-merge CI passed
 - **TASK-038 Timing, normalization and zero-second narration** — DONE · Media Pipeline Engineer · 6h · deps: TASK-037 · Issue [#141](https://github.com/dhruv0641/Dolla/issues/141) · implementation PR [#142](https://github.com/dhruv0641/Dolla/pull/142) merged as `0aa9826`; 3 real normalization and 334 backend tests, independent review and required/post-merge CI passed
 - **TASK-039 Captions and subtitle alignment** — DONE · Media Pipeline Engineer · 8h · deps: TASK-038 · Issue [#144](https://github.com/dhruv0641/Dolla/issues/144) · implementation PR [#145](https://github.com/dhruv0641/Dolla/pull/145) merged as `015abc4`; 4 focused and 338 backend tests, independent review and required/post-merge CI passed
-- **TASK-040 Audio preview and management** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-039
+- **TASK-040 Audio preview and management** — IN_PROGRESS · Media Pipeline Engineer · 12h · deps: TASK-039 · Issue [#147](https://github.com/dhruv0641/Dolla/issues/147) · Branch `feature/TASK-040-audio-preview-management`
 
 ## EPIC-09: Automated Video Editing
 

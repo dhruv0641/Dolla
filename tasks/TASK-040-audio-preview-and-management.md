@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-039
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#147](https://github.com/dhruv0641/Dolla/issues/147)
+- **Branch:** `feature/TASK-040-audio-preview-management`
+- **Blockers:** No code blocker. Preview must remain owner-scoped and local; raw paths and unverified/retired media must never be served.
 
 ## User Story
 As a FLOW AI Content OS operator, I want audio preview and management, so the platform can progress safely through a traceable production lifecycle.
