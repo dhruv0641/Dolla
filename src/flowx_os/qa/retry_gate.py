@@ -61,6 +61,10 @@ class RetryGateStore(Protocol):
         self, *, job_id: UUID, owner_user_id: str,
     ) -> SceneRetryGateDecision | None: ...
 
+    async def get_owned_retry_reservation(
+        self, *, reservation_id: UUID, account_id: UUID, owner_user_id: str,
+    ) -> CreditReservationRecord: ...
+
     async def record_failure_retry_gate(
         self, *, job_id: UUID, owner_user_id: str, retryable: bool,
         failure_code: str, spend_evidence: RetrySpendEvidence | None,
@@ -145,44 +149,64 @@ class SceneRetrySpendGateService:
                         or reservation.quote_expires_at.utcoffset() is None
                         or reservation.quote_expires_at <= observed_now):
                     reason = RetryGateReason.SPEND_STATE_INVALID
-                elif reservation.state != CreditReservationState.RESERVED:
-                    reason = RetryGateReason.SPEND_STATE_INVALID
-                elif not isinstance(approval_ref, str) or not _SAFE_APPROVAL.fullmatch(approval_ref):
-                    reason = RetryGateReason.APPROVAL_REQUIRED
-                elif self._authorizer is None:
-                    reason = RetryGateReason.APPROVAL_UNAVAILABLE
                 else:
-                    try:
-                        approved = await self._authorizer.is_authorized(
-                            approval_ref=approval_ref,
-                            account_ref=str(reservation.flow_account_id),
-                            operation=FlowOperation.VIDEO_GENERATE,
-                            max_allowed_credits=reservation.quoted_credits,
-                        )
-                    except Exception:
+                    trusted = await self._store.get_owned_retry_reservation(
+                        reservation_id=reservation.id,
+                        account_id=reservation.flow_account_id,
+                        owner_user_id=owner,
+                    )
+                    if (not isinstance(trusted, CreditReservationRecord)
+                            or trusted.id != reservation.id
+                            or trusted.flow_account_id != reservation.flow_account_id
+                            or not isinstance(trusted.request_id, UUID)
+                            or not isinstance(trusted.quote_expires_at, datetime)
+                            or trusted.quote_expires_at.tzinfo is None
+                            or trusted.quote_expires_at.utcoffset() is None):
+                        raise RuntimeError("retry gate store returned an invalid reservation")
+                    reservation = trusted
+                    if (reservation.state != CreditReservationState.RESERVED
+                            or reservation.quote_expires_at <= observed_now
+                            or isinstance(reservation.quoted_credits, bool)
+                            or not isinstance(reservation.quoted_credits, int)
+                            or reservation.quoted_credits <= 0):
+                        reason = RetryGateReason.SPEND_STATE_INVALID
+                    elif (not isinstance(approval_ref, str)
+                          or not _SAFE_APPROVAL.fullmatch(approval_ref)):
+                        reason = RetryGateReason.APPROVAL_REQUIRED
+                    elif self._authorizer is None:
                         reason = RetryGateReason.APPROVAL_UNAVAILABLE
                     else:
-                        if approved is not True:
-                            reason = RetryGateReason.APPROVAL_REJECTED
+                        try:
+                            approved = await self._authorizer.is_authorized(
+                                approval_ref=approval_ref,
+                                account_ref=str(reservation.flow_account_id),
+                                operation=FlowOperation.VIDEO_GENERATE,
+                                max_allowed_credits=reservation.quoted_credits,
+                            )
+                        except Exception:
+                            reason = RetryGateReason.APPROVAL_UNAVAILABLE
                         else:
-                            verified_at = self._now()
-                            if (not isinstance(verified_at, datetime)
-                                    or verified_at.tzinfo is None
-                                    or verified_at.utcoffset() is None):
-                                reason = RetryGateReason.SPEND_STATE_INVALID
+                            if approved is not True:
+                                reason = RetryGateReason.APPROVAL_REJECTED
                             else:
-                                evidence = RetrySpendEvidence(
-                                    reservation_id=reservation.id,
-                                    account_id=reservation.flow_account_id,
-                                    request_id=reservation.request_id,
-                                    quoted_credits=reservation.quoted_credits,
-                                    quote_expires_at=reservation.quote_expires_at,
-                                    approval_fingerprint=retry_approval_fingerprint(
-                                        reservation=reservation, approval_ref=approval_ref,
-                                    ),
-                                    verified_at=verified_at,
-                                )
-                                reason = RetryGateReason.ELIGIBLE
+                                verified_at = self._now()
+                                if (not isinstance(verified_at, datetime)
+                                        or verified_at.tzinfo is None
+                                        or verified_at.utcoffset() is None):
+                                    reason = RetryGateReason.SPEND_STATE_INVALID
+                                else:
+                                    evidence = RetrySpendEvidence(
+                                        reservation_id=reservation.id,
+                                        account_id=reservation.flow_account_id,
+                                        request_id=reservation.request_id,
+                                        quoted_credits=reservation.quoted_credits,
+                                        quote_expires_at=reservation.quote_expires_at,
+                                        approval_fingerprint=retry_approval_fingerprint(
+                                            reservation=reservation, approval_ref=approval_ref,
+                                        ),
+                                        verified_at=verified_at,
+                                    )
+                                    reason = RetryGateReason.ELIGIBLE
         return await self._store.record_failure_retry_gate(
             job_id=job_id, owner_user_id=owner, retryable=retryable,
             failure_code=failure_code, spend_evidence=evidence,

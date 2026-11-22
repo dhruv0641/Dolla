@@ -102,6 +102,7 @@ DECLARE prior_scheduled boolean;
 DECLARE prior_decision text;
 DECLARE prior_reservation uuid;
 DECLARE prior_max_attempts integer;
+DECLARE reservation_account uuid;
 BEGIN
   IF NEW.attempt_index = 1 THEN RETURN NEW; END IF;
   SELECT status, retry_scheduled, retry_gate_decision,
@@ -111,10 +112,14 @@ BEGIN
     FROM generation_jobs
     WHERE scene_id = NEW.scene_id AND attempt_index = NEW.attempt_index - 1
     FOR SHARE;
+  SELECT flow_account_id INTO reservation_account
+    FROM flow_credit_reservations
+    WHERE id = NEW.credit_reservation_id FOR SHARE;
   IF prior_status IS DISTINCT FROM 'FAILED'
      OR prior_scheduled IS DISTINCT FROM true
      OR prior_decision IS DISTINCT FROM 'ALLOW'
      OR prior_reservation IS DISTINCT FROM NEW.credit_reservation_id
+     OR reservation_account IS DISTINCT FROM NEW.flow_account_id
      OR prior_max_attempts IS NULL
      OR NEW.attempt_index > prior_max_attempts THEN
     RAISE EXCEPTION 'scene retry claim lacks an exact eligible retry gate'
@@ -135,7 +140,15 @@ BEGIN
       USING ERRCODE = 'check_violation';
   END IF;
   IF OLD.retry_gate_decision IS NOT NULL AND (
-       NEW.retry_gate_decision IS DISTINCT FROM OLD.retry_gate_decision
+       NEW.id IS DISTINCT FROM OLD.id
+       OR NEW.scene_id IS DISTINCT FROM OLD.scene_id
+       OR NEW.flow_account_id IS DISTINCT FROM OLD.flow_account_id
+       OR NEW.credit_reservation_id IS DISTINCT FROM OLD.credit_reservation_id
+       OR NEW.attempt_index IS DISTINCT FROM OLD.attempt_index
+       OR NEW.status IS DISTINCT FROM OLD.status
+       OR NEW.error_code IS DISTINCT FROM OLD.error_code
+       OR NEW.completed_at IS DISTINCT FROM OLD.completed_at
+       OR NEW.retry_gate_decision IS DISTINCT FROM OLD.retry_gate_decision
        OR NEW.retry_gate_reason IS DISTINCT FROM OLD.retry_gate_reason
        OR NEW.retry_credit_reservation_id IS DISTINCT FROM OLD.retry_credit_reservation_id
        OR NEW.retry_approval_fingerprint IS DISTINCT FROM OLD.retry_approval_fingerprint

@@ -33,10 +33,10 @@ QA retry-decision service, existing scene retry and credit-reservation contracts
 - [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
-- `python -m unittest tests.test_retry_spend_gate tests.test_generation_jobs tests.test_scene_retry_policy tests.test_credit_reservations tests.test_credit_ledger tests.test_credit_alarms tests.test_flow_jobs tests.test_migrations` — 98 passed.
-- `python -m unittest discover -s tests` — 432 passed.
+- `python -m unittest tests.test_retry_spend_gate tests.test_generation_jobs tests.test_scene_retry_policy tests.test_credit_reservations tests.test_credit_ledger tests.test_credit_alarms tests.test_flow_jobs tests.test_migrations` — 100 passed.
+- `python -m unittest discover -s tests` — 434 passed.
 - `python -m compileall -q src tests`, `python scripts/validate_project_plan.py`, and `git diff --check` passed; all 16 migrations parse through the migration test.
-- Evidence covers owner preflight before approval, exact approval/reservation binding, account → reservation → job/scene lock order, bounded attempts, stale/malformed spend denial, idempotent replay, direct-SQL gate shape and immutability.
+- Evidence covers job and reservation ownership preflight before approval, exact approval/reservation/account binding, account → reservation → job/scene lock order, bounded attempts, stale/malformed spend denial, idempotent replay, direct-SQL gate shape and decided-failure immutability.
 - Live PostgreSQL concurrency, real approval-provider behavior, actual retry execution and paid Flow generation remain unverified and unauthorized.
 
 ## Definition of Done

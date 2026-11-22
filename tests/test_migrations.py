@@ -154,7 +154,10 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("BEFORE UPDATE OR DELETE ON generation_jobs", sql)
         self.assertIn("require_scene_retry_claim_gate", sql)
         self.assertIn("prior_reservation IS DISTINCT FROM NEW.credit_reservation_id", sql)
+        self.assertIn("reservation_account IS DISTINCT FROM NEW.flow_account_id", sql)
         self.assertIn("NEW.attempt_index > prior_max_attempts", sql)
+        self.assertIn("NEW.status IS DISTINCT FROM OLD.status", sql)
+        self.assertIn("NEW.scene_id IS DISTINCT FROM OLD.scene_id", sql)
 
 
 if __name__ == "__main__":

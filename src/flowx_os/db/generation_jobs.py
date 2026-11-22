@@ -349,6 +349,37 @@ class FlowGenerationJobRepository:
         except Exception as exc:
             raise RepositoryUnavailable("generation job storage is unavailable") from exc
 
+    async def get_owned_retry_reservation(
+        self, *, reservation_id: UUID, account_id: UUID, owner_user_id: str,
+    ):
+        """Return only a repository-sourced reservation owned by the job owner."""
+        if (not isinstance(reservation_id, UUID) or not isinstance(account_id, UUID)
+                or not isinstance(owner_user_id, str) or not owner_user_id.strip()
+                or len(owner_user_id.strip()) > 200
+                or any(ord(char) < 32 or ord(char) == 127 for char in owner_user_id)):
+            raise ValueError("owner-scoped retry reservation identity is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    """SELECT r.id, r.flow_account_id, r.request_id, r.model_name,
+                              r.duration_seconds, r.quote_ref, r.quoted_credits,
+                              r.quote_source, r.quoted_at, r.quote_expires_at,
+                              r.state, r.created_at
+                       FROM flow_credit_reservations AS r
+                       JOIN flow_accounts AS a ON a.id = r.flow_account_id
+                       WHERE r.id = %s AND r.flow_account_id = %s
+                         AND a.owner_user_id = %s""",
+                    (reservation_id, account_id, owner_user_id.strip()),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise RepositoryUnavailable("owner-scoped retry reservation is unavailable")
+                return FlowCreditReservationRepository._to_record(row)
+        except RepositoryUnavailable:
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("credit reservation storage is unavailable") from exc
+
     async def record_failure_retry_gate(
         self, *, job_id: UUID, owner_user_id: str, retryable: bool,
         failure_code: str, spend_evidence: RetrySpendEvidence | None,

@@ -107,6 +107,22 @@ class FlowGenerationJobRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("ON CONFLICT (idempotency_fingerprint) DO NOTHING", connection.calls[3][0])
         self.assertIn("status)", connection.calls[3][0])
 
+    async def test_retry_reservation_preflight_returns_only_owned_database_snapshot(self):
+        reservation_id, account_id, request_id = uuid4(), uuid4(), uuid4()
+        connection = FakeConnection([(
+            reservation_id, account_id, request_id, "veo-3.1-lite", 8, "quote-1", 2,
+            "FLOW_QUOTE", self.NOW - timedelta(minutes=1),
+            self.NOW + timedelta(minutes=5), "RESERVED", self.NOW - timedelta(minutes=1),
+        )])
+        result = await FlowGenerationJobRepository(
+            FakePool(connection), now=lambda: self.NOW,
+        ).get_owned_retry_reservation(
+            reservation_id=reservation_id, account_id=account_id,
+            owner_user_id="owner-1",
+        )
+        self.assertEqual((result.id, result.flow_account_id), (reservation_id, account_id))
+        self.assertIn("a.owner_user_id = %s", connection.calls[0][0])
+
     async def test_failure_preflight_is_owner_scoped_and_replays_existing_gate(self):
         job_id, scene_id, reservation_id = uuid4(), uuid4(), uuid4()
         connection = FakeConnection([(

@@ -12,7 +12,7 @@ TASK-049 closes the gap between a definitive scene-generation failure and schedu
 - The reservation quote, observed daily/monthly balances, account health/compliance, reset/cycle window and approval verification must all be fresh at the transactional decision time.
 - The approval verifier must confirm `VIDEO_GENERATE` for the exact account and reserved credit ceiling. Only a SHA-256 approval fingerprint is persisted; the raw approval reference is not stored in retry-gate evidence.
 
-Owner preflight occurs before the account/reservation identity is sent to the injected approval verifier. Ownership and all mutable spend state are checked again while the failed job, scene, reservation and account are locked.
+Job ownership and a repository-sourced owner-scoped reservation snapshot are both preflighted before the account/reservation identity is sent to the injected approval verifier. Ownership and all mutable spend state are checked again while the failed job, scene, reservation and account are locked.
 
 ## Decisions
 

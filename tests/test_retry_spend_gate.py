@@ -27,14 +27,23 @@ def reservation(*, state=CreditReservationState.RESERVED):
 
 
 class Store:
-    def __init__(self, existing=None):
+    def __init__(self, existing=None, trusted_reservation=None):
         self.events = []
         self.record = None
         self.existing = existing
+        self.trusted_reservation = trusted_reservation
 
     async def assert_failure_owned(self, *, job_id, owner_user_id):
         self.events.append(("preflight", job_id, owner_user_id))
         return self.existing
+
+    async def get_owned_retry_reservation(
+        self, *, reservation_id, account_id, owner_user_id,
+    ):
+        self.events.append(("reservation_preflight", reservation_id, owner_user_id))
+        if self.trusted_reservation is None:
+            raise RuntimeError("owner-scoped retry reservation is unavailable")
+        return self.trusted_reservation
 
     async def record_failure_retry_gate(self, **kwargs):
         self.events.append(("record", kwargs["job_id"], kwargs["owner_user_id"]))
@@ -67,9 +76,9 @@ class Authorizer:
 
 class RetrySpendGateTests(unittest.IsolatedAsyncioTestCase):
     async def test_exact_reserved_approval_creates_hashed_spend_evidence(self):
-        store = Store()
-        auth = Authorizer(events=store.events)
         value = reservation()
+        store = Store(trusted_reservation=value)
+        auth = Authorizer(events=store.events)
         result = await SceneRetrySpendGateService(
             store, auth, now=lambda: NOW,
         ).record_failure(
@@ -79,7 +88,10 @@ class RetrySpendGateTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(result.retry_scheduled)
         self.assertEqual(result.reason, RetryGateReason.ELIGIBLE)
-        self.assertEqual([event[0] for event in store.events], ["preflight", "authorize", "record"])
+        self.assertEqual(
+            [event[0] for event in store.events],
+            ["preflight", "reservation_preflight", "authorize", "record"],
+        )
         self.assertEqual(auth.calls[0]["account_ref"], str(value.flow_account_id))
         self.assertEqual(auth.calls[0]["max_allowed_credits"], value.quoted_credits)
         self.assertEqual(store.record["spend_evidence"].approval_fingerprint.__len__(), 64)
@@ -91,7 +103,7 @@ class RetrySpendGateTests(unittest.IsolatedAsyncioTestCase):
             (reservation(state=CreditReservationState.RECONCILE_PENDING),
              RetryGateReason.SPEND_STATE_INVALID),
         ]:
-            store, auth = Store(), Authorizer()
+            store, auth = Store(trusted_reservation=value), Authorizer()
             result = await SceneRetrySpendGateService(store, auth, now=lambda: NOW).record_failure(
                 job_id=uuid4(), owner_user_id="owner-1", retryable=True,
                 failure_code="QA_FAILED", reservation=value,
@@ -109,10 +121,11 @@ class RetrySpendGateTests(unittest.IsolatedAsyncioTestCase):
              "approval:retry-1", RetryGateReason.APPROVAL_UNAVAILABLE),
         ]
         for auth, approval_ref, reason in cases:
-            store = Store()
+            value = reservation()
+            store = Store(trusted_reservation=value)
             result = await SceneRetrySpendGateService(store, auth, now=lambda: NOW).record_failure(
                 job_id=uuid4(), owner_user_id="owner-1", retryable=True,
-                failure_code="QA_FAILED", reservation=reservation(),
+                failure_code="QA_FAILED", reservation=value,
                 approval_ref=approval_ref,
             )
             self.assertEqual(result.reason, reason)
@@ -162,6 +175,22 @@ class RetrySpendGateTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(RuntimeError):
             await SceneRetrySpendGateService(
                 RejectingStore(), auth, now=lambda: NOW,
+            ).record_failure(
+                job_id=uuid4(), owner_user_id="owner-1", retryable=True,
+                failure_code="QA_FAILED", reservation=reservation(),
+                approval_ref="approval:retry-1",
+            )
+        self.assertEqual(auth.calls, [])
+
+    async def test_foreign_reservation_preflight_prevents_approval_provider_call(self):
+        class RejectingReservationStore(Store):
+            async def get_owned_retry_reservation(self, **kwargs):
+                raise RuntimeError("owner-scoped retry reservation is unavailable")
+
+        auth = Authorizer()
+        with self.assertRaises(RuntimeError):
+            await SceneRetrySpendGateService(
+                RejectingReservationStore(), auth, now=lambda: NOW,
             ).record_failure(
                 job_id=uuid4(), owner_user_id="owner-1", retryable=True,
                 failure_code="QA_FAILED", reservation=reservation(),
