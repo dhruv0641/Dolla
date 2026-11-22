@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-041
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#153](https://github.com/dhruv0641/Dolla/issues/153)
+- **Branch:** `feature/TASK-042-normalize-video-profile`
+- **Blockers:** None. Runtime FFmpeg/ffprobe availability remains fail-closed and must not be inferred from planning state.
 
 ## User Story
 As a FLOW AI Content OS operator, I want normalize codecs, fps and aspect ratios, so the platform can progress safely through a traceable production lifecycle.

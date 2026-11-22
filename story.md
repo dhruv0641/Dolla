@@ -147,3 +147,5 @@ TASK-041 now has a strict single-video baseline worker that verifies complete ma
 Caveman accepted TASK-041 final head `9f45402` with no blocker after the worker added an FFmpeg output-size ceiling and bounded `ffprobe` validation before ingest. The missing-probe regression confirms fail-closed behavior. Final-head full suite remains 347 passing; compileall, project-plan validation and diff check pass.
 
 TASK-041 implementation PR [#151](https://github.com/dhruv0641/Dolla/pull/151) passed both required checks and merged to protected `develop` as `f23b176`; the post-merge check also passed. TASK-041 is DONE pending tracker-only closeout and issue closure, making TASK-042 dependency-ready.
+
+TASK-041 tracker PR [#152](https://github.com/dhruv0641/Dolla/pull/152) merged as `89e5e77`, post-merge validation passed and issue #150 closed. TASK-042 began on issue [#153](https://github.com/dhruv0641/Dolla/issues/153) to add deterministic codec, frame-rate and aspect normalization on the bounded local worker foundation.
