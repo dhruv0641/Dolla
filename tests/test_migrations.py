@@ -161,6 +161,22 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertLess(sql.index("SELECT flow_account_id INTO reservation_account"),
                         sql.index("SELECT status, retry_scheduled"))
 
+    def test_human_review_decisions_bind_evidence_transition_and_immutability(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0017_human_review_decisions.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("idx_review_decisions_request_v1", sql)
+        self.assertIn("idx_review_decisions_qa_report_v1", sql)
+        self.assertIn("require_human_review_evidence", sql)
+        self.assertIn("q.id = NEW.qa_report_id", sql)
+        self.assertIn("qa_decision = 'FAIL' OR jsonb_array_length(qa_blockers) > 0", sql)
+        self.assertIn("NEW.approval_scope, COALESCE(NEW.revision_target, ''), NEW.reason", sql)
+        self.assertIn("content_owner IS DISTINCT FROM NEW.reviewer_user_id", sql)
+        self.assertIn("NEW.reason IS DISTINCT FROM btrim(NEW.reason)", sql)
+        self.assertIn("UPDATE content_items SET status = next_status", sql)
+        self.assertIn("prevent_human_review_mutation", sql)
+        self.assertIn("RAISE EXCEPTION 'human review decisions are immutable'", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON review_decisions", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

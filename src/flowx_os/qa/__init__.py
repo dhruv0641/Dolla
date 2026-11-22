@@ -38,6 +38,12 @@ from .retry_gate import (
     SceneRetrySpendGateService,
     retry_approval_fingerprint,
 )
+from .human_review import (
+    HumanReviewDecision,
+    HumanReviewRecord,
+    HumanReviewRequest,
+    HumanReviewRevisionTarget,
+)
 
 __all__ = [
     "AvDecision",
@@ -68,4 +74,8 @@ __all__ = [
     "SceneRetryGateDecision",
     "SceneRetrySpendGateService",
     "retry_approval_fingerprint",
+    "HumanReviewDecision",
+    "HumanReviewRecord",
+    "HumanReviewRequest",
+    "HumanReviewRevisionTarget",
 ]

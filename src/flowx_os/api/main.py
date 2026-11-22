@@ -74,11 +74,22 @@ from flowx_os.db.credit_reservations import (
 )
 from flowx_os.db.credit_ledger import FlowCreditLedgerRepository
 from flowx_os.db.credit_alarms import FlowCreditRiskAlarmRepository
+from flowx_os.db.human_reviews import (
+    HumanReviewConflict,
+    HumanReviewNotAllowed,
+    HumanReviewRepository,
+)
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.domain.assets import AssetKind
 from flowx_os.domain.storyboard import StoryboardTimeline
 from flowx_os.api.observability import RequestMetrics
 from flowx_os.assets.audio_preview import AudioPreviewError, AudioPreviewService
+from flowx_os.qa.human_review import (
+    HumanReviewDecision,
+    HumanReviewRecord,
+    HumanReviewRequest,
+    HumanReviewRevisionTarget,
+)
 
 
 _request_logger = logging.getLogger("flowx.api.request")
@@ -173,6 +184,31 @@ class ContentResponse(BaseModel):
 
 class ContentTransition(BaseModel):
     target_status: ContentStatus
+
+
+class HumanReviewCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request_id: UUID
+    asset_id: UUID
+    qa_report_id: UUID
+    decision: HumanReviewDecision
+    reason: str = Field(min_length=1, max_length=2000)
+    revision_target: HumanReviewRevisionTarget | None = None
+
+
+class HumanReviewResponse(BaseModel):
+    decision_id: UUID
+    request_id: UUID
+    content_id: UUID
+    asset_id: UUID
+    qa_report_id: UUID
+    reviewer_user_id: str
+    decision: HumanReviewDecision
+    reason: str
+    revision_target: HumanReviewRevisionTarget | None
+    next_status: ContentStatus
+    created_at: datetime
 
 
 class StoryboardSaveRequest(BaseModel):
@@ -1189,6 +1225,54 @@ def create_app(
         except RepositoryUnavailable as exc:
             raise HTTPException(status_code=503, detail="database_unavailable") from exc
         return {"retired": retired}
+
+    @app.post(
+        "/api/v1/brands/{brand_id}/content/{content_id}/human-reviews",
+        response_model=HumanReviewResponse,
+        status_code=201,
+        tags=["quality"],
+    )
+    async def create_human_review(
+        brand_id: UUID,
+        content_id: UUID,
+        body: HumanReviewCreate,
+        principal: Principal = Depends(require_roles(Role.ADMIN, Role.REVIEWER)),
+    ) -> HumanReviewResponse:
+        if database_pool is None:
+            raise HTTPException(status_code=503, detail="database_not_configured")
+        try:
+            request = HumanReviewRequest(
+                request_id=body.request_id, content_id=content_id,
+                asset_id=body.asset_id, qa_report_id=body.qa_report_id,
+                reviewer_user_id=principal.subject, decision=body.decision,
+                reason=body.reason, revision_target=body.revision_target,
+            )
+            record: HumanReviewRecord = await HumanReviewRepository(
+                database_pool
+            ).create_or_get(
+                decision_id=body.request_id, brand_id=brand_id,
+                owner_user_id=principal.subject, request=request,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="human_review_invalid") from exc
+        except OwnedContentNotFound as exc:
+            raise HTTPException(status_code=404, detail="content_not_found") from exc
+        except HumanReviewConflict as exc:
+            raise HTTPException(status_code=409, detail="human_review_conflict") from exc
+        except HumanReviewNotAllowed as exc:
+            raise HTTPException(status_code=409, detail="human_review_not_allowed") from exc
+        except RepositoryUnavailable as exc:
+            raise HTTPException(status_code=503, detail="database_unavailable") from exc
+        reviewed = record.request
+        return HumanReviewResponse(
+            decision_id=record.decision_id, request_id=reviewed.request_id,
+            content_id=reviewed.content_id, asset_id=reviewed.asset_id,
+            qa_report_id=reviewed.qa_report_id,
+            reviewer_user_id=reviewed.reviewer_user_id,
+            decision=reviewed.decision, reason=reviewed.reason,
+            revision_target=reviewed.revision_target,
+            next_status=record.next_status, created_at=record.created_at,
+        )
 
     return app
 
