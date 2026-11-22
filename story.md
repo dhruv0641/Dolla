@@ -169,3 +169,5 @@ TASK-043 tracker PR [#158](https://github.com/dhruv0641/Dolla/pull/158) merged a
 TASK-044 now exposes only versioned YouTube Shorts, Instagram Reels and Facebook Reels local product profiles. Each verified composed source is fully hashed, transformed through fixed H.264/AAC/mov_text settings, probed before `EXPORT_VARIANT` ingest and marked `publishing_performed: false`. Real outputs for all three profiles pass; 4 focused, 20 regression and 356 backend tests pass. Independent review is pending.
 
 Caveman accepted TASK-044 final head `824ae4c` with no blocker. The platform-profile mapping is immutable at runtime, source hash/profile settings remain path-free and fingerprinted, and all three real variants retain verified video/audio/subtitle streams without any upload or publication path. Final-head 356-test suite and project gates pass.
+
+TASK-044 implementation PR [#160](https://github.com/dhruv0641/Dolla/pull/160) passed both required checks and merged to protected `develop` as `49e5a4a`; post-merge validation also passed. TASK-044 is DONE pending tracker-only closeout and issue closure, making TASK-045 dependency-ready.

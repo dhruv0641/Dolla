@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-043
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#159](https://github.com/dhruv0641/Dolla/issues/159)
 - **Branch:** `feature/TASK-044-platform-export-variants`
+- **Implementation PR:** [#160](https://github.com/dhruv0641/Dolla/pull/160), merged to `develop` as `49e5a4a4417bbabb22f6ce2eee628921fe67fd73`
 - **Blockers:** None. Export is local-only; publishing, channel connections and upload APIs remain explicitly out of scope.
 
 ## User Story
@@ -38,6 +39,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Path-free manifests and final metadata bind source UUID/hash, profile/platform/settings and deterministic fingerprint. Bounded probe verifies exact geometry/FPS/SAR, one H.264/AAC/mov_text stream set and duration before ingest as `EXPORT_VARIANT`; metadata always records `publishing_performed: false`.
 - Four focused tests generate and verify real local YouTube, Instagram and Facebook variants at 1080×1920/30 FPS and reject tampered input before ingest; 20 render/composition/asset regressions and all 356 non-migration backend tests pass.
 - Independent Technical Reviewer accepted final head `824ae4c` with no blocker after checking profile immutability/mapping, composition lineage, full input integrity, path-free fingerprints, fixed command/resource bounds, stream preservation, output validation, idempotency and the no-publishing boundary.
+- Both required checks and the post-merge `develop` check passed for [PR #160](https://github.com/dhruv0641/Dolla/pull/160); no direct protected-branch push occurred.
 - Compileall, project-plan validation and diff check pass. Product profiles are not permanent platform-limit certification; OAuth, upload, remote processing, public availability and production isolation are unverified/out of scope.
 
 ## Tests and Verification
