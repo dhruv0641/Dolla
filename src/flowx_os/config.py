@@ -43,6 +43,7 @@ class Settings:
     gemini_credentials_ref: str | None
     flow_credentials_ref: str | None
     youtube_credentials_ref: str | None
+    youtube_publishing_enabled: bool
     meta_credentials_ref: str | None
 
     @classmethod
@@ -98,6 +99,10 @@ class Settings:
         if environment == "production" and database_ref is None:
             raise ConfigurationError("FLOWX_DATABASE_CREDENTIALS_REF is required in production.")
 
+        youtube_enabled = env.get("FLOWX_YOUTUBE_PUBLISHING_ENABLED", "false").strip().lower()
+        if youtube_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_YOUTUBE_PUBLISHING_ENABLED must be true or false.")
+
         return cls(
             environment=environment,
             log_level=log_level,
@@ -106,5 +111,6 @@ class Settings:
             gemini_credentials_ref=_secret_ref(env, "FLOWX_GEMINI_CREDENTIALS_REF"),
             flow_credentials_ref=_secret_ref(env, "FLOWX_FLOW_CREDENTIALS_REF"),
             youtube_credentials_ref=_secret_ref(env, "FLOWX_YOUTUBE_CREDENTIALS_REF"),
+            youtube_publishing_enabled=youtube_enabled == "true",
             meta_credentials_ref=_secret_ref(env, "FLOWX_META_CREDENTIALS_REF"),
         )

@@ -177,6 +177,24 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("RAISE EXCEPTION 'human review decisions are immutable'", sql)
         self.assertIn("BEFORE UPDATE OR DELETE ON review_decisions", sql)
 
+    def test_youtube_publications_require_approved_artifact_and_remote_verification(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0018_youtube_publication_verification.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("idx_publication_jobs_request_v1", sql)
+        self.assertIn("approval_decision_id uuid REFERENCES review_decisions(id)", sql)
+        self.assertIn("require_youtube_publication_claim", sql)
+        self.assertIn("rja.profile_id", sql)
+        self.assertIn("YOUTUBE_SHORTS_V1", sql)
+        self.assertIn("rd.decision", sql)
+        self.assertIn("guard_youtube_publication_transition", sql)
+        self.assertIn("remote_upload_status IS DISTINCT FROM 'processed'", sql)
+        self.assertIn("remote_processing_status IS DISTINCT FROM 'succeeded'", sql)
+        self.assertIn("remote_privacy_status IS DISTINCT FROM NEW.intended_privacy_status", sql)
+        self.assertIn("terminal YouTube publication state is immutable", sql)
+        self.assertIn("YouTube remote identities are immutable once observed", sql)
+        self.assertIn("failed YouTube publication requires an error code", sql)
+        self.assertIn("YouTube publication evidence is immutable", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

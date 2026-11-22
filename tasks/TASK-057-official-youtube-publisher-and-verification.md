@@ -37,5 +37,26 @@ Typed official YouTube authorization/transport contracts, owner-scoped publicati
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
 
+## Implementation Evidence
+- Added strict official-API authorization, resumable upload, remote video and
+  publication contracts in `flowx_os.publishing.youtube`; no HTTP/OAuth client
+  or credential resolver is embedded.
+- Added an owner-scoped claim repository and migration 0018. Claims require
+  `READY` content, the exact active `YOUTUBE_SHORTS_V1` export from the selected
+  completed render version, its immutable human `APPROVE` decision, and an
+  enabled `VALID` YouTube channel with an opaque credentials reference.
+- Persisted request fingerprints, opaque resumable-session references, upload
+  progress, remote IDs and bounded verification evidence. Unknown submission
+  outcomes enter `VERIFY_PENDING` and cannot start a replacement upload.
+- `PUBLISHED` requires matching owner-only remote channel/video evidence,
+  `uploadStatus=processed`, `processingStatus=succeeded`, and the intended
+  privacy status. Upload acceptance alone remains `PROCESSING`.
+- Publishing defaults off through `FLOWX_YOUTUBE_PUBLISHING_ENABLED=false`;
+  private is the only default privacy and subscriber notifications are disabled.
+- Verification: 45 focused/config/migration tests and the complete 466-test
+  suite pass; all 18 migrations parse, compilation, diff hygiene and the
+  76-task project validator pass. Live PostgreSQL, OAuth, channel connection,
+  quota behavior, upload and public publication remain unverified and unused.
+
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
