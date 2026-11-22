@@ -9,6 +9,14 @@ from flowx_os.rendering.worker import (
     RenderResult,
     build_render_manifest,
 )
+from flowx_os.rendering.composition import (
+    CompositionManifest,
+    CompositionRequest,
+    CompositionResult,
+    MediaCompositionService,
+    SceneCompositionInput,
+    build_composition_manifest,
+)
 
 __all__ = [
     "FfmpegRenderWorker",
@@ -18,4 +26,10 @@ __all__ = [
     "RenderRequest",
     "RenderResult",
     "build_render_manifest",
+    "CompositionManifest",
+    "CompositionRequest",
+    "CompositionResult",
+    "MediaCompositionService",
+    "SceneCompositionInput",
+    "build_composition_manifest",
 ]

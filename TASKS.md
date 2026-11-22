@@ -71,7 +71,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-041 FFmpeg render worker and manifests** — DONE · Media Pipeline Engineer · 4h · deps: TASK-032, TASK-036 · Issue [#150](https://github.com/dhruv0641/Dolla/issues/150) · implementation PR [#151](https://github.com/dhruv0641/Dolla/pull/151) merged as `f23b176`; 5 focused, 21 regression and 347 backend tests, independent review and required/post-merge CI passed
 - **TASK-042 Normalize codecs, fps and aspect ratios** — DONE · Media Pipeline Engineer · 6h · deps: TASK-041 · Issue [#153](https://github.com/dhruv0641/Dolla/issues/153) · implementation PR [#154](https://github.com/dhruv0641/Dolla/pull/154) merged as `fb9b840`; 6 focused, 19 regression and 348 backend tests, independent review and required/post-merge CI passed
-- **TASK-043 Compose scenes, audio and subtitles** — IN_PROGRESS · Media Pipeline Engineer · 8h · deps: TASK-042 · Issue [#156](https://github.com/dhruv0641/Dolla/issues/156) · Branch `feature/TASK-043-compose-scenes-media`
+- **TASK-043 Compose scenes, audio and subtitles** — IN_REVIEW · Media Pipeline Engineer · 8h · deps: TASK-042 · Issue [#156](https://github.com/dhruv0641/Dolla/issues/156) · Branch `feature/TASK-043-compose-scenes-media` · 4 focused, 17 regression and 352 backend tests pass; independent review pending
 - **TASK-044 Platform export variants** — BACKLOG · Media Pipeline Engineer · 12h · deps: TASK-043
 - **TASK-045 Render versions and artifacts** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-044
 
