@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-048
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#174](https://github.com/dhruv0641/Dolla/issues/174)
 - **Branch:** `feature/TASK-049-scene-retry-limits-spend-gate`
+- **Implementation PR:** [#175](https://github.com/dhruv0641/Dolla/pull/175), merged to `develop` as `f860fb08a0eb6e57b008794cf4dc4c8848e6a525`; required and post-merge checks passed.
 - **Blockers:** None for bounded local implementation; live spend/account state and paid retry execution must remain unavailable without explicit authorization.
 
 ## User Story

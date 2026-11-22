@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-049
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
