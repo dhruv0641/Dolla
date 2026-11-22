@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-046
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None. TASK-046 is DONE; the Head Man must select and scope this task before implementation begins.
+- **GitHub issue:** [#168](https://github.com/dhruv0641/Dolla/issues/168)
+- **Branch:** `feature/TASK-047-visual-audio-evaluation`
+- **Blockers:** None for local implementation. Production threshold calibration and subjective/semantic review evidence must be reported separately.
 
 ## User Story
 As a FLOW AI Content OS operator, I want visual and audio evaluation, so the platform can progress safely through a traceable production lifecycle.
