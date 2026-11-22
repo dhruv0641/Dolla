@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-036
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#138](https://github.com/dhruv0641/Dolla/issues/138)
+- **Branch:** `feature/TASK-037-voice-profiles-and-synthesis`
+- **Blockers:** No code blocker. A live local TTS engine remains unselected and unverified; the implementation must fail closed rather than simulate synthesis.
 
 ## User Story
 As a FLOW AI Content OS operator, I want voice profiles and synthesis, so the platform can progress safely through a traceable production lifecycle.
