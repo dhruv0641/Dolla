@@ -124,6 +124,21 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("visual/audio QA decision does not match findings", sql)
         self.assertIn("prevent_av_report_mutation", sql)
 
+    def test_policy_signal_reports_require_passing_av_and_are_immutable(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0015_policy_factuality_copyright_signals.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE UNIQUE INDEX idx_qa_reports_asset_signals_version", sql)
+        self.assertIn("WHERE version = 'signals-v1'", sql)
+        self.assertIn("require_policy_signal_lineage", sql)
+        self.assertIn("av.version = 'av-v1'", sql)
+        self.assertIn("av.decision = 'PASS'", sql)
+        self.assertIn("policy signal QA blocker envelope is invalid", sql)
+        self.assertIn("policy signal QA decision does not match findings", sql)
+        self.assertIn("policy signal QA copyright availability is invalid", sql)
+        self.assertIn("policy signal QA state does not match findings", sql)
+        self.assertIn("policy signal QA review disposition is invalid", sql)
+        self.assertIn("prevent_policy_signal_report_mutation", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

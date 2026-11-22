@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+import hashlib
+import json
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
@@ -141,9 +143,34 @@ class ReviewAssessment(_StrictModel):
 
 class HumanReviewResult(_StrictModel):
     assessment: ReviewAssessment
+    context_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     human_approval_required: Literal[True] = True
     approval_state: Literal["pending_human"] = "pending_human"
     content_approved: Literal[False] = False
+
+
+def review_context_fingerprint(context: ReviewContext) -> str:
+    """Bind a validated review result to exact bounded inputs without raw text."""
+    if not isinstance(context, ReviewContext):
+        raise TypeError("validated review context is required")
+    sources = [{
+        "evidence": source.evidence.model_dump(mode="json"),
+        "retrieved_at": source.retrieved_at.isoformat(),
+        "text_sha256": hashlib.sha256(source.text.encode("utf-8")).hexdigest(),
+    } for source in context.sources]
+    payload = {
+        "content_id": str(context.content_id),
+        "prompt_id": context.prompt_id,
+        "prompt_version": context.prompt_version,
+        "policy_version": context.policy_version,
+        "draft": context.draft.model_dump(mode="json"),
+        "sources": sources,
+    }
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 class ContentReviewer(Protocol):
@@ -188,4 +215,7 @@ class ContentReviewWorkflow:
         for finding_index, finding in enumerate(assessment.findings):
             if any(item not in source_ids for item in finding.evidence_ids):
                 raise ReviewError(ReviewErrorCode.UNKNOWN_EVIDENCE, path=f"findings.{finding_index}.evidence_ids")
-        return HumanReviewResult(assessment=assessment)
+        return HumanReviewResult(
+            assessment=assessment,
+            context_fingerprint=review_context_fingerprint(active),
+        )
