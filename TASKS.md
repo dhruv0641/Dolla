@@ -61,7 +61,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-08: Local Audio and Voiceover
 
-- **TASK-036 Evaluate local TTS** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135) · implementation PR [#136](https://github.com/dhruv0641/Dolla/pull/136) merged as `1b79dd5`; 330 tests and independent review passed; tracker closeout pending · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135)
+- **TASK-036 Evaluate local TTS** — DONE · Media Pipeline Engineer · 16h · deps: TASK-031 · Issue [#135](https://github.com/dhruv0641/Dolla/issues/135) · implementation PR [#136](https://github.com/dhruv0641/Dolla/pull/136) merged as `1b79dd5`; tracker closeout PR [#137](https://github.com/dhruv0641/Dolla/pull/137) pending; 330 tests and independent review passed
 - **TASK-037 Voice profiles and synthesis** — BACKLOG · Media Pipeline Engineer · 4h · deps: TASK-036
 - **TASK-038 Timing, normalization and zero-second narration** — BACKLOG · Media Pipeline Engineer · 6h · deps: TASK-037
 - **TASK-039 Captions and subtitle alignment** — BACKLOG · Media Pipeline Engineer · 8h · deps: TASK-038
