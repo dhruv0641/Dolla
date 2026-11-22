@@ -73,7 +73,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-042 Normalize codecs, fps and aspect ratios** — DONE · Media Pipeline Engineer · 6h · deps: TASK-041 · Issue [#153](https://github.com/dhruv0641/Dolla/issues/153) · implementation PR [#154](https://github.com/dhruv0641/Dolla/pull/154) merged as `fb9b840`; 6 focused, 19 regression and 348 backend tests, independent review and required/post-merge CI passed
 - **TASK-043 Compose scenes, audio and subtitles** — DONE · Media Pipeline Engineer · 8h · deps: TASK-042 · Issue [#156](https://github.com/dhruv0641/Dolla/issues/156) · implementation PR [#157](https://github.com/dhruv0641/Dolla/pull/157) merged as `4855be4`; 4 focused, 17 regression and 352 backend tests, independent review and required/post-merge CI passed
 - **TASK-044 Platform export variants** — DONE · Media Pipeline Engineer · 12h · deps: TASK-043 · Issue [#159](https://github.com/dhruv0641/Dolla/issues/159) · implementation PR [#160](https://github.com/dhruv0641/Dolla/pull/160) merged as `49e5a4a`; 4 focused, 20 regression and 356 backend tests, independent review and required/post-merge CI passed
-- **TASK-045 Render versions and artifacts** — BACKLOG · Media Pipeline Engineer · 16h · deps: TASK-044
+- **TASK-045 Render versions and artifacts** — IN_PROGRESS · Media Pipeline Engineer · 16h · deps: TASK-044 · Issue [#162](https://github.com/dhruv0641/Dolla/issues/162) · Branch `feature/TASK-045-render-versions-artifacts`
 
 ## EPIC-10: Video Quality Assurance
 

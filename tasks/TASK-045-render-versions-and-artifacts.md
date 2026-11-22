@@ -5,9 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-044
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#162](https://github.com/dhruv0641/Dolla/issues/162)
+- **Branch:** `feature/TASK-045-render-versions-artifacts`
+- **Blockers:** None for implementation. Live PostgreSQL transaction/locking evidence remains environment-dependent and must be reported separately.
 
 ## User Story
 As a FLOW AI Content OS operator, I want render versions and artifacts, so the platform can progress safely through a traceable production lifecycle.
