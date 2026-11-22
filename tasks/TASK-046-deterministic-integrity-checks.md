@@ -5,9 +5,9 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034, TASK-045
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** READY
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **Blockers:** None. TASK-034 and TASK-045 are DONE; the Head Man must select and scope this task before implementation begins.
 
 ## User Story
 As a FLOW AI Content OS operator, I want deterministic integrity checks, so the platform can progress safely through a traceable production lifecycle.
