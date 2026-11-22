@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-032, TASK-036
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#150](https://github.com/dhruv0641/Dolla/issues/150)
 - **Branch:** `feature/TASK-041-ffmpeg-render-worker`
@@ -28,9 +28,16 @@ Deliver ffmpeg render worker and manifests as an independently verifiable capabi
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+
+## Acceptance Evidence
+- `flowx_os.rendering.FfmpegRenderWorker` accepts a strict owner/content render request, verified managed input metadata and a fixed operator policy; it does not accept raw FFmpeg arguments.
+- Full-file hash, size, inode, link and path checks precede execution. FFmpeg uses no shell/stdin, fixed local protocols/demuxers/codecs, one thread, bounded runtime and bounded diagnostics; safe error codes hide stderr and paths.
+- `RenderManifest` produces migration-0010-compatible `inputs_manifest` JSON and a path-free declarative `command_manifest`; its SHA-256 fingerprint binds ordered input evidence, request/version/output identity and codec policy.
+- Five focused worker tests include real FFmpeg output and tamper rejection; 21 render/asset/probe/audio regression tests and the full 347-test non-migration backend suite pass.
+- Compileall, project-plan validation and diff check pass. Cross-build byte determinism, production volumes and PostgreSQL render-job orchestration remain unverified and are not claimed; multi-input composition belongs to TASK-043.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
