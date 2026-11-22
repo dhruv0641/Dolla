@@ -88,6 +88,18 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("CREATE TRIGGER voice_profile_immutable", sql)
         self.assertIn("OLD.active = false AND NEW.active = true", sql)
 
+    def test_render_versions_have_leases_retries_and_same_content_artifacts(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0012_render_versions_and_artifacts.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("plan_fingerprint char(64)", sql)
+        self.assertIn("render_jobs_lease_shape", sql)
+        self.assertIn("CREATE TABLE render_job_artifacts", sql)
+        self.assertIn("CREATE UNIQUE INDEX idx_render_job_one_final", sql)
+        self.assertIn("require_render_artifact_lineage", sql)
+        self.assertIn("asset_content <> job_content", sql)
+        self.assertIn("require_render_final_same_content", sql)
+        self.assertIn("render final asset is not registered for this job", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
