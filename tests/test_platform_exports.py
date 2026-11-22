@@ -78,6 +78,8 @@ class PlatformExportTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({profile.platform for profile in EXPORT_PROFILES.values()}, {"YOUTUBE", "INSTAGRAM", "FACEBOOK"})
         self.assertTrue(all((profile.width, profile.height, profile.frame_rate) == (1080, 1920, 30)
                             for profile in EXPORT_PROFILES.values()))
+        with self.assertRaises(TypeError):
+            EXPORT_PROFILES[ExportProfileId.YOUTUBE_SHORTS_V1] = EXPORT_PROFILES[ExportProfileId.YOUTUBE_SHORTS_V1]  # type: ignore[index]
         with self.assertRaises(ValidationError):
             request(profile_id="TIKTOK")
         with self.assertRaises(ValidationError):

@@ -4,7 +4,7 @@
 
 ## Versioned product profiles
 
-The allowlist contains `YOUTUBE_SHORTS_V1`, `INSTAGRAM_REELS_V1` and `FACEBOOK_REELS_V1`, matching the three platforms in the database architecture. All v1 profiles produce 1080×1920, 30 FPS, H.264/yuv420p video, AAC audio and selectable `mov_text` captions. They use fixed product bitrate targets: YouTube 8 Mbps/192 kbps and Instagram/Facebook 6 Mbps/128 kbps. These are FLOW product profiles, not a claim of permanent platform limits or upload certification; changes require a new versioned profile and ordinary review.
+The immutable allowlist contains `YOUTUBE_SHORTS_V1`, `INSTAGRAM_REELS_V1` and `FACEBOOK_REELS_V1`, matching the three platforms in the database architecture. All v1 profiles produce 1080×1920, 30 FPS, H.264/yuv420p video, AAC audio and selectable `mov_text` captions. They use fixed product bitrate targets: YouTube 8 Mbps/192 kbps and Instagram/Facebook 6 Mbps/128 kbps. These are FLOW product profiles, not a claim of permanent platform limits or upload certification; changes require a new versioned profile and ordinary review.
 
 ## Source and execution boundary
 

@@ -10,7 +10,8 @@ import json
 from pathlib import Path
 import re
 import tempfile
-from typing import Literal
+from types import MappingProxyType
+from typing import Literal, Mapping
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -78,7 +79,7 @@ class ExportProfile:
         )
 
 
-EXPORT_PROFILES: dict[ExportProfileId, ExportProfile] = {
+_EXPORT_PROFILES: dict[ExportProfileId, ExportProfile] = {
     ExportProfileId.YOUTUBE_SHORTS_V1: ExportProfile(
         ExportProfileId.YOUTUBE_SHORTS_V1, "YOUTUBE", 1080, 1920, 30, "COVER", 8_000_000, 192_000,
     ),
@@ -89,6 +90,7 @@ EXPORT_PROFILES: dict[ExportProfileId, ExportProfile] = {
         ExportProfileId.FACEBOOK_REELS_V1, "FACEBOOK", 1080, 1920, 30, "COVER", 6_000_000, 128_000,
     ),
 }
+EXPORT_PROFILES: Mapping[ExportProfileId, ExportProfile] = MappingProxyType(_EXPORT_PROFILES)
 
 
 class ExportRequest(BaseModel):
