@@ -5,10 +5,11 @@
 - **Priority:** P1
 - **Dependencies:** TASK-044
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#162](https://github.com/dhruv0641/Dolla/issues/162)
 - **Branch:** `feature/TASK-045-render-versions-artifacts`
+- **Implementation PR:** [#163](https://github.com/dhruv0641/Dolla/pull/163), merged to protected `develop` as `e29ac5ca3fe3361e23742f2e3952f0f12e42fe8b`
 - **Blockers:** None for implementation or review. Live PostgreSQL transaction/locking evidence remains environment-dependent; the installed `pglast` DLL is blocked by Windows Application Control, so both limitations are reported separately and production readiness is not claimed.
 
 ## User Story
@@ -51,3 +52,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - `python -m compileall -q src tests` and `git diff --check`: passed.
 - `python -m unittest tests.test_migrations -v`: unavailable because Windows Application Control blocks the installed `pglast` native DLL before tests load. Static assertions cover migration 0012; live PostgreSQL remains unconfigured and unclaimed.
 - Independent Technical Reviewer: no blocker on exact implementation commit `2a9788643d6fef41b55be8bf96d6ce5412e7180d`; 10/10 focused tests and the project validator independently passed. Residual boundaries remain the blocked local parser, absent live PostgreSQL, and no production worker-process integration.
+- GitHub delivery: both required PR checks passed on reviewed head `f6f856454fdce062249224019ae45e1afa24d780`; PR #163 merged only to `develop`, and post-merge validation passed on `e29ac5ca3fe3361e23742f2e3952f0f12e42fe8b`.
