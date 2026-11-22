@@ -225,6 +225,25 @@ BEGIN
     RAISE EXCEPTION 'YouTube publication transition is invalid'
       USING ERRCODE = 'check_violation';
   END IF;
+  IF NEW.status = 'PUBLISH_REQUESTED' AND (
+       NEW.upload_session_ref IS NOT NULL OR NEW.remote_upload_id IS NOT NULL
+       OR NEW.remote_post_id IS NOT NULL OR NEW.remote_url IS NOT NULL
+       OR NEW.uploaded_bytes <> 0 OR NEW.last_remote_status <> '{}'::jsonb
+       OR NEW.verification_attempt_count <> 0 OR NEW.last_verified_at IS NOT NULL
+       OR NEW.last_error_code IS NOT NULL OR NEW.last_error_message IS NOT NULL
+       OR NEW.published_at IS NOT NULL
+     ) THEN
+    RAISE EXCEPTION 'YouTube upload start reservation must be pristine'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.status = 'VERIFY_PENDING' AND (
+       (OLD.upload_session_ref IS NULL AND NEW.upload_session_ref IS NOT NULL)
+       OR (OLD.remote_upload_id IS NULL AND NEW.remote_upload_id IS NOT NULL)
+       OR (OLD.remote_post_id IS NULL AND NEW.remote_post_id IS NOT NULL)
+     ) THEN
+    RAISE EXCEPTION 'YouTube verification pending cannot introduce remote identity'
+      USING ERRCODE = 'check_violation';
+  END IF;
   IF NEW.upload_session_ref IS NOT NULL
      AND NEW.upload_session_ref !~ '^secretref://[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)+$' THEN
     RAISE EXCEPTION 'YouTube upload session reference is invalid'

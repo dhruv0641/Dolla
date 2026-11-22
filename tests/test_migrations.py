@@ -198,6 +198,9 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("terminal YouTube publication state is immutable", sql)
         self.assertIn("YouTube remote identities are immutable once observed", sql)
         self.assertIn("OLD.status = 'DRAFT' AND NEW.status = 'PUBLISH_REQUESTED'", sql)
+        self.assertIn("YouTube upload start reservation must be pristine", sql)
+        self.assertIn("NEW.last_remote_status <> '{}'::jsonb", sql)
+        self.assertIn("YouTube verification pending cannot introduce remote identity", sql)
         self.assertIn("failed YouTube publication requires an error code", sql)
         self.assertIn("YouTube publication evidence is immutable", sql)
 
