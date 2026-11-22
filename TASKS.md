@@ -95,7 +95,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-12: Social Publishing
 
 - **TASK-057 Official YouTube publisher and verification** — DONE · Publishing Integration Engineer · 12h · deps: TASK-011, TASK-045, TASK-050, TASK-072 · Issue [#180](https://github.com/dhruv0641/Dolla/issues/180) · PR [#181](https://github.com/dhruv0641/Dolla/pull/181) merged to `develop` as `5fd15e0`; 51 focused/473 full-suite tests, independent review and required/post-merge checks passed; no live OAuth/upload/publication claimed
-- **TASK-058 Instagram Reels publisher and verification** — IN_PROGRESS · Publishing Integration Engineer · 16h · deps: TASK-057 · Issue [#183](https://github.com/dhruv0641/Dolla/issues/183) · Branch `feature/TASK-058-instagram-reels-publisher-verification`
+- **TASK-058 Instagram Reels publisher and verification** — DONE · Publishing Integration Engineer · 16h · deps: TASK-057 · Issue [#183](https://github.com/dhruv0641/Dolla/issues/183) · PR [#184](https://github.com/dhruv0641/Dolla/pull/184) merged to `develop` as `49943dd`; 78 focused/500 full-suite tests, independent review and required/post-merge checks passed; no live Meta action claimed
 - **TASK-059 Facebook Page Reels publisher and verification** — BACKLOG · Publishing Integration Engineer · 4h · deps: TASK-058
 - **TASK-060 Independent platform state and reconciliation** — BACKLOG · Publishing Integration Engineer · 6h · deps: TASK-059
 - **TASK-061 Approval, schedule and duplicate prevention** — BACKLOG · Publishing Integration Engineer · 8h · deps: TASK-060
@@ -129,13 +129,13 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 62 (TASK-001 through TASK-057 and TASK-072 through TASK-076).
+- DONE: 63 (TASK-001 through TASK-058 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-058).
+- IN_PROGRESS: 0.
 - IN_REVIEW: 0.
 - READY: 0.
 - BLOCKED: 0.
-- BACKLOG: 13.
+- BACKLOG: 13 (TASK-059 through TASK-071).
 
 ## GitHub delivery references
 

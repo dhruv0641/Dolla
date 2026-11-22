@@ -5,10 +5,11 @@
 - **Priority:** P2
 - **Dependencies:** TASK-057
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#183](https://github.com/dhruv0641/Dolla/issues/183)
 - **Branch:** `feature/TASK-058-instagram-reels-publisher-verification`
+- **Pull request:** [#184](https://github.com/dhruv0641/Dolla/pull/184), merged to `develop` as `49943ddac658d9654534ebcc7408f8a678b08e1b`
 - **Blockers:** No blocker for disabled-by-default local implementation. Real Meta OAuth, professional-account connection, hosted media transfer, container creation and publication require separate explicit authorization and remain out of scope for development verification.
 
 ## User Story
@@ -57,6 +58,10 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   the final complete 500-test suite passed; all 19 migrations parsed; compileall,
   dependency validation and diff hygiene passed. Caveman accepted exact
   implementation commit `b62678c70249936b117093d87773408c7cbf4244` with no blocker.
+- Delivery: draft PR #184 passed both required GitHub checks on head
+  `6817b40d477177cfe7e9b37bf73b7710fe2f9efc`, was marked ready and merged
+  only to protected `develop` as `49943ddac658d9654534ebcc7408f8a678b08e1b`.
+  Post-merge project validation passed and issue #183 closed.
 - External limit: no Meta OAuth, account connection, public media hosting,
   container creation, publish request or public action was performed. Live
   PostgreSQL and Meta HTTP behavior remain unverified.
