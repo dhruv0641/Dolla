@@ -1,5 +1,15 @@
 """Deterministic, local quality assurance capabilities."""
 
+from .av_evaluation import (
+    AvDecision,
+    AvEvaluationError,
+    AvEvaluationPolicy,
+    AvEvaluationReport,
+    AvEvaluationService,
+    LocalFfmpegAvAnalyzer,
+    av_evidence_fingerprint,
+)
+
 from .integrity import (
     IntegrityCheckError,
     IntegrityDecision,
@@ -11,6 +21,12 @@ from .integrity import (
 )
 
 __all__ = [
+    "AvDecision",
+    "AvEvaluationError",
+    "AvEvaluationPolicy",
+    "AvEvaluationReport",
+    "AvEvaluationService",
+    "av_evidence_fingerprint",
     "IntegrityCheckError",
     "IntegrityDecision",
     "IntegrityExpectation",
@@ -18,4 +34,5 @@ __all__ = [
     "IntegrityFindingCode",
     "IntegrityReport",
     "MediaIntegrityService",
+    "LocalFfmpegAvAnalyzer",
 ]

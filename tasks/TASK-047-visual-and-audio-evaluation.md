@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-046
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#168](https://github.com/dhruv0641/Dolla/issues/168)
 - **Branch:** `feature/TASK-047-visual-audio-evaluation`
@@ -28,9 +28,9 @@ Deliver visual and audio evaluation as an independently verifiable capability wi
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +39,16 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation and acceptance evidence
+
+- `AvEvaluationService` requires exact passing `integrity-v1` evidence and revalidates owner-scoped final/export lineage before evaluating immutable media bytes.
+- `LocalFfmpegAvAnalyzer` uses a verified private snapshot and a fixed, bounded FFmpeg filter graph for black, freeze, silence, EBU R128 integrated loudness and true-peak measurements. Tool output is parsed into closed numeric evidence and then discarded.
+- Strict policy, finding and report models derive PASS, FAIL or NEEDS_HUMAN without a fabricated score. Semantic visual quality, speech intelligibility and mix preference remain explicitly `NOT_EVALUATED`.
+- Migration 0014 and `AvReportRepository` persist one immutable owner-scoped `av-v1` report per asset, bound to the exact passing integrity fingerprint. Exact replay is idempotent and rebinding fails closed.
+- Shared media snapshot hardening rejects symlinks, non-regular files and multiple hard links and verifies size and SHA-256 before analysis.
+- `docs/VISUAL_AUDIO_QA.md` documents defaults, trust boundaries, recovery and unverified production calibration/subjective-review limits.
+- Full application and migration suite: 404 tests passed before the final migration-only NULL-safety hardening. After that hardening, 34 focused QA, repository, probe and migration tests passed; every migration parsed through `pglast`.
+- Compileall, diff hygiene and project validation (15 epics, 76 tasks, no cycles) pass.
+- Real generated fixtures verify clean moving video/tone and measured black, freeze and silence intervals. Live PostgreSQL trigger/locking execution, production threshold calibration, diverse production media and human subjective judgments remain unverified and are not claimed.
+- Independent Technical Reviewer review is pending on the exact implementation commit.

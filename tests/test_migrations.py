@@ -111,6 +111,19 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("prevent_integrity_qa_report_mutation", sql)
         self.assertIn("IF TG_OP = 'UPDATE' AND NEW.version = 'integrity-v1'", sql)
 
+    def test_visual_audio_reports_require_passing_integrity_and_are_immutable(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0014_visual_audio_qa_reports.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE UNIQUE INDEX idx_qa_reports_asset_av_version", sql)
+        self.assertIn("WHERE version = 'av-v1'", sql)
+        self.assertIn("require_av_report_lineage", sql)
+        self.assertIn("integrity.version = 'integrity-v1'", sql)
+        self.assertIn("integrity.decision = 'PASS'", sql)
+        self.assertIn("visual/audio QA blocker envelope is invalid", sql)
+        self.assertIn("visual/audio QA finding envelope is invalid", sql)
+        self.assertIn("visual/audio QA decision does not match findings", sql)
+        self.assertIn("prevent_av_report_mutation", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
