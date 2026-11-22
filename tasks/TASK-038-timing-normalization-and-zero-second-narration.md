@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-037
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
 - **GitHub issue:** [#141](https://github.com/dhruv0641/Dolla/issues/141)
 - **Branch:** `feature/TASK-038-audio-timing-normalization`
@@ -33,10 +33,10 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Acceptance Evidence
-- Commit `65b758c` implements strict zero-millisecond timing, bounded local FFmpeg normalization, exact-duration PCM output validation and idempotent narration asset ingest; issue [#141](https://github.com/dhruv0641/Dolla/issues/141) tracks delivery.
+- Commit `65b758c` implements strict zero-millisecond timing, bounded local FFmpeg normalization, exact-duration PCM output validation and idempotent narration asset ingest; implementation PR [#142](https://github.com/dhruv0641/Dolla/pull/142) merged to `develop` as `0aa9826`.
 - Three real/local normalization tests, 14 combined audio tests and the full 334-test non-migration backend suite pass.
 - Independent Technical Reviewer found no blocker and confirmed the timing, lineage, filesystem, subprocess, idempotency and loudness-claim boundaries.
-- Compileall, project-plan validation and diff check pass. No migration is added by this task.
+- Compileall, project-plan validation and diff check pass. Both required PR checks and post-merge validation passed; no migration is added by this task.
 - PostgreSQL runtime, production filesystem behavior and measured final-render loudness remain unverified; no external or paid service was used.
 
 ## Tests and Verification
