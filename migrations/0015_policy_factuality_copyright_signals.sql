@@ -37,6 +37,14 @@ BEGIN
      OR NEW.checks->'human_approval_required' IS DISTINCT FROM 'true'::jsonb
      OR NEW.checks->'content_approved' IS DISTINCT FROM 'false'::jsonb
      OR jsonb_typeof(NEW.checks->'review') IS DISTINCT FROM 'object'
+     OR NEW.checks->'review'->>'context_fingerprint'
+          IS DISTINCT FROM NEW.checks->>'review_context_fingerprint'
+     OR NEW.checks->'review'->'human_approval_required' IS DISTINCT FROM 'true'::jsonb
+     OR NEW.checks->'review'->'content_approved' IS DISTINCT FROM 'false'::jsonb
+     OR jsonb_typeof(NEW.checks->'review'->'assessment') IS DISTINCT FROM 'object'
+     OR NEW.checks->'review'->'assessment'->>'disposition' IS NULL
+     OR NEW.checks->'review'->'assessment'->>'disposition'
+          NOT IN ('blocked', 'needs_revision', 'ready_for_human_review')
      OR jsonb_typeof(NEW.checks->'prompt_id') IS DISTINCT FROM 'string'
      OR length(NEW.checks->>'prompt_id') NOT BETWEEN 1 AND 100
      OR jsonb_typeof(NEW.checks->'prompt_version') IS DISTINCT FROM 'number'
@@ -71,6 +79,29 @@ BEGIN
     RAISE EXCEPTION 'policy signal QA signal envelope is invalid'
       USING ERRCODE = 'check_violation';
   END IF;
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS entry(finding)
+    WHERE (finding->>'code' IN (
+             'POLICY_CRITICAL', 'FACTUALITY_CRITICAL',
+             'COPYRIGHT_CRITICAL', 'AUTOMATED_REVIEW_BLOCKED'
+           ) AND finding->>'severity' <> 'BLOCKER')
+       OR (finding->>'code' NOT IN (
+             'POLICY_CRITICAL', 'FACTUALITY_CRITICAL',
+             'COPYRIGHT_CRITICAL', 'AUTOMATED_REVIEW_BLOCKED'
+           ) AND finding->>'severity' <> 'REVIEW')
+  ) THEN
+    RAISE EXCEPTION 'policy signal QA finding severity is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF (SELECT count(*) FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+      WHERE finding->>'code' IN ('POLICY_CRITICAL', 'POLICY_REVIEW_REQUIRED')) > 1
+     OR (SELECT count(*) FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+         WHERE finding->>'code' IN ('FACTUALITY_CRITICAL', 'FACTUALITY_REVIEW_REQUIRED')) > 1
+     OR (SELECT count(*) FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+         WHERE finding->>'code' IN ('COPYRIGHT_CRITICAL', 'COPYRIGHT_REVIEW_REQUIRED')) > 1 THEN
+    RAISE EXCEPTION 'policy signal QA domain findings conflict'
+      USING ERRCODE = 'check_violation';
+  END IF;
   IF jsonb_array_length(NEW.checks->'signals'->0->'authority_refs') < 1
      OR NEW.checks->'signals'->0->>'state' = 'UNAVAILABLE'
      OR NEW.checks->'signals'->1->>'state' = 'UNAVAILABLE'
@@ -79,6 +110,30 @@ BEGIN
      OR (NEW.checks->'signals'->2->>'state' = 'NO_AUTOMATED_FLAG'
          AND jsonb_array_length(NEW.checks->'signals'->2->'authority_refs') = 0) THEN
     RAISE EXCEPTION 'policy signal QA authority envelope is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.checks->'signals'->0->'authority_refs' IS DISTINCT FROM
+       jsonb_build_array('policy:' || (NEW.checks->>'policy_version'))
+     OR jsonb_array_length(NEW.checks->'signals'->1->'authority_refs') <> 0 THEN
+    RAISE EXCEPTION 'policy signal QA pinned authority is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(NEW.checks->'signals') AS entry(signal)
+    WHERE (SELECT count(*) <> count(DISTINCT value)
+           FROM jsonb_array_elements_text(signal->'evidence_ids') AS ids(value))
+       OR EXISTS (
+           SELECT 1 FROM jsonb_array_elements_text(signal->'evidence_ids') AS ids(value)
+           WHERE value !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+         )
+       OR (SELECT count(*) <> count(DISTINCT value)
+           FROM jsonb_array_elements_text(signal->'authority_refs') AS refs(value))
+       OR EXISTS (
+           SELECT 1 FROM jsonb_array_elements_text(signal->'authority_refs') AS refs(value)
+           WHERE value !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'
+         )
+  ) THEN
+    RAISE EXCEPTION 'policy signal QA evidence authority values are invalid'
       USING ERRCODE = 'check_violation';
   END IF;
   IF EXISTS (
@@ -97,6 +152,57 @@ BEGIN
        OR finding->>'severity' NOT IN ('BLOCKER', 'REVIEW')
   ) THEN
     RAISE EXCEPTION 'policy signal QA finding envelope is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF (SELECT count(*) <> count(DISTINCT finding->>'code')
+      FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding))
+     OR (SELECT jsonb_agg(finding ORDER BY ordinal)
+         FROM jsonb_array_elements(NEW.checks->'findings')
+           WITH ORDINALITY AS item(finding, ordinal)) IS DISTINCT FROM
+        (SELECT jsonb_agg(finding ORDER BY
+           CASE finding->>'code'
+             WHEN 'POLICY_CRITICAL' THEN 1 WHEN 'POLICY_REVIEW_REQUIRED' THEN 2
+             WHEN 'FACTUALITY_CRITICAL' THEN 3 WHEN 'FACTUALITY_REVIEW_REQUIRED' THEN 4
+             WHEN 'COPYRIGHT_CRITICAL' THEN 5 WHEN 'COPYRIGHT_REVIEW_REQUIRED' THEN 6
+             WHEN 'COPYRIGHT_AUTHORITY_UNAVAILABLE' THEN 7
+             WHEN 'AUTOMATED_REVIEW_BLOCKED' THEN 8
+             WHEN 'AUTOMATED_REVIEW_NEEDS_REVISION' THEN 9
+           END)
+         FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)) THEN
+    RAISE EXCEPTION 'policy signal QA findings are not canonical'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF ((NEW.checks->'signals'->0->>'state' = 'FLAGGED') IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' IN ('POLICY_CRITICAL', 'POLICY_REVIEW_REQUIRED')
+      ))
+     OR ((NEW.checks->'signals'->1->>'state' = 'FLAGGED') IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' IN ('FACTUALITY_CRITICAL', 'FACTUALITY_REVIEW_REQUIRED')
+      ))
+     OR ((NEW.checks->'signals'->2->>'state' = 'FLAGGED') IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' IN ('COPYRIGHT_CRITICAL', 'COPYRIGHT_REVIEW_REQUIRED')
+      )) THEN
+    RAISE EXCEPTION 'policy signal QA state does not match findings'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF ((jsonb_array_length(NEW.checks->'signals'->2->'authority_refs') = 0) IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' = 'COPYRIGHT_AUTHORITY_UNAVAILABLE'
+      )) THEN
+    RAISE EXCEPTION 'policy signal QA copyright availability is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF ((NEW.checks->'review'->'assessment'->>'disposition' = 'blocked') IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' = 'AUTOMATED_REVIEW_BLOCKED'
+      ))
+     OR ((NEW.checks->'review'->'assessment'->>'disposition' = 'needs_revision') IS DISTINCT FROM EXISTS (
+        SELECT 1 FROM jsonb_array_elements(NEW.checks->'findings') AS item(finding)
+        WHERE finding->>'code' = 'AUTOMATED_REVIEW_NEEDS_REVISION'
+      )) THEN
+    RAISE EXCEPTION 'policy signal QA review disposition is invalid'
       USING ERRCODE = 'check_violation';
   END IF;
   SELECT COALESCE(jsonb_agg(finding->>'code' ORDER BY ordinal)

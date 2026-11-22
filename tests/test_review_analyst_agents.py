@@ -20,6 +20,7 @@ from flowx_os.agents.review import (
     ReviewError,
     ReviewErrorCode,
     ReviewSeverity,
+    review_context_fingerprint,
 )
 from flowx_os.agents.schemas import EvidenceReference, ScriptDraft, StoryboardDraft, StoryboardScene
 from flowx_os.agents.script_storyboard import ScriptStoryboardDraft
@@ -134,9 +135,11 @@ class FakeAnalyst:
 
 class ReviewWorkflowTests(IsolatedAsyncioTestCase):
     async def test_valid_assessment_never_approves_content(self):
+        context = review_context()
         provider = FakeReviewer(lambda value: review_assessment(value))
-        result = await ContentReviewWorkflow(provider).run(review_context())
+        result = await ContentReviewWorkflow(provider).run(context)
         self.assertEqual(result.assessment.disposition, ReviewDisposition.READY_FOR_HUMAN_REVIEW)
+        self.assertEqual(result.context_fingerprint, review_context_fingerprint(context))
         self.assertTrue(result.human_approval_required)
         self.assertEqual(result.approval_state, "pending_human")
         self.assertFalse(result.content_approved)

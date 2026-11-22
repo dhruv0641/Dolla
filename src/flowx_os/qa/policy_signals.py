@@ -22,6 +22,7 @@ from flowx_os.agents.review import (
     ReviewContext,
     ReviewDisposition,
     ReviewSeverity,
+    review_context_fingerprint,
 )
 from flowx_os.qa.av_evaluation import AvDecision, AvEvaluationReport
 
@@ -108,25 +109,6 @@ def _canonical_hash(value: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def review_context_fingerprint(context: ReviewContext) -> str:
-    """Hash bounded review inputs without persisting raw source snapshot text."""
-    sources = []
-    for source in context.sources:
-        sources.append({
-            "evidence": source.evidence.model_dump(mode="json"),
-            "retrieved_at": source.retrieved_at.isoformat(),
-            "text_sha256": hashlib.sha256(source.text.encode("utf-8")).hexdigest(),
-        })
-    return _canonical_hash({
-        "content_id": str(context.content_id),
-        "prompt_id": context.prompt_id,
-        "prompt_version": context.prompt_version,
-        "policy_version": context.policy_version,
-        "draft": context.draft.model_dump(mode="json"),
-        "sources": sources,
-    })
-
-
 def signal_evidence_fingerprint(
     *, asset_id: UUID, content_id: UUID, av_evidence_fingerprint: str,
     context_fingerprint: str, prompt_id: str, prompt_version: int,
@@ -189,8 +171,24 @@ class ContentSignalReport(BaseModel):
                 SignalFindingCode.COPYRIGHT_REVIEW_REQUIRED,
             },
         }
+        blocker_codes = {
+            SignalFindingCode.POLICY_CRITICAL,
+            SignalFindingCode.FACTUALITY_CRITICAL,
+            SignalFindingCode.COPYRIGHT_CRITICAL,
+            SignalFindingCode.AUTOMATED_REVIEW_BLOCKED,
+        }
+        for finding in self.findings:
+            expected_severity = (
+                SignalFindingSeverity.BLOCKER
+                if finding.code in blocker_codes else SignalFindingSeverity.REVIEW
+            )
+            if finding.severity != expected_severity:
+                raise ValueError("signal finding severity is not canonical")
         for signal in self.signals:
-            flagged = any(code in domain_codes[signal.domain] for code in codes)
+            domain_count = sum(code in domain_codes[signal.domain] for code in codes)
+            if domain_count > 1:
+                raise ValueError("signal domain has conflicting findings")
+            flagged = domain_count == 1
             expected_state = (
                 SignalState.FLAGGED if flagged else
                 SignalState.UNAVAILABLE
@@ -199,8 +197,12 @@ class ContentSignalReport(BaseModel):
             )
             if signal.state != expected_state:
                 raise ValueError("signal state does not match findings and authority")
+        if self.signals[0].authority_refs != (f"policy:{self.policy_version}",):
+            raise ValueError("policy signal is not bound to the pinned policy version")
+        if self.signals[1].authority_refs:
+            raise ValueError("factuality signal cannot invent an authority reference")
         unavailable = SignalFindingCode.COPYRIGHT_AUTHORITY_UNAVAILABLE in codes
-        if unavailable != (self.signals[2].state == SignalState.UNAVAILABLE):
+        if unavailable != (not self.signals[2].authority_refs):
             raise ValueError("copyright availability does not match findings")
         blocker = any(item.severity == SignalFindingSeverity.BLOCKER for item in self.findings)
         expected_decision = (
@@ -256,6 +258,9 @@ class PolicySignalService:
                 or not isinstance(rights_authority_refs, tuple)):
             raise ValueError("policy signals require passing AV evidence and validated review context")
         source_ids = {source.evidence.citation_id for source in context.sources}
+        context_hash = review_context_fingerprint(context)
+        if review.context_fingerprint != context_hash:
+            raise ValueError("review result is not bound to the supplied context")
         if any(
             evidence_id not in source_ids
             for finding in review.assessment.findings
@@ -280,14 +285,10 @@ class PolicySignalService:
                 policy_ref if domain == SignalDomain.POLICY else
                 rights_authority_refs if domain == SignalDomain.COPYRIGHT else ()
             )
-            if domain == SignalDomain.COPYRIGHT and not authority and not domain_findings:
-                state = SignalState.UNAVAILABLE
-                findings.append(SignalFinding(
-                    code=SignalFindingCode.COPYRIGHT_AUTHORITY_UNAVAILABLE,
-                    severity=SignalFindingSeverity.REVIEW,
-                ))
-            elif domain_findings:
+            if domain_findings:
                 state = SignalState.FLAGGED
+            elif domain == SignalDomain.COPYRIGHT and not authority:
+                state = SignalState.UNAVAILABLE
             else:
                 state = SignalState.NO_AUTOMATED_FLAG
             signals.append(ContentSignal(
@@ -300,6 +301,11 @@ class PolicySignalService:
                     code=_CRITICAL_CODE[domain] if critical else _REVIEW_CODE[domain],
                     severity=(SignalFindingSeverity.BLOCKER if critical
                               else SignalFindingSeverity.REVIEW),
+                ))
+            if domain == SignalDomain.COPYRIGHT and not authority:
+                findings.append(SignalFinding(
+                    code=SignalFindingCode.COPYRIGHT_AUTHORITY_UNAVAILABLE,
+                    severity=SignalFindingSeverity.REVIEW,
                 ))
 
         if review.assessment.disposition == ReviewDisposition.BLOCKED:
@@ -318,7 +324,6 @@ class PolicySignalService:
             if any(item.severity == SignalFindingSeverity.BLOCKER for item in ordered)
             else SignalDecision.NEEDS_HUMAN if ordered else SignalDecision.PASS
         )
-        context_hash = review_context_fingerprint(context)
         signal_tuple = tuple(signals)
         fingerprint = signal_evidence_fingerprint(
             asset_id=av_report.asset_id, content_id=av_report.content_id,

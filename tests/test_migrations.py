@@ -134,6 +134,9 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("av.decision = 'PASS'", sql)
         self.assertIn("policy signal QA blocker envelope is invalid", sql)
         self.assertIn("policy signal QA decision does not match findings", sql)
+        self.assertIn("policy signal QA copyright availability is invalid", sql)
+        self.assertIn("policy signal QA state does not match findings", sql)
+        self.assertIn("policy signal QA review disposition is invalid", sql)
         self.assertIn("prevent_policy_signal_report_mutation", sql)
 
 

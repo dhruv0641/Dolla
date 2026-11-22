@@ -10,6 +10,7 @@ from flowx_os.agents.review import (
     ReviewAssessment,
     ReviewContext,
     ReviewDisposition,
+    review_context_fingerprint,
 )
 from flowx_os.agents.schemas import EvidenceReference, ScriptDraft, StoryboardDraft, StoryboardScene
 from flowx_os.agents.script_storyboard import ScriptStoryboardDraft
@@ -92,7 +93,7 @@ def review(context: ReviewContext, *, disposition=ReviewDisposition.READY_FOR_HU
         disposition=disposition, score=80.0,
         summary="Automated signals are available for a human reviewer.",
         findings=list(findings),
-    ))
+    ), context_fingerprint=review_context_fingerprint(context))
 
 
 class PolicySignalTests(unittest.TestCase):
@@ -158,6 +159,25 @@ class PolicySignalTests(unittest.TestCase):
             (SignalFindingCode.COPYRIGHT_CRITICAL, SignalFindingCode.AUTOMATED_REVIEW_BLOCKED),
         )
 
+    def test_rights_finding_does_not_hide_missing_authority(self):
+        context = review_context()
+        result = review(context, findings=({
+            "category": "rights", "severity": "warning",
+            "summary": "Rights require review.",
+            "recommendation": "Supply the authoritative rights record.",
+            "evidence_ids": [],
+        },))
+        report = PolicySignalService().evaluate(
+            av_report=av_report(), context=context, review=result,
+        )
+        self.assertEqual(report.signals[2].state, SignalState.FLAGGED)
+        self.assertEqual(
+            tuple(item.code for item in report.findings),
+            (SignalFindingCode.COPYRIGHT_REVIEW_REQUIRED,
+             SignalFindingCode.COPYRIGHT_AUTHORITY_UNAVAILABLE),
+        )
+        self.assertEqual(report.decision, SignalDecision.NEEDS_HUMAN)
+
     def test_fingerprint_is_repeatable_and_tamper_evident(self):
         context = review_context()
         result = review(context)
@@ -213,6 +233,18 @@ class PolicySignalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown source evidence"):
             PolicySignalService().evaluate(
                 av_report=av_report(), context=context, review=result,
+                rights_authority_refs=("rights:original-work",),
+            )
+
+    def test_review_result_cannot_be_rebound_to_different_context(self):
+        first = review_context()
+        payload = first.model_dump(mode="python")
+        payload["prompt_version"] = 2
+        second = ReviewContext.model_validate(payload)
+        result = review(first)
+        with self.assertRaisesRegex(ValueError, "not bound"):
+            PolicySignalService().evaluate(
+                av_report=av_report(), context=second, review=result,
                 rights_authority_refs=("rights:original-work",),
             )
 
