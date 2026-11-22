@@ -193,6 +193,8 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("remote_upload_status IS DISTINCT FROM 'processed'", sql)
         self.assertIn("remote_processing_status IS DISTINCT FROM 'succeeded'", sql)
         self.assertIn("remote_privacy_status IS DISTINCT FROM NEW.intended_privacy_status", sql)
+        self.assertIn("remote_channel_id IS DISTINCT FROM NEW.channel_external_id_snapshot", sql)
+        self.assertNotIn("ch.external_channel_id = remote_channel_id", sql)
         self.assertIn("terminal YouTube publication state is immutable", sql)
         self.assertIn("YouTube remote identities are immutable once observed", sql)
         self.assertIn("OLD.status = 'DRAFT' AND NEW.status = 'PUBLISH_REQUESTED'", sql)

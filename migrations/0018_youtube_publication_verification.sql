@@ -270,10 +270,7 @@ BEGIN
        OR remote_upload_status IS DISTINCT FROM 'processed'
        OR remote_processing_status IS DISTINCT FROM 'succeeded'
        OR remote_privacy_status IS DISTINCT FROM NEW.intended_privacy_status
-       OR NOT EXISTS (
-         SELECT 1 FROM social_channels AS ch
-         WHERE ch.id = NEW.channel_id AND ch.external_channel_id = remote_channel_id
-       )
+       OR remote_channel_id IS DISTINCT FROM NEW.channel_external_id_snapshot
        OR NEW.remote_url IS DISTINCT FROM 'https://www.youtube.com/watch?v=' || NEW.remote_post_id
        OR NEW.last_verified_at IS NULL OR NEW.published_at IS NULL
        OR NEW.last_error_code IS NOT NULL OR NEW.last_error_message IS NOT NULL THEN

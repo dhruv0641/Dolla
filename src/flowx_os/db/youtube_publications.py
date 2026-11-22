@@ -73,7 +73,6 @@ class YouTubePublicationRepository:
                     claim = self._claim(existing)
                     if claim.publication_id != request.publication_id or claim.request_fingerprint != request.fingerprint:
                         raise YouTubePublicationConflict("YouTube request already identifies different work")
-                    await self._assert_network_ready_in_transaction(connection, claim)
                     return claim
                 if owned[0] != "READY":
                     raise YouTubePublicationNotAllowed("content is not ready for publication")

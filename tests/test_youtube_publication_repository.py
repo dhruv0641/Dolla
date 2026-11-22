@@ -147,11 +147,21 @@ class YouTubePublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         request = publication_request()
         row = claim_row(request, status="UPLOAD_STARTED",
                         session="secretref://runtime/session-1", upload_id="upload_1")
-        connection = FakeConnection([("SCHEDULED",), row, (1,)])
+        connection = FakeConnection([("SCHEDULED",), row])
         claim = await YouTubePublicationRepository(FakePool(connection)).claim(request)
         self.assertEqual(claim.status, "UPLOAD_STARTED")
-        self.assertEqual(len(connection.calls), 3)
-        self.assertIn("ch.enabled = true", connection.calls[2][0])
+        self.assertEqual(len(connection.calls), 2)
+
+    async def test_terminal_history_replays_without_current_channel_readiness(self):
+        request = publication_request()
+        row = claim_row(
+            request, status="PUBLISHED", session="secretref://runtime/session-1",
+            upload_id="upload_1", video_id="video_1",
+        )
+        connection = FakeConnection([("PUBLISHED",), row])
+        claim = await YouTubePublicationRepository(FakePool(connection)).claim(request)
+        self.assertEqual(claim.status, "PUBLISHED")
+        self.assertFalse(any("ch.enabled = true" in query for query, _ in connection.calls))
 
     async def test_session_and_upload_updates_lock_exact_owned_claim(self):
         request = publication_request()

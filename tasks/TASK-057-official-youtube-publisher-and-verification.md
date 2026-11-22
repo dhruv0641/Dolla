@@ -55,8 +55,8 @@ Typed official YouTube authorization/transport contracts, owner-scoped publicati
   privacy status. Upload acceptance alone remains `PROCESSING`.
 - Publishing defaults off through `FLOWX_YOUTUBE_PUBLISHING_ENABLED=false`;
   private is the only default privacy and subscriber notifications are disabled.
-- Verification after independent-review corrections: 50 focused/config/
-  migration tests and the complete 472-test suite pass;
+- Verification after independent-review corrections: 51 focused/config/
+  migration tests and the complete 473-test suite pass;
   all 18 migrations parse, compilation, diff hygiene and the 76-task project
   validator pass. Live PostgreSQL, OAuth, channel connection,
   quota behavior, upload and public publication remain unverified and unused.
