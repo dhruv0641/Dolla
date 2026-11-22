@@ -28,6 +28,35 @@ class AssetCatalogRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self._pool = pool
 
+    async def get_active_audio(
+        self, *, asset_id: UUID, brand_id: UUID, content_id: UUID,
+        owner_user_id: str,
+    ) -> AssetRecord:
+        """Return one active audio asset without disclosing foreign/retired rows."""
+        if (not isinstance(asset_id, UUID) or not isinstance(brand_id, UUID)
+                or not isinstance(content_id, UUID) or not isinstance(owner_user_id, str)
+                or not owner_user_id.strip()):
+            raise ValueError("audio asset lookup is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    f"""SELECT {_QUALIFIED_ASSET_COLUMNS}
+                       FROM assets AS a JOIN content_items AS c ON c.id = a.content_id
+                       JOIN brands AS b ON b.id = c.brand_id
+                       WHERE a.id = %s AND c.id = %s AND b.id = %s
+                         AND b.owner_user_id = %s AND a.retention_state = 'ACTIVE'
+                         AND a.mime_type LIKE 'audio/%'""",
+                    (asset_id, content_id, brand_id, owner_user_id.strip()),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise OwnedContentNotFound("audio asset not found")
+                return _record(row)
+        except (OwnedContentNotFound, RepositoryUnavailable):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("audio asset lookup is unavailable") from exc
+
     async def search(
         self, *, owner_user_id: str, brand_id: UUID | None = None,
         content_id: UUID | None = None, scene_id: UUID | None = None,

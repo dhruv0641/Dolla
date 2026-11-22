@@ -4,8 +4,9 @@ from uuid import uuid4
 
 from flowx_os.db.asset_catalog import AssetCatalogRepository, AssetRetentionBlocked
 from flowx_os.db.content import OwnedContentNotFound
+from flowx_os.domain.assets import AssetKind
 from tests.test_asset_repository import (
-    ASSET_ID, BRAND_ID, CONTENT_ID, FakeCursor, FakePool, NOW, row,
+    ASSET_ID, BRAND_ID, CONTENT_ID, FakeCursor, FakePool, NOW, metadata, row,
 )
 
 
@@ -14,6 +15,26 @@ class UpdateCursor(FakeCursor):
 
 
 class CatalogTests(unittest.IsolatedAsyncioTestCase):
+    async def test_active_audio_lookup_hides_foreign_retired_and_non_audio_rows(self):
+        audio = row(metadata(kind=AssetKind.NARRATION, mime_type="audio/wav", source_job_id=None))
+        pool = FakePool([FakeCursor(one=audio)])
+        result = await AssetCatalogRepository(pool).get_active_audio(
+            asset_id=ASSET_ID, brand_id=BRAND_ID, content_id=CONTENT_ID,
+            owner_user_id="owner",
+        )
+        self.assertEqual(result.metadata.mime_type, "audio/wav")
+        query, params = pool.connection_value.queries[0]
+        self.assertIn("b.owner_user_id = %s", query)
+        self.assertIn("a.retention_state = 'ACTIVE'", query)
+        self.assertIn("a.mime_type LIKE 'audio/%'", query)
+        self.assertEqual(params, (ASSET_ID, CONTENT_ID, BRAND_ID, "owner"))
+
+        with self.assertRaises(OwnedContentNotFound):
+            await AssetCatalogRepository(FakePool([FakeCursor(one=None)])).get_active_audio(
+                asset_id=ASSET_ID, brand_id=BRAND_ID, content_id=CONTENT_ID,
+                owner_user_id="owner",
+            )
+
     async def test_search_enforces_owner_and_bounded_keyset(self):
         other = row()
         pool = FakePool([FakeCursor(many=[other, other])])
