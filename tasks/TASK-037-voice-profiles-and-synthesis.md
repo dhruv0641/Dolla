@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-036
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE; DASHBOARD_DEMO.html
 - **GitHub issue:** [#138](https://github.com/dhruv0641/Dolla/issues/138)
 - **Branch:** `feature/TASK-037-voice-profiles-and-synthesis`
@@ -33,10 +33,10 @@ Relevant application service, tests, migration (if needed), configuration and do
 - [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Acceptance Evidence
-- Commits `d3efe3a` and `06ded3c` implement provider-neutral profile, persistence and synthesis boundaries; GitHub issue [#138](https://github.com/dhruv0641/Dolla/issues/138) tracks delivery.
+- Commits `d3efe3a`, `06ded3c` and `0132e6e` implement provider-neutral profile, persistence and synthesis boundaries; implementation PR [#139](https://github.com/dhruv0641/Dolla/pull/139) merged to `develop` as `22ea8e4`.
 - Focused synthesis/repository suite passes 11 tests. Full non-migration backend suite passes 331 tests; the 7 real-FFmpeg tests pass after isolating one transient local tool failure.
 - Independent Technical Reviewer found no blockers after the configuration-reference correction.
-- Compileall, project-plan validation and diff check pass. GitHub CI must verify PostgreSQL migration parsing because Windows Application Control blocks the local `pglast` DLL.
+- Compileall, project-plan validation and diff check pass. Both required PR checks and post-merge validation passed, including CI migration parsing that Windows Application Control blocks locally.
 - No concrete TTS engine/provider was selected or invoked. Live PostgreSQL concurrency, live synthesis and production readiness are not claimed.
 
 ## Tests and Verification
