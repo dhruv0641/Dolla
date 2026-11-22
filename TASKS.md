@@ -77,7 +77,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-10: Video Quality Assurance
 
-- **TASK-046 Deterministic integrity checks** — IN_PROGRESS · QA and Security Engineer · 6h · deps: TASK-034, TASK-045 · Issue [#165](https://github.com/dhruv0641/Dolla/issues/165) · Branch `feature/TASK-046-deterministic-integrity-checks`
+- **TASK-046 Deterministic integrity checks** — IN_REVIEW · QA and Security Engineer · 6h · deps: TASK-034, TASK-045 · Issue [#165](https://github.com/dhruv0641/Dolla/issues/165) · Branch `feature/TASK-046-deterministic-integrity-checks` · 18 focused/390 total tests passed; live PostgreSQL unverified
 - **TASK-047 Visual and audio evaluation** — BACKLOG · QA and Security Engineer · 8h · deps: TASK-046
 - **TASK-048 Policy, factuality and copyright signals** — BACKLOG · QA and Security Engineer · 12h · deps: TASK-047
 - **TASK-049 Scene retry limits and spend gate** — BACKLOG · QA and Security Engineer · 16h · deps: TASK-048

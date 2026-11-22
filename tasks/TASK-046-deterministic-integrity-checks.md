@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-034, TASK-045
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#165](https://github.com/dhruv0641/Dolla/issues/165)
 - **Branch:** `feature/TASK-046-deterministic-integrity-checks`
@@ -28,9 +28,9 @@ Deliver deterministic integrity checks as an independently verifiable capability
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +39,16 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation and acceptance evidence
+
+- `MediaIntegrityService` binds owner-scoped final/export metadata to a strict expectation and emits a PASS/FAIL report with closed, stably ordered finding codes and a canonical SHA-256 evidence fingerprint.
+- The bounded managed-media probe now reports sanitized container, frame-rate, H.264 profile, pixel format and subtitle evidence while preserving full hash and decode verification.
+- Checks cover declared fingerprint/profile, managed digest, decode, MP4 container, exact video/audio/subtitle stream counts and codecs, dimensions, FPS, profile, `yuv420p` and duration tolerance. Unsafe tool text is redacted.
+- Migration 0013 and `IntegrityReportRepository` persist one immutable owner-scoped `integrity-v1` report per active same-content render artifact. Exact replay is idempotent; rebinding fails closed; no invented score is stored.
+- `docs/MEDIA_INTEGRITY_QA.md` records the trust boundary, checks, recovery and separation from visual, policy, human approval and publishing.
+- 18 focused tests and 38 combined QA/probe/render regressions pass, including a real H.264/AAC/mov_text fixture.
+- Full application suite: 377 passed. Migration suite: 13 passed, including parsing every migration with `pglast` (390 total).
+- Compileall, diff hygiene, and project validation (15 epics, 76 tasks, no cycles) pass.
+- Live PostgreSQL trigger/locking execution and production media-volume behavior remain unverified and are not claimed.
+- Independent Technical Reviewer: pending against the exact implementation commit.
