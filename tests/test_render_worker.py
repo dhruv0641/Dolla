@@ -101,7 +101,7 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual(caught.exception.code, "OPERATION_UNSUPPORTED")
 
-    @unittest.skipUnless(shutil.which("ffmpeg"), "FFmpeg unavailable")
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg tools unavailable")
     async def test_real_render_verifies_managed_input_and_ingests_mp4(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -125,7 +125,7 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ingest.calls[0]["kind"], AssetKind.FINAL_VIDEO)
         self.assertEqual(ingest.calls[0]["media_metadata"]["render_fingerprint"], result.manifest.fingerprint)
 
-    @unittest.skipUnless(shutil.which("ffmpeg"), "FFmpeg unavailable")
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg tools unavailable")
     async def test_tampered_or_wrong_source_fails_before_ingest(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -7,7 +7,7 @@
 - The caller supplies an authenticated `RenderRequest`, ordered `StoredAssetFile` values and owner-scoped `AssetRecord` values. Every UUID, content lineage field, managed URI, MIME type, size and SHA-256 must agree.
 - The worker derives paths from asset UUIDs below the configured root, rejects symlinks and hard links, snapshots and hashes the complete input, and detects file identity changes while reading.
 - FFmpeg runs without a shell or stdin, with a fixed protocol/demuxer allowlist, one thread, bounded runtime and bounded diagnostic output. Callers cannot inject paths, filters, protocols, codecs or flags.
-- The temporary MP4 must be a regular single-link file, remain under the byte cap and have an MP4 signature before it is passed to the existing owner-scoped asset-ingest boundary.
+- FFmpeg receives an output file-size ceiling. The temporary MP4 must be a regular single-link file, remain under the byte cap, have an MP4 signature, and pass a bounded local `ffprobe` container/video/duration check before it is passed to the existing owner-scoped asset-ingest boundary.
 
 ## Durable manifests and retries
 

@@ -241,7 +241,8 @@ def _inspect_output(path: Path, *, max_bytes: int) -> tuple[str, int]:
                 if size > max_bytes:
                     raise RenderError("OUTPUT_SIZE_LIMIT", "render output exceeds the byte limit")
                 digest.update(block)
-        prefix = path.read_bytes()[:12]
+        with path.open("rb") as stream:
+            prefix = stream.read(12)
         if size < 12 or prefix[4:8] != b"ftyp":
             raise RenderError("OUTPUT_FORMAT_INVALID", "render output is not an MP4 file")
         return digest.hexdigest(), size
@@ -251,18 +252,36 @@ def _inspect_output(path: Path, *, max_bytes: int) -> tuple[str, int]:
         raise RenderError("OUTPUT_UNAVAILABLE", "render output is unavailable") from exc
 
 
+def _validate_output_media(path: Path, *, ffprobe: str, timeout: float, output_limit: int) -> None:
+    try:
+        raw = _run(
+            [ffprobe, "-v", "error", "-protocol_whitelist", "file", "-format_whitelist", "mov,mp4,m4a,3gp,3g2,mj2",
+             "-f", "mov", "-show_entries", "format=duration:stream=codec_type", "-of", "json", str(path)],
+            timeout=timeout, output_limit=output_limit,
+        )
+        payload = json.loads(raw)
+        duration = float(payload["format"]["duration"])
+        streams = payload["streams"]
+        if (not math.isfinite(duration) or duration <= 0 or not isinstance(streams, list)
+                or not any(item.get("codec_type") == "video" for item in streams if isinstance(item, dict))):
+            raise ValueError("video stream or duration missing")
+    except (MediaProbeError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+        raise RenderError("OUTPUT_MEDIA_INVALID", "render output failed media validation") from exc
+
+
 class FfmpegRenderWorker:
     """Execute a fixed baseline transcode against verified managed bytes."""
 
     _DEMUXERS = {"video/mp4": ("mov", "mov,mp4,m4a,3gp,3g2,mj2"), "video/webm": ("matroska", "matroska,webm")}
 
     def __init__(
-        self, *, storage_root: Path, asset_ingest: AssetIngest, ffmpeg: str = "ffmpeg",
+        self, *, storage_root: Path, asset_ingest: AssetIngest, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
         policy: RenderPolicy | None = None,
     ) -> None:
         self._root = Path(storage_root).expanduser().resolve()
         self._ingest = asset_ingest
         self._ffmpeg = ffmpeg
+        self._ffprobe = ffprobe
         self._policy = policy or RenderPolicy()
 
     async def render(
@@ -292,11 +311,16 @@ class FfmpegRenderWorker:
                      "-map_chapters", "-1", "-c:v", self._policy.video_codec, "-preset", self._policy.preset,
                      "-pix_fmt", self._policy.pixel_format, "-c:a", self._policy.audio_codec,
                      "-fflags", "+bitexact", "-flags:v", "+bitexact", "-flags:a", "+bitexact",
-                     "-movflags", "+faststart", "-threads", "1", "-f", "mp4", str(output)],
+                     "-movflags", "+faststart", "-fs", str(self._policy.max_output_bytes),
+                     "-threads", "1", "-f", "mp4", str(output)],
                     timeout=self._policy.timeout_seconds, output_limit=self._policy.tool_output_limit,
                 )
                 output_hash, output_size = await asyncio.to_thread(
                     _inspect_output, output, max_bytes=self._policy.max_output_bytes,
+                )
+                await asyncio.to_thread(
+                    _validate_output_media, output, ffprobe=self._ffprobe,
+                    timeout=self._policy.timeout_seconds, output_limit=self._policy.tool_output_limit,
                 )
                 await self._ingest.ingest(
                     asset_id=request.output_asset_id, source_path=output, mime_type="video/mp4",
