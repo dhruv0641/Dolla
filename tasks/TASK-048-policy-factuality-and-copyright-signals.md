@@ -5,7 +5,7 @@
 - **Priority:** P1
 - **Dependencies:** TASK-047
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE; MASTER PROMPT
 - **GitHub issue:** [#171](https://github.com/dhruv0641/Dolla/issues/171)
 - **Branch:** `feature/TASK-048-policy-factuality-copyright-signals`
@@ -28,9 +28,9 @@ Deliver policy, factuality and copyright signals as an independently verifiable 
 QA signal contracts and service, owner-scoped persistence/migration if needed, focused tests and operator documentation. Reuse TASK-017 source evidence and TASK-047 QA report boundaries; select exact paths after targeted repository inspection.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +39,17 @@ QA signal contracts and service, owner-scoped persistence/migration if needed, f
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation and acceptance evidence
+
+- `PolicySignalService` deterministically maps the already validated content-review assessment into fixed POLICY, FACTUALITY and COPYRIGHT signals after requiring exact PASS `av-v1` evidence and matching content lineage.
+- Signal states distinguish `NO_AUTOMATED_FLAG`, `FLAGGED` and `UNAVAILABLE`; none is represented as authoritative truth, policy clearance or legal determination. Critical findings block, lesser findings/revision requests and absent rights authority require human review.
+- PASS remains an automated-stage result only. Every report structurally retains `human_approval_required=true` and `content_approved=false`.
+- Unknown citation IDs, malformed/duplicate rights references, changed content, non-passing AV evidence, non-canonical findings/states/decisions and fingerprint tampering fail closed.
+- The canonical fingerprint binds asset/content, upstream AV evidence, a raw-text-free review-context digest, pinned prompt/policy versions, the validated assessment, signals, findings and human boundary.
+- Migration 0015 and `PolicySignalReportRepository` persist one immutable owner-scoped `signals-v1` report per active final/export asset. Exact replay is idempotent; rebinding fails closed; the database requires exact passing AV evidence and derived blocker/decision consistency.
+- `docs/POLICY_SIGNAL_QA.md` records meaning, trust boundaries, recovery and explicit unverified provider/legal/live-database limits.
+- Eight service tests and four repository tests pass; 37 focused signal/review/migration regressions pass. Full suite: 417 tests passed.
+- Every migration parses through `pglast`; compileall, diff hygiene and project validation (15 epics, 76 tasks, no cycles) pass.
+- Live PostgreSQL execution, live policy/fact-check/rights providers, rights-record authenticity, current platform-rule completeness and human/legal judgment remain unverified and are not claimed.
+- Independent Technical Reviewer review is pending on the exact implementation commit.
