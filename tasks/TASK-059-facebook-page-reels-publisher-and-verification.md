@@ -5,9 +5,11 @@
 - **Priority:** P2
 - **Dependencies:** TASK-058
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#186](https://github.com/dhruv0641/Dolla/issues/186)
+- **Branch:** `feature/TASK-059-facebook-page-reels-publisher-verification`
+- **Blockers:** No blocker for disabled-by-default local implementation. Live Meta Page eligibility, OAuth, account connection, hosted or resumable transfer, upload/container creation and publication require separate explicit authorization and remain outside development verification.
 
 ## User Story
 As a FLOW AI Content OS operator, I want facebook page reels publisher and verification, so the platform can progress safely through a traceable production lifecycle.
