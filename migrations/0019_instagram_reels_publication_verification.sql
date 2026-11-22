@@ -310,7 +310,8 @@ BEGIN
   IF NEW.instagram_phase = 'MEDIA_RECORDED' AND (
        jsonb_typeof(NEW.last_remote_status) IS DISTINCT FROM 'object'
        OR NEW.last_remote_status->>'container_id' IS DISTINCT FROM NEW.remote_upload_id
-       OR NEW.last_remote_status->>'container_status' NOT IN ('FINISHED','PUBLISHED')
+       OR NEW.last_remote_status->>'container_status' NOT IN
+          ('EXPIRED','ERROR','FINISHED','IN_PROGRESS','PUBLISHED')
      ) THEN
     RAISE EXCEPTION 'Instagram recorded media evidence is invalid'
       USING ERRCODE = 'check_violation';

@@ -98,20 +98,21 @@ class FakeStore:
         return self.current
 
     async def record_container_status(self, *, claim, remote):
-        phase = {
-            InstagramContainerState.IN_PROGRESS: "CONTAINER_PROCESSING",
-            InstagramContainerState.FINISHED: "CONTAINER_READY",
-            InstagramContainerState.PUBLISHED: (
-                "MEDIA_RECORDED" if claim.remote_media_id else "MEDIA_ID_UNKNOWN"
-            ),
-            InstagramContainerState.ERROR: "FAILED",
-            InstagramContainerState.EXPIRED: "FAILED",
-        }[remote.state]
-        status = "PROCESSING"
-        if remote.state == InstagramContainerState.PUBLISHED:
-            status = "VERIFY_PENDING"
-        elif remote.state in {InstagramContainerState.ERROR, InstagramContainerState.EXPIRED}:
-            status = "FAILED"
+        if claim.remote_media_id is not None:
+            phase, status = "MEDIA_RECORDED", "VERIFY_PENDING"
+        else:
+            phase = {
+                InstagramContainerState.IN_PROGRESS: "CONTAINER_PROCESSING",
+                InstagramContainerState.FINISHED: "CONTAINER_READY",
+                InstagramContainerState.PUBLISHED: "MEDIA_ID_UNKNOWN",
+                InstagramContainerState.ERROR: "FAILED",
+                InstagramContainerState.EXPIRED: "FAILED",
+            }[remote.state]
+            status = "PROCESSING"
+            if remote.state == InstagramContainerState.PUBLISHED:
+                status = "VERIFY_PENDING"
+            elif remote.state in {InstagramContainerState.ERROR, InstagramContainerState.EXPIRED}:
+                status = "FAILED"
         self.current = replace(
             claim, status=status, phase=phase,
             verification_attempt_count=claim.verification_attempt_count + 1,
@@ -366,8 +367,33 @@ class InstagramPublishingTests(unittest.IsolatedAsyncioTestCase):
         result = await self.publisher(store, transport).reconcile(self.req)
         self.assertEqual(result.status, "VERIFY_PENDING")
         self.assertEqual(store.current.phase, "MEDIA_RECORDED")
-        self.assertNotIn("container_status", [call[0] for call in store.calls])
+        self.assertIn("container_status", [call[0] for call in store.calls])
+        self.assertEqual(store.current.verification_attempt_count, 2)
         self.assertNotIn("publish", [call[0] for call in transport.calls])
+
+    async def test_media_reconciliation_is_bounded_without_phase_regression(self):
+        current = claim_for(
+            self.req, self.data, status="VERIFY_PENDING", phase="MEDIA_RECORDED",
+            remote_container_id="container_123", remote_media_id="media_123",
+        )
+        store = FakeStore(current)
+        transport = FakeTransport(statuses=[
+            InstagramContainerState.FINISHED,
+            InstagramContainerState.FINISHED,
+            InstagramContainerState.FINISHED,
+        ])
+        publisher = self.publisher(
+            store, transport,
+            InstagramPolicy(enabled=True, maximum_verification_attempts=2),
+        )
+        self.assertEqual((await publisher.reconcile(self.req)).status, "VERIFY_PENDING")
+        self.assertEqual((await publisher.reconcile(self.req)).status, "VERIFY_PENDING")
+        self.assertEqual(store.current.phase, "MEDIA_RECORDED")
+        self.assertEqual(store.current.verification_attempt_count, 2)
+        with self.assertRaises(InstagramError) as caught:
+            await publisher.reconcile(self.req)
+        self.assertEqual(caught.exception.code, "VERIFY_LIMIT_REACHED")
+        self.assertEqual([call[0] for call in transport.calls].count("get_container"), 2)
 
     async def test_revocation_during_authorization_blocks_container_creation(self):
         store = RevocableStore(claim_for(self.req, self.data))

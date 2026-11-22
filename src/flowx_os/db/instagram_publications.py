@@ -225,20 +225,23 @@ class InstagramPublicationRepository:
             raise ValueError("Instagram container status is invalid")
         if remote.container_id != claim.remote_container_id:
             raise InstagramPublicationConflict("Instagram container identity changed")
-        status = "PROCESSING"
-        phase = {
-            InstagramContainerState.IN_PROGRESS: "CONTAINER_PROCESSING",
-            InstagramContainerState.FINISHED: "CONTAINER_READY",
-            InstagramContainerState.PUBLISHED: (
-                "MEDIA_RECORDED" if claim.remote_media_id else "MEDIA_ID_UNKNOWN"
-            ),
-            InstagramContainerState.ERROR: "FAILED",
-            InstagramContainerState.EXPIRED: "FAILED",
-        }[remote.state]
-        if remote.state == InstagramContainerState.PUBLISHED:
-            status = "VERIFY_PENDING"
-        elif remote.state in {InstagramContainerState.ERROR, InstagramContainerState.EXPIRED}:
-            status = "FAILED"
+        if claim.remote_media_id is not None:
+            # Preserve accepted media identity while persisting every later
+            # container observation so bounded reconciliation still advances.
+            status, phase = "VERIFY_PENDING", "MEDIA_RECORDED"
+        else:
+            status = "PROCESSING"
+            phase = {
+                InstagramContainerState.IN_PROGRESS: "CONTAINER_PROCESSING",
+                InstagramContainerState.FINISHED: "CONTAINER_READY",
+                InstagramContainerState.PUBLISHED: "MEDIA_ID_UNKNOWN",
+                InstagramContainerState.ERROR: "FAILED",
+                InstagramContainerState.EXPIRED: "FAILED",
+            }[remote.state]
+            if remote.state == InstagramContainerState.PUBLISHED:
+                status = "VERIFY_PENDING"
+            elif remote.state in {InstagramContainerState.ERROR, InstagramContainerState.EXPIRED}:
+                status = "FAILED"
         evidence = json.dumps({
             "schema_version": 1,
             "container_id": remote.container_id,

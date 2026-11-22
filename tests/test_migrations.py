@@ -218,6 +218,7 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("Instagram remote identities are immutable once observed", sql)
         self.assertIn("Instagram publishable container evidence is invalid", sql)
         self.assertIn("Instagram unknown media evidence is invalid", sql)
+        self.assertIn("'EXPIRED','ERROR','FINISHED','IN_PROGRESS','PUBLISHED'", sql)
         self.assertIn("container_state IS DISTINCT FROM 'PUBLISHED'", sql)
         self.assertIn("owner_id IS DISTINCT FROM NEW.channel_external_id_snapshot", sql)
         self.assertIn("media_type_value IS DISTINCT FROM 'VIDEO'", sql)

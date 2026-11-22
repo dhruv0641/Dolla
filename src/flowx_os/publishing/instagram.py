@@ -495,6 +495,9 @@ class InstagramPublisher:
     ) -> InstagramPublicationResult:
         try:
             container = await self._get_container_safely(claim)
+            claim = await self._store.record_container_status(
+                claim=claim, remote=container,
+            )
             if container.state != InstagramContainerState.PUBLISHED:
                 return InstagramPublicationResult(
                     claim.publication_id, "VERIFY_PENDING", claim.remote_media_id,
