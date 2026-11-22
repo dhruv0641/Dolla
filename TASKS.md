@@ -78,7 +78,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-10: Video Quality Assurance
 
 - **TASK-046 Deterministic integrity checks** — DONE · QA and Security Engineer · 6h · deps: TASK-034, TASK-045 · Issue [#165](https://github.com/dhruv0641/Dolla/issues/165) · implementation PR [#166](https://github.com/dhruv0641/Dolla/pull/166) merged as `1fed3c8`; 18 focused/390 total tests, independent review, required checks and post-merge CI passed; live PostgreSQL unverified
-- **TASK-047 Visual and audio evaluation** — IN_REVIEW · QA and Security Engineer · 8h · deps: TASK-046 · Issue [#168](https://github.com/dhruv0641/Dolla/issues/168) · Branch `feature/TASK-047-visual-audio-evaluation` · 12 task-specific/34 focused/404 full-suite tests passed; independent review pending
+- **TASK-047 Visual and audio evaluation** — IN_REVIEW · QA and Security Engineer · 8h · deps: TASK-046 · Issue [#168](https://github.com/dhruv0641/Dolla/issues/168) · Branch `feature/TASK-047-visual-audio-evaluation` · 12 task-specific/34 focused/404 full-suite tests passed; exact-commit independent review passed
 - **TASK-048 Policy, factuality and copyright signals** — BACKLOG · QA and Security Engineer · 12h · deps: TASK-047
 - **TASK-049 Scene retry limits and spend gate** — BACKLOG · QA and Security Engineer · 16h · deps: TASK-048
 - **TASK-050 Human review and approvals** — BACKLOG · QA and Security Engineer · 4h · deps: TASK-049
