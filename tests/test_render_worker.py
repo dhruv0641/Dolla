@@ -118,12 +118,20 @@ class RenderWorkerTests(unittest.IsolatedAsyncioTestCase):
                 request=request(), sources=[source], source_records=[record(source)],
             )
 
+            rejected = RecordingIngest()
+            with self.assertRaises(RenderError) as caught:
+                await FfmpegRenderWorker(
+                    storage_root=root, asset_ingest=rejected, ffprobe="missing-flowx-ffprobe",
+                ).render(request=request(), sources=[source], source_records=[record(source)])
+
         self.assertEqual(result.output_asset_id, OUTPUT_ID)
         self.assertEqual(result.output_size_bytes, len(ingest.payload))
         self.assertEqual(result.output_sha256_hex, hashlib.sha256(ingest.payload).hexdigest())
         self.assertEqual(ingest.payload[4:8], b"ftyp")
         self.assertEqual(ingest.calls[0]["kind"], AssetKind.FINAL_VIDEO)
         self.assertEqual(ingest.calls[0]["media_metadata"]["render_fingerprint"], result.manifest.fingerprint)
+        self.assertEqual(caught.exception.code, "OUTPUT_MEDIA_INVALID")
+        self.assertEqual(rejected.calls, [])
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg tools unavailable")
     async def test_tampered_or_wrong_source_fails_before_ingest(self):
