@@ -1,5 +1,10 @@
 # Official YouTube publisher
 
+Independent read-only platform observations and divergence verdicts are handled
+by `PlatformPublicationReconciler`; see
+`docs/PLATFORM_PUBLICATION_RECONCILIATION.md`. They never mutate this publisher's
+workflow state.
+
 TASK-057 adds a transport-injected boundary for the official YouTube Data API.
 It is disabled by default and does not implement an OAuth consent flow, resolve
 credentials, connect a channel, schedule a publication, or invoke Google by

@@ -52,6 +52,18 @@ from flowx_os.publishing.youtube import (
     YouTubeUploadOutcome,
     YouTubeUploadState,
 )
+from flowx_os.publishing.reconciliation import (
+    PlatformPublicationObservation,
+    PlatformPublicationReconciler,
+    PlatformReconciliationError,
+    PlatformReconciliationPolicy,
+    PlatformReconciliationRequest,
+    PublicationPlatform,
+    PublicationReconciliationRecord,
+    PublicationReconciliationTarget,
+    ReconciliationVerdict,
+    RemotePublicationState,
+)
 
 __all__ = [
     "FACEBOOK_CREATE_CONTENT_TASK", "FACEBOOK_PAGES_MANAGE_POSTS_SCOPE",
@@ -70,4 +82,9 @@ __all__ = [
     "YouTubePolicy", "YouTubePrivacy", "YouTubePublicationClaim",
     "YouTubePublicationResult", "YouTubePublisher", "YouTubePublishRequest",
     "YouTubeRemoteVideo", "YouTubeUploadOutcome", "YouTubeUploadState",
+    "PlatformPublicationObservation", "PlatformPublicationReconciler",
+    "PlatformReconciliationError", "PlatformReconciliationPolicy",
+    "PlatformReconciliationRequest", "PublicationPlatform",
+    "PublicationReconciliationRecord", "PublicationReconciliationTarget",
+    "ReconciliationVerdict", "RemotePublicationState",
 ]

@@ -19,6 +19,18 @@ class MigrationSyntaxTests(unittest.TestCase):
         sql = migration.read_text(encoding="utf-8")
         self.assertIn("assets_source_job_fk", sql)
 
+    def test_platform_reconciliation_is_versioned_idempotent_and_immutable(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0021_platform_publication_reconciliation.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("publication_state_version bigint NOT NULL DEFAULT 0", sql)
+        self.assertIn("NEW.publication_state_version := OLD.publication_state_version + 1", sql)
+        self.assertIn("CREATE TABLE publication_reconciliations", sql)
+        self.assertIn("request_id uuid NOT NULL UNIQUE", sql)
+        self.assertIn("CHECK (requires_human_review = (verdict <> 'IN_SYNC'))", sql)
+        self.assertIn("publication reconciliation history is immutable", sql)
+        self.assertIn("publication_reconciliations_prevent_update", sql)
+        self.assertIn("publication_reconciliations_prevent_delete", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")

@@ -47,6 +47,7 @@ class Settings:
     meta_credentials_ref: str | None
     instagram_publishing_enabled: bool
     facebook_publishing_enabled: bool
+    platform_reconciliation_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -110,6 +111,11 @@ class Settings:
         facebook_enabled = env.get("FLOWX_FACEBOOK_PUBLISHING_ENABLED", "false").strip().lower()
         if facebook_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_FACEBOOK_PUBLISHING_ENABLED must be true or false.")
+        reconciliation_enabled = env.get(
+            "FLOWX_PLATFORM_RECONCILIATION_ENABLED", "false"
+        ).strip().lower()
+        if reconciliation_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_PLATFORM_RECONCILIATION_ENABLED must be true or false.")
 
         return cls(
             environment=environment,
@@ -123,4 +129,5 @@ class Settings:
             meta_credentials_ref=_secret_ref(env, "FLOWX_META_CREDENTIALS_REF"),
             instagram_publishing_enabled=instagram_enabled == "true",
             facebook_publishing_enabled=facebook_enabled == "true",
+            platform_reconciliation_enabled=reconciliation_enabled == "true",
         )

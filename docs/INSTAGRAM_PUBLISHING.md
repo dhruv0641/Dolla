@@ -1,5 +1,10 @@
 # Instagram Reels publishing boundary
 
+Independent read-only platform observations and divergence verdicts are handled
+by `PlatformPublicationReconciler`; see
+`docs/PLATFORM_PUBLICATION_RECONCILIATION.md`. They never mutate this publisher's
+workflow state.
+
 TASK-058 provides a disabled-by-default application boundary for publishing an
 exact human-approved `INSTAGRAM_REELS_V1` export to an authorized Instagram
 professional account. It does not implement OAuth, resolve credentials, host

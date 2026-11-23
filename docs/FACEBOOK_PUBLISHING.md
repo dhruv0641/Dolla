@@ -1,5 +1,10 @@
 # Facebook Page Reels publishing boundary
 
+Independent read-only platform observations and divergence verdicts are handled
+by `PlatformPublicationReconciler`; see
+`docs/PLATFORM_PUBLICATION_RECONCILIATION.md`. They never mutate this publisher's
+workflow state.
+
 TASK-059 implements a disabled-by-default, transport-injected boundary for the
 official Facebook Page Reels API. It does not implement Facebook Login, resolve
 Page access tokens, connect a Page, call Meta, or publish content by itself.
