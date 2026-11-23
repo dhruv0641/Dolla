@@ -73,6 +73,10 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   bounded scalar and structured values, database-derived observation
   fingerprints returned to the application, and a fresh post-provider clock
   sample with a slow-provider regression.
+- Correction-head re-review accepted those two fixes but found the seeded SQL
+  definition registry still allowed later inserts. The follow-up seals all
+  definition inserts after migration seeding and enforces metric namespace to
+  platform agreement, so the fingerprinted registry cannot be extended.
 - Remaining gate: independent correction-head review, then the single final full
   suite and GitHub PR/CI. Production PostgreSQL and live provider behavior
   remain explicitly unverified.

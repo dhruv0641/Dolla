@@ -24,7 +24,12 @@ CREATE TABLE analytics_metric_definitions (
   metric_unit text NOT NULL CHECK (metric_unit IN (
     'COUNT','SECONDS','MINUTES','MILLISECONDS','RATIO','STRUCTURED'
   )),
-  PRIMARY KEY (registry_version, metric_id)
+  PRIMARY KEY (registry_version, metric_id),
+  CHECK (
+    (platform = 'YOUTUBE' AND metric_id LIKE 'youtube.%') OR
+    (platform = 'INSTAGRAM' AND metric_id LIKE 'instagram.%') OR
+    (platform = 'FACEBOOK' AND metric_id LIKE 'facebook.%')
+  )
 );
 
 INSERT INTO analytics_metric_definitions
@@ -66,7 +71,7 @@ CREATE TRIGGER analytics_metric_registries_immutable
   FOR EACH ROW EXECUTE FUNCTION guard_analytics_metric_registry_immutable();
 
 CREATE TRIGGER analytics_metric_definitions_immutable
-  BEFORE UPDATE OR DELETE ON analytics_metric_definitions
+  BEFORE INSERT OR UPDATE OR DELETE ON analytics_metric_definitions
   FOR EACH ROW EXECUTE FUNCTION guard_analytics_metric_registry_immutable();
 
 CREATE TABLE analytics_metric_collection_attempts (

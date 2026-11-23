@@ -61,6 +61,8 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("CREATE TABLE analytics_metric_observations", sql)
         self.assertIn("CREATE TABLE analytics_metric_registries", sql)
         self.assertIn("CREATE TABLE analytics_metric_definitions", sql)
+        self.assertIn("BEFORE INSERT OR UPDATE OR DELETE ON analytics_metric_definitions", sql)
+        self.assertIn("platform = 'YOUTUBE' AND metric_id LIKE 'youtube.%'", sql)
         self.assertIn("definition.metric_unit = 'COUNT'", sql)
         self.assertIn("NEW.observation_fingerprint := encode(digest", sql)
         self.assertIn("pg_column_size(metric_data) <= 65536", sql)
