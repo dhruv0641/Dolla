@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-064
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#204](https://github.com/dhruv0641/Dolla/issues/204)
+- **Branch:** `feature/TASK-065-evidence-backed-recommendations-experiments`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
