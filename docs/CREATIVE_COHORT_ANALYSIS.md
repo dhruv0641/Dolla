@@ -34,7 +34,7 @@ A descriptive report requires at least two eligible cohorts. Otherwise its statu
 
 ## Persistence and replay
 
-`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. Every included publication is stored as one typed metadata/metric pair. Deferred database validation requires those pairs to match the report exactly, recomputes group sizes, eligibility, medians and quartiles, and rejects a report with missing or substituted metric evidence. Database triggers also derive request/report fingerprints; updates and deletes are rejected.
+`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. Voice, Flow model and quoted-cost factors follow the exact final render's immutable input asset IDs, not the content item's current voice or currently approved scenes. Every included publication is stored as one typed metadata/metric pair. Deferred database validation requires those pairs to match the report exactly, recomputes group sizes, eligibility, medians and quartiles, and rejects a report with missing or substituted metric evidence. Database triggers also derive request/report fingerprints; updates and deletes are rejected.
 
 ## Operational limits
 
@@ -42,4 +42,5 @@ A descriptive report requires at least two eligible cohorts. Otherwise its statu
 - Cohorts cannot mix platforms, metrics, windows, registry versions or owners.
 - Derived ratios and structured metrics are rejected; only raw scalar count/time metrics are comparable.
 - Unavailable samples are excluded and counted, never imputed.
+- Exclusion counts are application-declared because an absent source has no immutable source row to reference. PostgreSQL strictly requires the complete five-reason schema, unique allowed reasons, nonnegative integer counts and exact candidate arithmetic; it does not claim to independently prove why an absent candidate was unavailable.
 - Results are descriptive inputs for human review. TASK-065 owns recommendations and experiments; TASK-066 owns any spend-aware approved feedback loop.

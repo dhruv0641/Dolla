@@ -15,14 +15,15 @@ LANGUAGE sql STABLE AS $$
       FROM tts_synthesis_requests AS tts
       JOIN voice_profiles AS vp ON vp.id = tts.profile_id AND vp.brand_id = tts.brand_id
       WHERE tts.content_id = c.id AND tts.status = 'COMPLETED'
+        AND tts.asset_id::text IN (SELECT jsonb_array_elements_text(rj.inputs_manifest->'asset_ids'))
     ), ''),
     COALESCE((
       SELECT string_agg(g.id::text || ':' || r.model_name || ':' || r.quoted_credits::text, ',' ORDER BY g.id::text)
-      FROM scenes AS scene
-      JOIN assets AS asset ON asset.id = scene.approved_asset_id AND asset.scene_id = scene.id
-      JOIN generation_jobs AS g ON g.id = asset.source_job_id AND g.scene_id = scene.id
+      FROM assets AS asset
+      JOIN generation_jobs AS g ON g.id = asset.source_job_id
       JOIN flow_credit_reservations AS r ON r.id = g.credit_reservation_id
-      WHERE scene.content_id = c.id AND scene.storyboard_version = source_storyboard_version
+      WHERE asset.content_id = c.id
+        AND asset.id::text IN (SELECT jsonb_array_elements_text(rj.inputs_manifest->'asset_ids'))
     ), '')
   ), 'sha256'), 'hex')::char(64)
   FROM publication_jobs AS p
@@ -31,6 +32,10 @@ LANGUAGE sql STABLE AS $$
   JOIN social_channels AS ch ON ch.id = p.channel_id AND ch.brand_id = b.id
   JOIN storyboard_versions AS sv
     ON sv.content_id = c.id AND sv.version = source_storyboard_version
+  JOIN render_jobs AS rj
+    ON rj.content_id = c.id AND rj.render_version = p.artifact_version AND rj.status = 'DONE'
+  JOIN render_job_artifacts AS rja
+    ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'FINAL_VIDEO'
   WHERE p.id = source_publication_id
     AND p.status = 'PUBLISHED' AND p.published_at IS NOT NULL;
 $$;
@@ -66,39 +71,44 @@ DECLARE
   current_platform text; current_published_at timestamptz; current_niche text;
   current_language text; current_script jsonb; current_duration_ms integer;
   current_scene_count integer; voice_count integer; current_voice text;
-  model_count integer; current_model text; current_cost bigint;
+  model_count integer; current_model text; current_cost bigint; render_inputs jsonb;
   expected_source_fingerprint char(64); expected_snapshot_fingerprint char(64);
 BEGIN
   SELECT b.owner_user_id, b.id, c.id, p.artifact_version, c.script_version,
          c.storyboard_version, ch.platform, p.published_at, b.niche, c.language,
-         c.script, sv.total_duration_ms,
+         c.script, sv.total_duration_ms, rj.inputs_manifest,
          (SELECT count(*) FROM scenes AS s WHERE s.content_id = c.id AND s.storyboard_version = NEW.storyboard_version),
          creative_metadata_source_fingerprint(p.id, NEW.storyboard_version)
     INTO current_owner, current_brand, current_content, current_artifact,
          current_script_version, current_storyboard, current_platform,
          current_published_at, current_niche, current_language, current_script,
-         current_duration_ms, current_scene_count, expected_source_fingerprint
+         current_duration_ms, render_inputs, current_scene_count, expected_source_fingerprint
     FROM publication_jobs AS p
     JOIN content_items AS c ON c.id = p.content_id
     JOIN brands AS b ON b.id = c.brand_id
     JOIN social_channels AS ch ON ch.id = p.channel_id AND ch.brand_id = b.id
     JOIN storyboard_versions AS sv ON sv.content_id = c.id AND sv.version = NEW.storyboard_version
+    JOIN render_jobs AS rj
+      ON rj.content_id = c.id AND rj.render_version = p.artifact_version AND rj.status = 'DONE'
+    JOIN render_job_artifacts AS rja
+      ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'FINAL_VIDEO'
    WHERE p.id = NEW.publication_id AND p.status = 'PUBLISHED' AND p.published_at IS NOT NULL
-   FOR SHARE OF p, c, b, ch, sv;
+   FOR SHARE OF p, c, b, ch, sv, rj, rja;
 
   SELECT count(DISTINCT vp.voice_key), min(vp.voice_key)
     INTO voice_count, current_voice
     FROM tts_synthesis_requests AS tts
     JOIN voice_profiles AS vp ON vp.id = tts.profile_id AND vp.brand_id = tts.brand_id
-   WHERE tts.content_id = NEW.content_id AND tts.status = 'COMPLETED';
+   WHERE tts.content_id = NEW.content_id AND tts.status = 'COMPLETED'
+     AND tts.asset_id::text IN (SELECT jsonb_array_elements_text(render_inputs->'asset_ids'));
 
   SELECT count(DISTINCT r.model_name), min(r.model_name), sum(r.quoted_credits)
     INTO model_count, current_model, current_cost
-    FROM scenes AS scene
-    JOIN assets AS asset ON asset.id = scene.approved_asset_id AND asset.scene_id = scene.id
-    JOIN generation_jobs AS g ON g.id = asset.source_job_id AND g.scene_id = scene.id
+    FROM assets AS asset
+    JOIN generation_jobs AS g ON g.id = asset.source_job_id
     JOIN flow_credit_reservations AS r ON r.id = g.credit_reservation_id
-   WHERE scene.content_id = NEW.content_id AND scene.storyboard_version = NEW.storyboard_version;
+   WHERE asset.content_id = NEW.content_id
+     AND asset.id::text IN (SELECT jsonb_array_elements_text(render_inputs->'asset_ids'));
 
   IF current_owner IS NULL
      OR NEW.owner_user_id IS DISTINCT FROM current_owner
@@ -142,7 +152,7 @@ BEGIN
        'evidence_ref','publication:platform:v1','unavailable_reason',NULL))
      OR NOT NEW.factors @> jsonb_build_array(jsonb_build_object(
        'factor','POSTING_TIME_UTC','availability','OBSERVED',
-       'value','D' || extract(isodow FROM current_published_at)::integer::text ||
+       'value','D' || extract(isodow FROM current_published_at AT TIME ZONE 'UTC')::integer::text ||
                '-H' || to_char(current_published_at AT TIME ZONE 'UTC','HH24') || 'Z',
        'evidence_ref','publication:published-at:utc-weekday-hour-v1','unavailable_reason',NULL))
      OR NOT NEW.factors @> jsonb_build_array(jsonb_build_object(
@@ -261,22 +271,22 @@ BEGIN
     NEW.request_id::text, NEW.owner_user_id, NEW.definition_version, NEW.factor,
     NEW.metric_id, NEW.window_name, NEW.registry_version, NEW.registry_fingerprint,
     NEW.minimum_group_size::text,
-    coalesce((SELECT string_agg(concat_ws('|', value->>'label', value->>'lower', value->>'upper'), '|')
-      FROM jsonb_array_elements(NEW.bands) AS item(value)), '')
+    coalesce((SELECT string_agg(concat_ws('|', value->>'label', value->>'lower', value->>'upper'), '|' ORDER BY ordinal)
+      FROM jsonb_array_elements(NEW.bands) WITH ORDINALITY AS item(value, ordinal)), '')
   ], '|'), 'sha256'), 'hex') INTO expected_request_fingerprint;
   SELECT encode(digest(array_to_string(ARRAY[
     NEW.request_fingerprint, NEW.report_data->>'status', NEW.report_data->>'interpretation',
     NEW.report_data->>'candidate_count', NEW.report_data->>'included_count',
-    coalesce((SELECT string_agg(concat_ws('|', value->>0, value->>1), '|')
-      FROM jsonb_array_elements(NEW.report_data->'exclusions') AS item(value)), ''),
+    coalesce((SELECT string_agg(concat_ws('|', value->>0, value->>1), '|' ORDER BY ordinal)
+      FROM jsonb_array_elements(NEW.report_data->'exclusions') WITH ORDINALITY AS item(value, ordinal)), ''),
     coalesce((SELECT string_agg(concat_ws('|', value->>'label', value->>'sample_size',
       value->>'eligible', coalesce(value->>'median',''), coalesce(value->>'q1',''),
-      coalesce(value->>'q3','')), '|')
-      FROM jsonb_array_elements(NEW.report_data->'cohorts') AS item(value)), ''),
+      coalesce(value->>'q3','')), '|' ORDER BY ordinal)
+      FROM jsonb_array_elements(NEW.report_data->'cohorts') WITH ORDINALITY AS item(value, ordinal)), ''),
     coalesce((SELECT string_agg(concat_ws('|', value->>'publication_id',
       value->>'metadata_snapshot_id', value->>'metadata_fingerprint',
-      value->>'observation_request_id', value->>'observation_fingerprint'), '|')
-      FROM jsonb_array_elements(NEW.report_data->'sources') AS item(value)), '')
+      value->>'observation_request_id', value->>'observation_fingerprint'), '|' ORDER BY ordinal)
+      FROM jsonb_array_elements(NEW.report_data->'sources') WITH ORDINALITY AS item(value, ordinal)), '')
   ], '|'), 'sha256'), 'hex') INTO expected_report_fingerprint;
   IF metric_kind IS DISTINCT FROM 'RAW' OR metric_unit NOT IN ('COUNT','SECONDS','MINUTES','MILLISECONDS')
      OR NEW.request_fingerprint IS DISTINCT FROM expected_request_fingerprint
@@ -289,6 +299,15 @@ BEGIN
      OR jsonb_typeof(NEW.report_data->'sources') <> 'array'
      OR jsonb_typeof(NEW.report_data->'cohorts') <> 'array'
      OR jsonb_typeof(NEW.report_data->'exclusions') <> 'array'
+     OR jsonb_array_length(NEW.report_data->'exclusions') <> 5
+     OR (SELECT count(DISTINCT value->>0)
+           FROM jsonb_array_elements(NEW.report_data->'exclusions') AS item(value)) <> 5
+     OR EXISTS (
+       SELECT 1 FROM jsonb_array_elements(NEW.report_data->'exclusions') AS item(value)
+       WHERE jsonb_typeof(value) <> 'array' OR jsonb_array_length(value) <> 2
+          OR value->>0 NOT IN ('METADATA_UNAVAILABLE','SNAPSHOT_UNAVAILABLE','FACTOR_UNAVAILABLE','METRIC_UNAVAILABLE','OUTSIDE_BANDS')
+          OR jsonb_typeof(value->1) <> 'number' OR (value->>1)::integer < 0
+     )
      OR (NEW.report_data->>'candidate_count')::integer NOT BETWEEN 1 AND 10000
      OR (NEW.report_data->>'included_count')::integer <> cohort_total
      OR (NEW.report_data->>'candidate_count')::integer <> cohort_total + exclusion_total
