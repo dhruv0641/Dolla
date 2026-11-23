@@ -243,6 +243,11 @@ BEGIN
     (OLD.status = 'PROCESSING' AND OLD.facebook_phase IN
       ('UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY')
       AND NEW.status = 'FAILED' AND NEW.facebook_phase = 'FAILED') OR
+    (OLD.status = 'PROCESSING'
+      AND OLD.facebook_phase IN ('UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY')
+      AND NEW.status = OLD.status AND NEW.facebook_phase = OLD.facebook_phase
+      AND NEW.last_error_code IN
+        ('PUBLISH_RECEIPT_UNKNOWN','UNEXPECTED_SCHEDULED_REEL')) OR
     (OLD.status = 'PROCESSING' AND OLD.facebook_phase = 'VIDEO_READY'
       AND NEW.status = 'PUBLISH_REQUESTED' AND NEW.facebook_phase = 'PUBLISH_RESERVED') OR
     (OLD.status = 'PUBLISH_REQUESTED' AND OLD.facebook_phase = 'PUBLISH_RESERVED'

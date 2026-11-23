@@ -326,15 +326,21 @@ class FacebookPublicationRepository:
             r"(?i)(token|secret|credential|authorization|cookie)\s*[:=]", message,
         ):
             message = "Facebook transport failed"
+        is_remote_observation = error.code in {
+            "PUBLISH_RECEIPT_UNKNOWN", "UNEXPECTED_SCHEDULED_REEL",
+        }
         try:
             async with unit_of_work(self._pool) as connection:
                 await self._lock_owned(connection, claim)
                 await connection.execute(
                     """UPDATE publication_jobs SET last_error_code = %s,
-                              last_error_message = %s
+                              last_error_message = %s,
+                              verification_attempt_count = verification_attempt_count + %s,
+                              last_verified_at = CASE WHEN %s THEN now() ELSE last_verified_at END
                        WHERE id = %s AND request_fingerprint = %s
                          AND status NOT IN ('PUBLISHED','FAILED','CANCELLED')""",
-                    (error.code, message, claim.publication_id, claim.request_fingerprint),
+                    (error.code, message, 1 if is_remote_observation else 0,
+                     is_remote_observation, claim.publication_id, claim.request_fingerprint),
                 )
         except (FacebookPublicationConflict, RepositoryUnavailable):
             raise

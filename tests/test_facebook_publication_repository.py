@@ -10,6 +10,7 @@ from flowx_os.db.facebook_publications import (
     FacebookPublicationRepository,
 )
 from flowx_os.publishing.facebook import (
+    FacebookError,
     FacebookPublishReceipt,
     FacebookPublishRequest,
     FacebookRemoteReel,
@@ -276,6 +277,23 @@ class FacebookPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         recovery_query = connection.calls[2][0]
         self.assertIn("last_error_code = 'PUBLISH_RECEIPT_UNKNOWN'", recovery_query)
         self.assertIn("'UPLOAD_ACCEPTED','VIDEO_PROCESSING','VIDEO_READY'", recovery_query)
+
+    async def test_unexpected_remote_publish_observation_advances_bound(self):
+        request = publication_request()
+        claim = FacebookPublicationRepository._claim(claim_row(
+            request, status="PROCESSING", phase="VIDEO_READY",
+            video="video_1", session="secretref://meta/upload/session-1",
+        ))
+        connection = FakeConnection([("PROCESSING",)])
+        await FacebookPublicationRepository(FakePool(connection)).record_transport_failure(
+            claim=claim,
+            error=FacebookError(
+                "PUBLISH_RECEIPT_UNKNOWN", "operator recovery required", ambiguous=True,
+            ),
+        )
+        query, params = connection.calls[1]
+        self.assertIn("verification_attempt_count = verification_attempt_count + %s", query)
+        self.assertEqual(params[2:4], (1, True))
 
     async def test_recovered_session_and_upload_are_exact_and_single_winner(self):
         request = publication_request()

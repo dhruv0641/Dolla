@@ -56,7 +56,7 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   `START_RESERVED`, `UPLOAD_RESERVED` and `PUBLISH_RESERVED` winners, bounded
   status observations, explicit recovery/cancellation and exact final Page,
   video, post, byte, phase and permalink proof.
-- Local verification: 103 cross-platform publishing/config/migration tests pass;
+- Local verification: 104 cross-platform publishing/config/migration tests pass;
   all 20 migrations parse as PostgreSQL, compileall, dependency validation and
   diff hygiene pass. Full-suite and independent-review evidence remain pending.
 - External limit: no Facebook Login, Page connection, token resolution, upload

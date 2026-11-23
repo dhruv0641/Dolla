@@ -235,6 +235,8 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("START_RESERVED", sql)
         self.assertIn("UPLOAD_RESERVED", sql)
         self.assertIn("PUBLISH_RESERVED", sql)
+        self.assertIn("UNEXPECTED_SCHEDULED_REEL", sql)
+        self.assertIn("PUBLISH_RECEIPT_UNKNOWN", sql)
         self.assertIn("Facebook start reservation must be pristine", sql)
         self.assertIn("Facebook remote identities are immutable once observed", sql)
         self.assertIn("Facebook publishable video evidence is invalid", sql)
