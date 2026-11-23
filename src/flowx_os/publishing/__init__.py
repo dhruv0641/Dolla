@@ -65,6 +65,19 @@ from flowx_os.publishing.reconciliation import (
     RemotePublicationState,
     classify_publication_state,
 )
+from flowx_os.publishing.scheduling import (
+    PublicationApprovalDecision,
+    PublicationApprovalRecord,
+    PublicationApprovalRequest,
+    PublicationDeliveryState,
+    PublicationSchedulePolicy,
+    PublicationScheduleRecord,
+    PublicationScheduleRequest,
+    PublicationSchedulingError,
+    PublicationSchedulingService,
+    local_day_bounds,
+    resolve_local_schedule,
+)
 
 __all__ = [
     "FACEBOOK_CREATE_CONTENT_TASK", "FACEBOOK_PAGES_MANAGE_POSTS_SCOPE",
@@ -89,4 +102,9 @@ __all__ = [
     "PublicationReconciliationRecord", "PublicationReconciliationTarget",
     "ReconciliationVerdict", "RemotePublicationState",
     "classify_publication_state",
+    "PublicationApprovalDecision", "PublicationApprovalRecord",
+    "PublicationApprovalRequest", "PublicationDeliveryState",
+    "PublicationSchedulePolicy", "PublicationScheduleRecord",
+    "PublicationScheduleRequest", "PublicationSchedulingError",
+    "PublicationSchedulingService", "local_day_bounds", "resolve_local_schedule",
 ]

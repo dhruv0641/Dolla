@@ -168,6 +168,10 @@ class InstagramPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         query = connection.calls[0][0]
         self.assertIn("channel_external_id_snapshot", query)
         self.assertIn("credentials_ref_snapshot", query)
+        self.assertIn("JOIN publication_delivery_reservations AS dr", query)
+        self.assertIn("JOIN publication_delivery_approvals AS da", query)
+        self.assertIn("dr.scheduled_at_utc <= now()", query)
+        self.assertIn("pr.requires_human_review = true", query)
 
     async def test_container_and_publish_identities_have_separate_barriers(self):
         request = publication_request()

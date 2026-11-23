@@ -48,6 +48,7 @@ class Settings:
     instagram_publishing_enabled: bool
     facebook_publishing_enabled: bool
     platform_reconciliation_enabled: bool
+    publication_scheduling_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -116,6 +117,11 @@ class Settings:
         ).strip().lower()
         if reconciliation_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_PLATFORM_RECONCILIATION_ENABLED must be true or false.")
+        scheduling_enabled = env.get(
+            "FLOWX_PUBLICATION_SCHEDULING_ENABLED", "false"
+        ).strip().lower()
+        if scheduling_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_PUBLICATION_SCHEDULING_ENABLED must be true or false.")
 
         return cls(
             environment=environment,
@@ -130,4 +136,5 @@ class Settings:
             instagram_publishing_enabled=instagram_enabled == "true",
             facebook_publishing_enabled=facebook_enabled == "true",
             platform_reconciliation_enabled=reconciliation_enabled == "true",
+            publication_scheduling_enabled=scheduling_enabled == "true",
         )

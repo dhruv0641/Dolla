@@ -237,6 +237,10 @@ class FacebookPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("ch.platform = 'FACEBOOK'", query)
         self.assertIn("channel_external_id_snapshot", query)
         self.assertIn("credentials_ref_snapshot", query)
+        self.assertIn("JOIN publication_delivery_reservations AS dr", query)
+        self.assertIn("JOIN publication_delivery_approvals AS da", query)
+        self.assertIn("dr.scheduled_at_utc <= now()", query)
+        self.assertIn("pr.requires_human_review = true", query)
 
     async def test_recovered_publish_is_owner_scoped_and_exact(self):
         request = publication_request()

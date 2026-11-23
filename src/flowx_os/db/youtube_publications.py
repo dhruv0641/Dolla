@@ -390,6 +390,10 @@ class YouTubePublicationRepository:
             """SELECT p.status FROM publication_jobs AS p
                JOIN social_channels AS ch ON ch.id = p.channel_id
                JOIN brands AS b ON b.id = ch.brand_id
+               JOIN publication_delivery_reservations AS dr
+                 ON dr.publication_id = p.id
+               JOIN publication_delivery_approvals AS da
+                 ON da.id = dr.approval_id AND da.publication_id = p.id
                WHERE p.id = %s AND p.request_fingerprint = %s
                  AND p.asset_id = %s AND p.channel_id = %s
                  AND b.id = %s AND b.owner_user_id = %s
@@ -436,6 +440,10 @@ class YouTubePublicationRepository:
             """SELECT 1 FROM publication_jobs AS p
                JOIN social_channels AS ch ON ch.id = p.channel_id
                JOIN brands AS b ON b.id = ch.brand_id
+               JOIN publication_delivery_reservations AS dr
+                 ON dr.publication_id = p.id
+               JOIN publication_delivery_approvals AS da
+                 ON da.id = dr.approval_id AND da.publication_id = p.id
                WHERE p.id = %s AND p.request_fingerprint = %s
                  AND b.id = %s AND b.owner_user_id = %s
                  AND ch.enabled = true AND ch.permissions_status = 'VALID'
@@ -445,6 +453,17 @@ class YouTubePublicationRepository:
                  AND p.channel_external_id_snapshot = %s
                  AND p.credentials_ref_snapshot = %s
                  AND p.destination_fingerprint = %s
+                 AND dr.owner_user_id = b.owner_user_id
+                 AND dr.content_id = p.content_id AND dr.channel_id = p.channel_id
+                 AND dr.asset_id = p.asset_id AND dr.artifact_version = p.artifact_version
+                 AND dr.destination_fingerprint = p.destination_fingerprint
+                 AND dr.state IN ('SCHEDULED','DISPATCH_RESERVED')
+                 AND dr.scheduled_at_utc <= now()
+                 AND da.decision = 'APPROVE' AND da.valid_until > now()
+                 AND NOT EXISTS (
+                   SELECT 1 FROM publication_reconciliations AS pr
+                   WHERE pr.publication_id = p.id AND pr.requires_human_review = true
+                 )
                FOR KEY SHARE OF p, ch""",
             (claim.publication_id, claim.request_fingerprint, claim.brand_id,
              claim.owner_user_id, claim.channel_external_id, claim.credentials_ref,
