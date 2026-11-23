@@ -45,7 +45,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - `docs/PUBLICATION_APPROVAL_AND_SCHEDULING.md` records configuration, DST, idempotency, recovery, and live-verification limits.
 - Initial focused verification passed 141 tests. Independent Caveman review then rejected head `c1ebbc8` with four findings: no due-event consumer, invalid local-day bounds when midnight is skipped, moving-clock replay rejection, and approval expiry blocking already-reserved recovery.
 - Corrections add `ScheduledPublicationDispatcher`, exact leased reservation reload and injected platform executors; compute local-day boundaries from the first valid civil instant; load exact idempotent replays before moving gates; and apply approval expiry only before the atomic dispatch reservation. The expanded focused publishing/reconciliation/scheduling/workflow/configuration/migration gate passes **158 tests**. All 23 migrations parse, `compileall`, diff hygiene, and the 76-node project validator pass.
-- No live PostgreSQL, OAuth, account, concrete provider executor, upload, scheduling, publication, paid, or public action was performed. Exact correction-head independent re-review and the one final full suite remain pending.
+- Independent Caveman accepted exact correction head `9a1216322a43d5369893c6a97c61efbad9dc25c7` with no remaining finding after verifying all four corrections, owner isolation, leased evidence, atomicity, safe ambiguity handling and platform recovery.
+- The single final full suite passed **571 tests**. No live PostgreSQL, OAuth, account, concrete provider executor, upload, scheduling, publication, paid, or public action was performed. PR checks and merge remain pending.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
