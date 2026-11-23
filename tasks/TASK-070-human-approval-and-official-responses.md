@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-069
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#219](https://github.com/dhruv0641/Dolla/issues/219)
+- **Branch:** `feature/TASK-070-human-approval-official-responses`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
