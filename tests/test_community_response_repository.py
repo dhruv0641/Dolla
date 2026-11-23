@@ -130,7 +130,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(stored, record)
         query, params = connection.calls[1]
-        self.assertIn("INSERT INTO community_response_approvals", query)
+        self.assertIn("record_community_response_approval", query)
         self.assertIn(Role.REVIEWER.value, params)
 
     async def test_claim_inserts_exact_approved_current_destination_snapshot(self):
@@ -145,12 +145,15 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
             "secretref://vault/youtube/community", value.remote_object_id,
             value.remote_comment_id,
         )
-        connection = Connection([None, evidence, claim_row(claim)])
+        connection = Connection([
+            None, (value.publication_id,), (value.publication_id,),
+            evidence, claim_row(claim),
+        ])
         stored = await CommunityResponseRepository(Pool(connection)).claim(request)
         self.assertEqual(stored, claim)
         sql = "\n".join(query for query, _ in connection.calls)
         self.assertIn("a.valid_until > clock_timestamp()", sql)
-        self.assertIn("FOR UPDATE OF p", sql)
+        self.assertIn("WHERE p.id = %s FOR UPDATE", sql)
         self.assertIn("INSERT INTO community_official_responses", sql)
 
     async def test_mutation_reservation_is_single_winner_with_exact_authorization(self):
@@ -173,6 +176,37 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("state = 'DRAFT'", query)
         self.assertEqual(params[0], authorization.fingerprint)
         self.assertEqual(params[1], [YOUTUBE_REPLY_SCOPE])
+
+    async def test_readiness_locks_publication_before_current_evidence_query(self):
+        value = target()
+        _, record = approval(value)
+        request = OfficialResponseRequest(uuid4(), record.request.approval_id, value.owner_user_id, NOW)
+        claim = response_claim(value, request, record)
+        connection = Connection([(value.publication_id,), (1,)])
+        await CommunityResponseRepository(Pool(connection)).assert_network_ready(claim)
+        self.assertIn("WHERE p.id = %s FOR UPDATE", connection.calls[0][0])
+        self.assertNotIn("community_comments_current", connection.calls[0][0])
+        self.assertIn("community_comments_current", connection.calls[1][0])
+
+    async def test_refresh_binds_second_authorization_to_reserved_claim(self):
+        value = target()
+        _, record = approval(value)
+        request = OfficialResponseRequest(uuid4(), record.request.approval_id, value.owner_user_id, NOW)
+        claim = response_claim(value, request, record, ResponseState.MUTATION_RESERVED)
+        authorization = ReplyAuthorization(
+            PublicationPlatform.YOUTUBE, value.destination_id,
+            (YOUTUBE_REPLY_SCOPE,), NOW - timedelta(seconds=2),
+            NOW + timedelta(minutes=5),
+        )
+        connection = Connection([claim_row(claim)])
+        stored = await CommunityResponseRepository(Pool(connection)).refresh_mutation_authorization(
+            claim, authorization,
+        )
+        self.assertEqual(stored, claim)
+        query, params = connection.calls[0]
+        self.assertIn("state = 'MUTATION_RESERVED'", query)
+        self.assertIn("receipt_state IS NULL", query)
+        self.assertEqual(params[0], authorization.fingerprint)
 
 
 if __name__ == "__main__": unittest.main()

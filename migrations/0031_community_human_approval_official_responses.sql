@@ -113,6 +113,67 @@ CREATE TRIGGER community_response_approvals_prevent_mutation
   BEFORE UPDATE OR DELETE ON community_response_approvals
   FOR EACH ROW EXECUTE FUNCTION guard_community_response_approval_immutable();
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_roles WHERE rolname = 'flowx_community_approval_writer'
+  ) THEN
+    CREATE ROLE flowx_community_approval_writer
+      NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_roles WHERE rolname = 'flowx_community_response_runtime'
+  ) THEN
+    CREATE ROLE flowx_community_response_runtime
+      NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+  END IF;
+END;
+$$;
+
+CREATE FUNCTION record_community_response_approval(
+  approval_id_value uuid,
+  draft_request_id_value uuid,
+  owner_user_id_value text,
+  reviewer_user_id_value text,
+  reviewer_role_value text,
+  decision_value text,
+  reason_value text,
+  decided_at_value timestamptz,
+  valid_until_value timestamptz,
+  request_fingerprint_value char(64),
+  draft_fingerprint_value char(64),
+  draft_text_fingerprint_value char(64),
+  record_fingerprint_value char(64)
+) RETURNS SETOF community_response_approvals
+LANGUAGE sql SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+  INSERT INTO public.community_response_approvals (
+    approval_id, draft_request_id, owner_user_id, reviewer_user_id,
+    reviewer_role, decision, reason, decided_at, valid_until,
+    request_fingerprint, draft_fingerprint, draft_text_fingerprint,
+    record_fingerprint
+  ) VALUES (
+    approval_id_value, draft_request_id_value, owner_user_id_value,
+    reviewer_user_id_value, reviewer_role_value, decision_value, reason_value,
+    decided_at_value, valid_until_value, request_fingerprint_value,
+    draft_fingerprint_value, draft_text_fingerprint_value,
+    record_fingerprint_value
+  )
+  ON CONFLICT DO NOTHING
+  RETURNING *;
+$$;
+
+REVOKE ALL ON community_response_approvals FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION record_community_response_approval(
+  uuid, uuid, text, text, text, text, text, timestamptz, timestamptz,
+  char(64), char(64), char(64), char(64)
+) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION record_community_response_approval(
+  uuid, uuid, text, text, text, text, text, timestamptz, timestamptz,
+  char(64), char(64), char(64), char(64)
+) TO flowx_community_approval_writer;
+
 CREATE TABLE community_official_responses (
   request_id uuid PRIMARY KEY,
   approval_id uuid NOT NULL UNIQUE REFERENCES community_response_approvals(approval_id),
@@ -215,6 +276,8 @@ BEGIN
     WHERE approval_id = NEW.approval_id FOR KEY SHARE;
   SELECT * INTO draft FROM community_reply_draft_records
     WHERE request_id = approval.draft_request_id FOR KEY SHARE;
+  PERFORM p.id FROM publication_jobs AS p
+    WHERE p.id = draft.publication_id FOR UPDATE;
   SELECT * INTO comment_value FROM community_comments_current
     WHERE id = draft.comment_version_id;
   SELECT p.status, ch, b.owner_user_id
@@ -222,7 +285,7 @@ BEGIN
     FROM publication_jobs AS p
     JOIN social_channels AS ch ON ch.id = p.channel_id
     JOIN brands AS b ON b.id = ch.brand_id
-    WHERE p.id = draft.publication_id FOR UPDATE OF p;
+    WHERE p.id = draft.publication_id;
   expected_request := encode(digest(concat_ws('|',
     NEW.request_id::text, NEW.approval_id::text, NEW.owner_user_id,
     to_char(NEW.requested_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
@@ -306,6 +369,8 @@ BEGIN
   END IF;
 
   IF OLD.state = 'DRAFT' AND NEW.state = 'MUTATION_RESERVED' THEN
+    PERFORM p.id FROM publication_jobs AS p
+      WHERE p.id = NEW.publication_id FOR UPDATE;
     SELECT true INTO network_ready
       FROM community_response_approvals AS a
       JOIN community_reply_draft_records AS d ON d.request_id = a.draft_request_id
@@ -334,7 +399,7 @@ BEGIN
                 ((SELECT created_at FROM community_analysis_reports
                   WHERE request_id = d.analysis_request_id), d.analysis_request_id::text)
         )
-      FOR UPDATE OF p;
+      ;
     expected_authorization := encode(digest(concat_ws('|',
       NEW.platform, NEW.destination_id,
       array_to_string(NEW.authorization_scopes, ','),
@@ -347,6 +412,12 @@ BEGIN
        OR network_ready IS DISTINCT FROM true
        OR NEW.authorization_fingerprint IS NULL
        OR NEW.authorization_fingerprint IS DISTINCT FROM expected_authorization
+       OR cardinality(NEW.authorization_scopes) = 0
+       OR array_position(NEW.authorization_scopes, NULL) IS NOT NULL
+       OR EXISTS (
+         SELECT 1 FROM unnest(NEW.authorization_scopes) AS scope_value
+         WHERE scope_value !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'
+       )
        OR NEW.authorization_scopes IS DISTINCT FROM ARRAY(
          SELECT DISTINCT scope_value
          FROM unnest(NEW.authorization_scopes) AS scope_value
@@ -354,7 +425,7 @@ BEGIN
        )
        OR NEW.authorization_checked_at > NEW.mutation_reserved_at
        OR NEW.authorization_checked_at < NEW.mutation_reserved_at - interval '300 seconds'
-       OR NEW.authorization_valid_until <= NEW.mutation_reserved_at
+       OR NEW.authorization_valid_until < NEW.mutation_reserved_at + interval '30 seconds'
        OR (NEW.platform = 'YOUTUBE' AND NOT
          ('https://www.googleapis.com/auth/youtube.force-ssl' = ANY(NEW.authorization_scopes)))
        OR (NEW.platform = 'INSTAGRAM' AND NOT
@@ -374,6 +445,85 @@ BEGIN
        OR NEW.verification_text_fingerprint IS NOT NULL
        OR NEW.verification_visible IS NOT NULL OR NEW.error_code IS NOT NULL THEN
       RAISE EXCEPTION 'official response reservation is invalid'
+        USING ERRCODE = 'check_violation';
+    END IF;
+  ELSIF OLD.state = 'MUTATION_RESERVED' AND NEW.state = 'MUTATION_RESERVED' THEN
+    PERFORM p.id FROM publication_jobs AS p
+      WHERE p.id = NEW.publication_id FOR UPDATE;
+    SELECT true INTO network_ready
+      FROM community_response_approvals AS a
+      JOIN community_reply_draft_records AS d ON d.request_id = a.draft_request_id
+      JOIN community_comments_current AS c ON c.id = d.comment_version_id
+      JOIN publication_jobs AS p ON p.id = d.publication_id
+      JOIN social_channels AS ch ON ch.id = p.channel_id
+      JOIN brands AS b ON b.id = ch.brand_id
+      WHERE a.approval_id = NEW.approval_id AND a.decision = 'APPROVE'
+        AND a.valid_until > clock_timestamp()
+        AND a.record_fingerprint = NEW.approval_fingerprint
+        AND d.record_fingerprint = NEW.draft_fingerprint
+        AND d.draft_text = NEW.draft_text AND c.id = NEW.comment_version_id
+        AND c.state <> 'DELETED' AND c.platform = NEW.platform
+        AND c.destination_id = NEW.destination_id
+        AND c.remote_object_id = NEW.remote_object_id
+        AND c.remote_comment_id = NEW.remote_comment_id
+        AND p.id = NEW.publication_id AND p.status = 'PUBLISHED'
+        AND ch.enabled AND ch.permissions_status = 'VALID'
+        AND ch.external_channel_id = NEW.destination_id
+        AND ch.credentials_ref = NEW.credentials_ref
+        AND b.owner_user_id = NEW.owner_user_id
+        AND NOT EXISTS (
+          SELECT 1 FROM community_analysis_reports AS newer
+          WHERE newer.publication_id = d.publication_id
+            AND (newer.created_at, newer.request_id::text) >
+                ((SELECT created_at FROM community_analysis_reports
+                  WHERE request_id = d.analysis_request_id), d.analysis_request_id::text)
+        );
+    expected_authorization := encode(digest(concat_ws('|',
+      NEW.platform, NEW.destination_id,
+      array_to_string(NEW.authorization_scopes, ','),
+      to_char(NEW.authorization_checked_at AT TIME ZONE 'UTC',
+        'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+      to_char(NEW.authorization_valid_until AT TIME ZONE 'UTC',
+        'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
+    ), 'sha256'), 'hex');
+    IF network_ready IS DISTINCT FROM true
+       OR NEW.authorization_fingerprint IS DISTINCT FROM expected_authorization
+       OR cardinality(NEW.authorization_scopes) = 0
+       OR array_position(NEW.authorization_scopes, NULL) IS NOT NULL
+       OR EXISTS (
+         SELECT 1 FROM unnest(NEW.authorization_scopes) AS scope_value
+         WHERE scope_value !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'
+       )
+       OR NEW.authorization_scopes IS DISTINCT FROM ARRAY(
+         SELECT DISTINCT scope_value
+         FROM unnest(NEW.authorization_scopes) AS scope_value
+         ORDER BY scope_value COLLATE "C"
+       )
+       OR NEW.authorization_checked_at > clock_timestamp()
+       OR NEW.authorization_checked_at < clock_timestamp() - interval '300 seconds'
+       OR NEW.authorization_valid_until < clock_timestamp() + interval '30 seconds'
+       OR (NEW.platform = 'YOUTUBE' AND NOT
+         ('https://www.googleapis.com/auth/youtube.force-ssl' = ANY(NEW.authorization_scopes)))
+       OR (NEW.platform = 'INSTAGRAM' AND NOT
+         ('instagram_business_manage_comments' = ANY(NEW.authorization_scopes)))
+       OR (NEW.platform = 'FACEBOOK' AND NOT
+         ('pages_manage_engagement' = ANY(NEW.authorization_scopes)))
+       OR (NEW.mutation_reserved_at, NEW.receipt_state, NEW.receipt_fingerprint,
+           NEW.remote_response_id, NEW.recovery_evidence_id, NEW.identity_recovered_at,
+           NEW.verification_evidence_id, NEW.verification_observed_at,
+           NEW.verification_fingerprint, NEW.verification_platform,
+           NEW.verification_destination_id, NEW.verification_remote_object_id,
+           NEW.verification_parent_comment_id, NEW.verification_text_fingerprint,
+           NEW.verification_visible, NEW.error_code)
+          IS DISTINCT FROM
+          (OLD.mutation_reserved_at, OLD.receipt_state, OLD.receipt_fingerprint,
+           OLD.remote_response_id, OLD.recovery_evidence_id, OLD.identity_recovered_at,
+           OLD.verification_evidence_id, OLD.verification_observed_at,
+           OLD.verification_fingerprint, OLD.verification_platform,
+           OLD.verification_destination_id, OLD.verification_remote_object_id,
+           OLD.verification_parent_comment_id, OLD.verification_text_fingerprint,
+           OLD.verification_visible, OLD.error_code) THEN
+      RAISE EXCEPTION 'official response authorization refresh is invalid'
         USING ERRCODE = 'check_violation';
     END IF;
   ELSIF OLD.state = 'MUTATION_RESERVED' AND NEW.state IN ('VERIFY_PENDING','FAILED') THEN
@@ -403,6 +553,10 @@ BEGIN
        OR NEW.verification_visible IS NOT NULL
        OR (NEW.receipt_state IS NOT NULL
          AND NEW.receipt_fingerprint IS DISTINCT FROM expected_receipt)
+       OR (NEW.receipt_state = 'ACCEPTED' AND NEW.remote_response_id IS NULL)
+       OR (NEW.receipt_state IS NULL AND (
+         NEW.receipt_fingerprint IS NOT NULL OR NEW.remote_response_id IS NOT NULL
+       ))
        OR (NEW.state = 'FAILED' AND (
          NEW.remote_response_id IS NOT NULL OR NEW.receipt_state IS NOT NULL
          OR NEW.receipt_fingerprint IS NOT NULL OR NEW.error_code IS NULL
@@ -530,6 +684,20 @@ REVOKE EXECUTE ON FUNCTION guard_community_response_approval_immutable() FROM PU
 REVOKE EXECUTE ON FUNCTION require_community_official_response_insert() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION guard_community_official_response_update() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION guard_community_official_response_delete() FROM PUBLIC;
+
+GRANT USAGE ON SCHEMA public
+  TO flowx_community_approval_writer, flowx_community_response_runtime;
+GRANT SELECT ON community_response_approvals,
+  community_reply_draft_records, community_comment_versions,
+  publication_jobs, social_channels, brands, community_analysis_reports,
+  community_comments_current
+  TO flowx_community_approval_writer;
+GRANT SELECT ON community_response_approvals, community_reply_draft_records,
+  community_comment_versions, publication_jobs, social_channels, brands,
+  community_analysis_reports, community_comments_current
+  TO flowx_community_response_runtime;
+GRANT SELECT, INSERT, UPDATE ON community_official_responses
+  TO flowx_community_response_runtime;
 
 COMMENT ON TABLE community_response_approvals IS
   'Immutable reviewer/admin decisions over one exact inert reply draft; approval alone grants no provider authority.';

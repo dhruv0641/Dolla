@@ -95,6 +95,9 @@ class Store:
             self.claim_value = replace(self.claim_value, destination_id="other")
         return self.claim_value
 
+    async def refresh_mutation_authorization(self, claim, authorization):
+        return claim
+
     async def record_receipt(self, claim, receipt):
         self.receipt = receipt
         self.claim_value = replace(
@@ -127,11 +130,13 @@ class Transport:
     def __init__(self) -> None:
         self.create_calls = 0
         self.get_calls = 0
+        self.authorization_calls = 0
         self.raise_create = False
         self.authorization = ReplyAuthorization(
             PublicationPlatform.YOUTUBE, "UCchannel", (YOUTUBE_REPLY_SCOPE,),
             NOW - timedelta(seconds=10), NOW + timedelta(minutes=10),
         )
+        self.authorization_sequence = []
         self.receipt = ProviderResponseReceipt(
             ProviderMutationState.ACCEPTED, PublicationPlatform.YOUTUBE,
             "UCchannel", "video123", "comment123",
@@ -143,6 +148,9 @@ class Transport:
         )
 
     async def check_authorization(self, **kwargs):
+        self.authorization_calls += 1
+        if self.authorization_sequence:
+            return self.authorization_sequence.pop(0)
         return self.authorization
 
     async def create_response(self, **kwargs):
@@ -253,6 +261,7 @@ async def test_success_requires_reservation_and_independent_remote_proof():
     assert result.remote_response_id == "reply123"
     assert store.reserve_calls == 1
     assert transport.create_calls == 1
+    assert transport.authorization_calls == 2
     assert transport.get_calls == 1
     assert store.ready_calls == 3
 
@@ -275,6 +284,22 @@ async def test_insufficient_or_stale_authorization_fails_before_mutation():
     with pytest.raises(CommunityResponseError) as caught:
         await instance.respond(request, now=NOW)
     assert caught.value.code == "AUTHORIZATION_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_authorization_is_rechecked_after_reservation_before_mutation():
+    value, store, transport, instance = service()
+    approval = approval_request(value)
+    request = response_request(approval.approval_id)
+    install_claim(value, store, transport, request, approval)
+    revoked = replace(transport.authorization, granted_scopes=("youtube.readonly",))
+    transport.authorization_sequence = [transport.authorization, revoked]
+    with pytest.raises(CommunityResponseError) as caught:
+        await instance.respond(request, now=NOW)
+    assert caught.value.code == "AUTHORIZATION_INVALID"
+    assert store.reserve_calls == 1
+    assert transport.authorization_calls == 2
+    assert transport.create_calls == 0
 
 
 @pytest.mark.asyncio

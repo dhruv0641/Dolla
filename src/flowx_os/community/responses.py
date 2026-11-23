@@ -409,6 +409,9 @@ class CommunityResponseStore(Protocol):
     async def reserve_mutation(
         self, claim: OfficialResponseClaim, authorization: ReplyAuthorization,
     ) -> OfficialResponseClaim: ...
+    async def refresh_mutation_authorization(
+        self, claim: OfficialResponseClaim, authorization: ReplyAuthorization,
+    ) -> OfficialResponseClaim: ...
     async def record_receipt(
         self, claim: OfficialResponseClaim, receipt: ProviderResponseReceipt,
     ) -> OfficialResponseClaim: ...
@@ -524,6 +527,14 @@ class CommunityResponseService:
         prior_claim = claim
         claim = await self._store.reserve_mutation(claim, authorization)
         self._require_claim_transition(prior_claim, claim, ResponseState.MUTATION_RESERVED)
+        rechecked_authorization = await self._authorization(claim, now)
+        claim_after_recheck = await self._store.refresh_mutation_authorization(
+            claim, rechecked_authorization,
+        )
+        self._require_claim_transition(
+            claim, claim_after_recheck, ResponseState.MUTATION_RESERVED,
+        )
+        claim = claim_after_recheck
         await self._store.assert_network_ready(claim)
         try:
             receipt = await self._transport.create_response(
@@ -533,7 +544,7 @@ class CommunityResponseService:
                 parent_remote_comment_id=claim.remote_comment_id,
                 text=claim.draft_text,
                 idempotency_fingerprint=claim.request_fingerprint,
-                authorization_fingerprint=authorization.fingerprint,
+                authorization_fingerprint=rechecked_authorization.fingerprint,
             )
         except CommunityResponseError as exc:
             await self._store.record_transport_failure(claim, exc)
@@ -547,7 +558,7 @@ class CommunityResponseService:
             await self._store.record_transport_failure(claim, error)
             raise error from exc
         try:
-            self._require_receipt(claim, authorization, receipt)
+            self._require_receipt(claim, rechecked_authorization, receipt)
         except CommunityResponseError as exc:
             await self._store.record_transport_failure(claim, exc)
             raise
@@ -602,6 +613,7 @@ class CommunityResponseService:
             or not required_reply_scopes(claim.platform).issubset(authorization.granted_scopes)
             or authorization.checked_at > now
             or authorization.valid_until <= now
+            or authorization.valid_until < now + timedelta(seconds=30)
             or now - authorization.checked_at > timedelta(seconds=self._policy.maximum_authorization_age_seconds)
         ):
             raise CommunityResponseError("AUTHORIZATION_INVALID", "current official reply authorization is invalid")

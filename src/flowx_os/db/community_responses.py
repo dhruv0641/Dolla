@@ -51,8 +51,11 @@ def _receipt_fingerprint(receipt: ProviderResponseReceipt) -> str:
 
 
 class CommunityResponseRepository:
-    def __init__(self, pool: ConnectionPool) -> None:
+    def __init__(
+        self, pool: ConnectionPool, *, approval_pool: ConnectionPool | None = None,
+    ) -> None:
         self._pool = pool
+        self._approval_pool = approval_pool or pool
 
     async def load_approvable_draft(
         self, request: ResponseApprovalRequest,
@@ -60,7 +63,7 @@ class CommunityResponseRepository:
         if not isinstance(request, ResponseApprovalRequest):
             raise ValueError("response approval request is required")
         try:
-            async with unit_of_work(self._pool) as connection:
+            async with unit_of_work(self._approval_pool) as connection:
                 row = await self._draft_row(connection, request, lock=True)
                 if row is None:
                     raise CommunityResponseNotFound("owned current reply draft not found")
@@ -84,22 +87,14 @@ class CommunityResponseRepository:
         ):
             raise ValueError("response approval persistence identity is invalid")
         try:
-            async with unit_of_work(self._pool) as connection:
+            async with unit_of_work(self._approval_pool) as connection:
                 current = await self._draft_row(connection, request, lock=True)
                 if current is None or self._draft(current) != draft:
                     raise CommunityResponseConflict("reply draft changed before approval")
                 cursor = await connection.execute(
-                    """INSERT INTO community_response_approvals
-                      (approval_id, draft_request_id, owner_user_id, reviewer_user_id,
-                       reviewer_role, decision, reason, decided_at, valid_until,
-                       request_fingerprint, draft_fingerprint,
-                       draft_text_fingerprint, record_fingerprint)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT DO NOTHING
-                    RETURNING approval_id, draft_request_id, owner_user_id,
-                      reviewer_user_id, reviewer_role, decision, reason, decided_at,
-                      valid_until, request_fingerprint, draft_fingerprint,
-                      draft_text_fingerprint, record_fingerprint""",
+                    """SELECT * FROM record_community_response_approval(
+                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )""",
                     (
                         request.approval_id, request.draft_request_id,
                         request.owner_user_id, request.reviewer_user_id,
@@ -145,6 +140,26 @@ class CommunityResponseRepository:
                         raise CommunityResponseConflict("official response request conflicts")
                     return claim
                 cursor = await connection.execute(
+                    """SELECT d.publication_id
+                       FROM community_response_approvals AS a
+                       JOIN community_reply_draft_records AS d
+                         ON d.request_id = a.draft_request_id
+                       WHERE a.approval_id = %s AND a.owner_user_id = %s
+                         AND a.decision = 'APPROVE'
+                         AND a.valid_until > clock_timestamp()""",
+                    (request.approval_id, request.owner_user_id),
+                )
+                publication = await cursor.fetchone()
+                if publication is None:
+                    raise CommunityResponseNotFound("approved response evidence not found")
+                cursor = await connection.execute(
+                    """SELECT p.id FROM publication_jobs AS p
+                       WHERE p.id = %s FOR UPDATE""",
+                    (publication[0],),
+                )
+                if await cursor.fetchone() is None:
+                    raise CommunityResponseNotFound("approved publication not found")
+                cursor = await connection.execute(
                     """SELECT a.record_fingerprint, a.draft_fingerprint,
                               a.draft_text_fingerprint, d.draft_text,
                               d.publication_id, d.comment_version_id,
@@ -161,8 +176,7 @@ class CommunityResponseRepository:
                        WHERE a.approval_id = %s AND a.owner_user_id = %s
                          AND a.decision = 'APPROVE' AND a.valid_until > clock_timestamp()
                          AND b.owner_user_id = %s AND p.status = 'PUBLISHED'
-                         AND ch.enabled AND ch.permissions_status = 'VALID'
-                       FOR UPDATE OF p""",
+                         AND ch.enabled AND ch.permissions_status = 'VALID'""",
                     (request.approval_id, request.owner_user_id, request.owner_user_id),
                 )
                 evidence = await cursor.fetchone()
@@ -206,6 +220,13 @@ class CommunityResponseRepository:
         try:
             async with unit_of_work(self._pool) as connection:
                 cursor = await connection.execute(
+                    """SELECT p.id FROM publication_jobs AS p
+                       WHERE p.id = %s FOR UPDATE""",
+                    (claim.publication_id,),
+                )
+                if await cursor.fetchone() is None:
+                    raise CommunityResponseConflict("official response publication is unavailable")
+                cursor = await connection.execute(
                     """SELECT 1
                        FROM community_official_responses AS r
                        JOIN community_response_approvals AS a ON a.approval_id = r.approval_id
@@ -243,7 +264,12 @@ class CommunityResponseRepository:
                              )
                            )
                          )
-                       FOR UPDATE OF p""",
+                         AND (
+                           r.state <> 'MUTATION_RESERVED' OR (
+                             r.authorization_checked_at >= clock_timestamp() - interval '300 seconds'
+                             AND r.authorization_valid_until >= clock_timestamp() + interval '30 seconds'
+                           )
+                         )""",
                     (claim.request_id, claim.owner_user_id, claim.request_fingerprint, claim.state.value),
                 )
                 if await cursor.fetchone() is None:
@@ -285,6 +311,40 @@ class CommunityResponseRepository:
             raise
         except Exception as exc:
             raise RepositoryUnavailable("community response reservation is unavailable") from exc
+
+    async def refresh_mutation_authorization(
+        self, claim: OfficialResponseClaim, authorization: ReplyAuthorization,
+    ) -> OfficialResponseClaim:
+        if not isinstance(claim, OfficialResponseClaim) or not isinstance(authorization, ReplyAuthorization):
+            raise ValueError("official response authorization refresh is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    f"""UPDATE community_official_responses
+                        SET authorization_fingerprint = %s,
+                            authorization_scopes = %s,
+                            authorization_checked_at = %s,
+                            authorization_valid_until = %s
+                        WHERE request_id = %s AND owner_user_id = %s
+                          AND request_fingerprint = %s
+                          AND state = 'MUTATION_RESERVED'
+                          AND remote_response_id IS NULL
+                          AND receipt_state IS NULL
+                        RETURNING {_CLAIM_COLUMNS}""",
+                    (
+                        authorization.fingerprint, list(authorization.granted_scopes),
+                        authorization.checked_at, authorization.valid_until,
+                        claim.request_id, claim.owner_user_id, claim.request_fingerprint,
+                    ),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise CommunityResponseConflict("official response authorization refresh conflicts")
+                return self._claim(row)
+        except (CommunityResponseConflict, ValueError):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("community response authorization refresh is unavailable") from exc
 
     async def record_receipt(
         self, claim: OfficialResponseClaim, receipt: ProviderResponseReceipt,
