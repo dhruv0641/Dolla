@@ -200,8 +200,14 @@ class YouTubePublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
 
         connection = FakeConnection([(1,)])
         await YouTubePublicationRepository(FakePool(connection)).assert_network_ready(reserved)
-        self.assertIn("channel_external_id_snapshot", connection.calls[0][0])
-        self.assertIn("credentials_ref_snapshot", connection.calls[0][0])
+        query = connection.calls[0][0]
+        self.assertIn("channel_external_id_snapshot", query)
+        self.assertIn("credentials_ref_snapshot", query)
+        self.assertIn("JOIN publication_delivery_reservations AS dr", query)
+        self.assertIn("JOIN publication_delivery_approvals AS da", query)
+        self.assertIn("dr.scheduled_at_utc <= now()", query)
+        self.assertIn("dr.state = 'DISPATCH_RESERVED' OR da.valid_until > now()", query)
+        self.assertIn("pr.requires_human_review = true", query)
 
     async def test_operator_recovery_and_cancellation_are_owner_scoped(self):
         request = publication_request()

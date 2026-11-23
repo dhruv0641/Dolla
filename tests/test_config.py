@@ -19,6 +19,7 @@ class SettingsTests(unittest.TestCase):
         self.assertFalse(settings.instagram_publishing_enabled)
         self.assertFalse(settings.facebook_publishing_enabled)
         self.assertFalse(settings.platform_reconciliation_enabled)
+        self.assertFalse(settings.publication_scheduling_enabled)
 
     def test_secret_references_are_retained_as_references(self) -> None:
         settings = Settings.from_env(
@@ -75,6 +76,12 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(enabled.platform_reconciliation_enabled)
         with self.assertRaises(ConfigurationError):
             Settings.from_env({"FLOWX_PLATFORM_RECONCILIATION_ENABLED": "yes"})
+
+    def test_publication_scheduling_requires_explicit_boolean_enablement(self) -> None:
+        enabled = Settings.from_env({"FLOWX_PUBLICATION_SCHEDULING_ENABLED": "true"})
+        self.assertTrue(enabled.publication_scheduling_enabled)
+        with self.assertRaises(ConfigurationError):
+            Settings.from_env({"FLOWX_PUBLICATION_SCHEDULING_ENABLED": "yes"})
 
     def test_empty_storage_path_is_rejected(self) -> None:
         with self.assertRaisesRegex(ConfigurationError, "FLOWX_STORAGE_ROOT"):

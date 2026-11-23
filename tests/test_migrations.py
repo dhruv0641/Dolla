@@ -38,6 +38,22 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("publication_reconciliations_prevent_update", sql)
         self.assertIn("publication_reconciliations_prevent_delete", sql)
 
+    def test_publication_delivery_requires_exact_approval_and_atomic_reservation(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0022_publication_approval_schedule_duplicate_prevention.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE publication_delivery_approvals", sql)
+        self.assertIn("owner_user_id = approver_user_id", sql)
+        self.assertIn("publication delivery approvals are immutable", sql)
+        self.assertIn("CREATE TABLE publication_delivery_reservations", sql)
+        self.assertIn("UNIQUE (content_id, platform, channel_id, artifact_version)", sql)
+        self.assertIn("FOR UPDATE OF p, ch", sql)
+        self.assertIn("date_trunc('day', NEW.local_scheduled_at)", sql)
+        self.assertIn("current_remote_upload IS NOT NULL", sql)
+        self.assertIn("pr.requires_human_review = true", sql)
+        self.assertIn("reserve_due_publication_delivery", sql)
+        self.assertIn("state = 'DISPATCH_RESERVED', dispatch_reserved_at = now()", sql)
+        self.assertIn("publication_jobs_require_due_delivery", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")
