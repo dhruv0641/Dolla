@@ -67,12 +67,22 @@ def schedule_record(request):
 
 
 class FakeStore:
-    def __init__(self):
+    def __init__(self, *, existing_approval=None, existing_schedule=None):
         self.calls = []
+        self.existing_approval = existing_approval
+        self.existing_schedule = existing_schedule
+
+    async def get_approval(self, request):
+        self.calls.append(("get_approval", request))
+        return self.existing_approval
 
     async def record_approval(self, request):
         self.calls.append(("approve", request))
         return approval_record(request)
+
+    async def get_schedule(self, request):
+        self.calls.append(("get_schedule", request))
+        return self.existing_schedule
 
     async def schedule(self, request, *, now, policy):
         self.calls.append(("schedule", request, now, policy))
@@ -113,6 +123,14 @@ class PublicationSchedulingTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(first, second)
         self.assertEqual((first_offset, second_offset), (-240, -300))
 
+    def test_local_day_bounds_accept_midnight_dst_gap(self):
+        request = schedule_request(
+            local=datetime(2026, 4, 24, 12, 0), timezone_name="Africa/Cairo",
+        )
+        start, end = request.day_bounds_utc
+        self.assertEqual(start, datetime(2026, 4, 23, 22, 0, tzinfo=timezone.utc))
+        self.assertEqual(end, datetime(2026, 4, 24, 21, 0, tzinfo=timezone.utc))
+
     async def test_approval_is_explicit_owner_action_and_must_be_unexpired(self):
         with self.assertRaises(ValueError):
             PublicationApprovalRequest(
@@ -133,7 +151,7 @@ class PublicationSchedulingTests(unittest.IsolatedAsyncioTestCase):
             store=store, now=lambda: NOW,
         ).approve(request)
         self.assertEqual(result.approval_id, request.approval_id)
-        self.assertEqual(store.calls[0][0], "approve")
+        self.assertEqual([call[0] for call in store.calls], ["get_approval", "approve"])
 
     async def test_scheduling_is_disabled_by_default(self):
         store = FakeStore()
@@ -142,7 +160,7 @@ class PublicationSchedulingTests(unittest.IsolatedAsyncioTestCase):
                 store=store, now=lambda: NOW,
             ).schedule(schedule_request())
         self.assertEqual(caught.exception.code, "SCHEDULING_DISABLED")
-        self.assertEqual(store.calls, [])
+        self.assertEqual([call[0] for call in store.calls], ["get_schedule"])
 
     async def test_schedule_enforces_lead_and_horizon_before_storage(self):
         policy = PublicationSchedulePolicy(enabled=True)
@@ -157,7 +175,7 @@ class PublicationSchedulingTests(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(PublicationSchedulingError) as caught:
                     await service.schedule(schedule_request(local=local))
                 self.assertEqual(caught.exception.code, code)
-        self.assertEqual(store.calls, [])
+        self.assertEqual([call[0] for call in store.calls], ["get_schedule", "get_schedule"])
 
     async def test_enabled_schedule_passes_utc_and_bounded_policy_to_store(self):
         store = FakeStore()
@@ -169,9 +187,27 @@ class PublicationSchedulingTests(unittest.IsolatedAsyncioTestCase):
             store=store, policy=policy, now=lambda: NOW,
         ).schedule(request)
         self.assertEqual(result.scheduled_at_utc, request.scheduled_at_utc)
-        self.assertEqual(store.calls[0][0], "schedule")
-        self.assertEqual(store.calls[0][2], NOW)
-        self.assertIs(store.calls[0][3], policy)
+        self.assertEqual(store.calls[1][0], "schedule")
+        self.assertEqual(store.calls[1][2], NOW)
+        self.assertIs(store.calls[1][3], policy)
+
+    async def test_exact_replays_survive_expiry_lead_time_and_disablement(self):
+        approval = approval_request(valid_until=NOW + timedelta(minutes=1))
+        stored_approval = approval_record(approval)
+        approval_store = FakeStore(existing_approval=stored_approval)
+        replayed_approval = await PublicationSchedulingService(
+            store=approval_store, now=lambda: NOW + timedelta(days=2),
+        ).approve(approval)
+        self.assertIs(replayed_approval, stored_approval)
+
+        request = schedule_request(approval)
+        stored_schedule = schedule_record(request)
+        schedule_store = FakeStore(existing_schedule=stored_schedule)
+        replayed_schedule = await PublicationSchedulingService(
+            store=schedule_store, now=lambda: NOW + timedelta(days=30),
+        ).schedule(request)
+        self.assertIs(replayed_schedule, stored_schedule)
+        self.assertEqual([call[0] for call in schedule_store.calls], ["get_schedule"])
 
 
 if __name__ == "__main__":

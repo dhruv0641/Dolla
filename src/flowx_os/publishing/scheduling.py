@@ -90,13 +90,34 @@ def resolve_local_schedule(
 
 
 def local_day_bounds(local_day: date, timezone_name: str) -> tuple[datetime, datetime]:
-    start, _ = resolve_local_schedule(
-        datetime.combine(local_day, datetime.min.time()), timezone_name, None,
-    )
-    end, _ = resolve_local_schedule(
-        datetime.combine(local_day + timedelta(days=1), datetime.min.time()),
-        timezone_name, None,
-    )
+    def first_valid(value: datetime) -> datetime:
+        first_minute = None
+        for minute in range(2 * 24 * 60 + 1):
+            candidate = value + timedelta(minutes=minute)
+            try:
+                resolved, _ = resolve_local_schedule(candidate, timezone_name, 0)
+            except ValueError:
+                continue
+            first_minute = (candidate, resolved)
+            break
+        if first_minute is None:
+            raise ValueError("publication local-day boundary is unavailable")
+        candidate, resolved = first_minute
+        if candidate == value:
+            return resolved
+        previous = candidate - timedelta(minutes=1)
+        for second in range(1, 61):
+            exact = previous + timedelta(seconds=second)
+            try:
+                return resolve_local_schedule(exact, timezone_name, 0)[0]
+            except ValueError:
+                continue
+        return resolved
+
+    start = first_valid(datetime.combine(local_day, datetime.min.time()))
+    end = first_valid(datetime.combine(local_day + timedelta(days=1), datetime.min.time()))
+    if end <= start:
+        raise ValueError("publication local-day bounds are invalid")
     return start, end
 
 
@@ -268,9 +289,17 @@ class PublicationSchedulePolicy:
 
 
 class PublicationScheduleStore(Protocol):
+    async def get_approval(
+        self, request: PublicationApprovalRequest,
+    ) -> PublicationApprovalRecord | None: ...
+
     async def record_approval(
         self, request: PublicationApprovalRequest,
     ) -> PublicationApprovalRecord: ...
+
+    async def get_schedule(
+        self, request: PublicationScheduleRequest,
+    ) -> PublicationScheduleRecord | None: ...
 
     async def schedule(
         self, request: PublicationScheduleRequest, *, now: datetime,
@@ -293,6 +322,9 @@ class PublicationSchedulingService:
     ) -> PublicationApprovalRecord:
         if not isinstance(request, PublicationApprovalRequest):
             raise ValueError("publication approval request is required")
+        existing = await self._store.get_approval(request)
+        if existing is not None:
+            return existing
         now = self._now()
         if not _aware(now):
             raise PublicationSchedulingError("CLOCK_INVALID", "scheduler clock is invalid")
@@ -305,6 +337,9 @@ class PublicationSchedulingService:
     ) -> PublicationScheduleRecord:
         if not isinstance(request, PublicationScheduleRequest):
             raise ValueError("publication schedule request is required")
+        existing = await self._store.get_schedule(request)
+        if existing is not None:
+            return existing
         if not self._policy.enabled:
             raise PublicationSchedulingError("SCHEDULING_DISABLED", "publication scheduling is disabled")
         now = self._now()

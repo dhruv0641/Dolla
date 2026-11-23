@@ -19,6 +19,11 @@ from flowx_os.publishing.scheduling import (
     PublicationScheduleRequest,
     PublicationSchedulingError,
 )
+from flowx_os.workflow.dispatcher import LeasedJob
+from flowx_os.workflow.publication_dispatch import (
+    PublicationDispatchCommand,
+    PublicationDispatchEnvelope,
+)
 
 
 class PublicationScheduleNotFound(RuntimeError):
@@ -61,6 +66,99 @@ class PublicationScheduleRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self._pool = pool
 
+    async def get_approval(
+        self, request: PublicationApprovalRequest,
+    ) -> PublicationApprovalRecord | None:
+        if not isinstance(request, PublicationApprovalRequest):
+            raise ValueError("publication approval request is required")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                row = await self._find_approval_request(connection, request)
+                return self._approval_replay(row, request) if row is not None else None
+        except (PublicationScheduleConflict, ValueError):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("publication approval storage is unavailable") from exc
+
+    async def get_schedule(
+        self, request: PublicationScheduleRequest,
+    ) -> PublicationScheduleRecord | None:
+        if not isinstance(request, PublicationScheduleRequest):
+            raise ValueError("publication schedule request is required")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                row = await self._find_schedule_request(connection, request)
+                return self._schedule_replay(row, request) if row is not None else None
+        except (PublicationScheduleConflict, ValueError):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("publication schedule storage is unavailable") from exc
+
+    async def load_due_dispatch(
+        self, *, job: LeasedJob, envelope: PublicationDispatchEnvelope,
+    ) -> PublicationDispatchCommand:
+        if (not isinstance(job, LeasedJob)
+                or not isinstance(envelope, PublicationDispatchEnvelope)):
+            raise ValueError("publication dispatch evidence is invalid")
+        try:
+            async with unit_of_work(self._pool) as connection:
+                cursor = await connection.execute(
+                    """SELECT r.outbox_job_id, r.id, r.publication_id,
+                              r.owner_user_id, r.platform, r.state,
+                              r.scheduled_at_utc
+                       FROM publication_delivery_reservations AS r
+                       JOIN publication_delivery_approvals AS a
+                         ON a.id = r.approval_id AND a.publication_id = r.publication_id
+                       JOIN publication_jobs AS p ON p.id = r.publication_id
+                       JOIN social_channels AS ch ON ch.id = r.channel_id
+                       JOIN brands AS b ON b.id = ch.brand_id
+                       JOIN outbox_jobs AS o ON o.id = r.outbox_job_id
+                       WHERE r.id = %s AND r.publication_id = %s
+                         AND r.platform = %s AND r.outbox_job_id = %s
+                         AND o.event_name = 'publication.dispatch_due'
+                         AND o.correlation_id = r.publication_id
+                         AND o.status = 'LEASED' AND o.lease_owner = %s
+                         AND o.attempt_count = %s AND o.lease_until > now()
+                         AND r.scheduled_at_utc <= now()
+                         AND r.state IN ('SCHEDULED','DISPATCH_RESERVED')
+                         AND a.decision = 'APPROVE'
+                         AND (r.state = 'DISPATCH_RESERVED' OR a.valid_until > now())
+                         AND r.owner_user_id = b.owner_user_id
+                         AND r.content_id = p.content_id AND r.channel_id = p.channel_id
+                         AND r.asset_id = p.asset_id
+                         AND r.artifact_version = p.artifact_version
+                         AND r.destination_fingerprint = p.destination_fingerprint
+                         AND ch.platform = r.platform AND ch.enabled = true
+                         AND ch.permissions_status = 'VALID'
+                         AND ch.external_channel_id = p.channel_external_id_snapshot
+                         AND ch.credentials_ref = p.credentials_ref_snapshot
+                         AND NOT EXISTS (
+                           SELECT 1 FROM publication_reconciliations AS pr
+                           WHERE pr.publication_id = p.id
+                             AND pr.requires_human_review = true
+                         )
+                       FOR KEY SHARE OF r, a, p, ch, o""",
+                    (
+                        envelope.schedule_id, envelope.publication_id,
+                        envelope.platform.value, job.id, job.lease_owner,
+                        job.attempt_count,
+                    ),
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise PublicationScheduleNotAllowed(
+                        "publication dispatch is not due or current"
+                    )
+                return PublicationDispatchCommand(
+                    outbox_job_id=row[0], schedule_id=row[1], publication_id=row[2],
+                    owner_user_id=row[3], platform=PublicationPlatform(row[4]),
+                    state=PublicationDeliveryState(row[5]), scheduled_at_utc=row[6],
+                )
+        except (PublicationScheduleNotAllowed, ValueError):
+            raise
+        except Exception as exc:
+            raise RepositoryUnavailable("publication dispatch storage is unavailable") from exc
+
     async def record_approval(
         self, request: PublicationApprovalRequest,
     ) -> PublicationApprovalRecord:
@@ -70,16 +168,7 @@ class PublicationScheduleRepository:
             async with unit_of_work(self._pool) as connection:
                 existing = await self._find_approval_request(connection, request)
                 if existing is not None:
-                    record = self._approval(existing)
-                    if (record.approval_id != request.approval_id
-                            or record.publication_id != request.publication_id
-                            or record.decision is not request.decision
-                            or record.valid_until != request.valid_until
-                            or record.reason != request.reason):
-                        raise PublicationScheduleConflict(
-                            "approval request already identifies different work"
-                        )
-                    return record
+                    return self._approval_replay(existing, request)
                 cursor = await connection.execute(
                     _TARGET_SELECT + " FOR UPDATE OF p, ch",
                     (request.publication_id, request.owner_user_id),
@@ -132,26 +221,17 @@ class PublicationScheduleRepository:
             raise ValueError("publication schedule evidence is invalid")
         now_utc = now.astimezone(timezone.utc)
         scheduled = request.scheduled_at_utc
-        if (scheduled < now_utc + timedelta(seconds=policy.minimum_lead_seconds)
-                or scheduled > now_utc + timedelta(days=policy.maximum_horizon_days)):
-            raise PublicationSchedulingError(
-                "SCHEDULE_WINDOW_INVALID", "publication schedule is outside the allowed window",
-            )
         try:
             async with unit_of_work(self._pool) as connection:
                 existing = await self._find_schedule_request(connection, request)
                 if existing is not None:
-                    record = self._schedule(existing)
-                    if (record.schedule_id != request.schedule_id
-                            or record.publication_id != request.publication_id
-                            or record.approval_id != request.approval_id
-                            or record.local_scheduled_at != request.local_scheduled_at
-                            or record.timezone_name != request.timezone_name
-                            or record.fold != request.fold):
-                        raise PublicationScheduleConflict(
-                            "schedule request already identifies different work"
-                        )
-                    return record
+                    return self._schedule_replay(existing, request)
+                if (scheduled < now_utc + timedelta(seconds=policy.minimum_lead_seconds)
+                        or scheduled > now_utc + timedelta(days=policy.maximum_horizon_days)):
+                    raise PublicationSchedulingError(
+                        "SCHEDULE_WINDOW_INVALID",
+                        "publication schedule is outside the allowed window",
+                    )
                 cursor = await connection.execute(
                     _TARGET_SELECT + " FOR UPDATE OF p, ch",
                     (request.publication_id, request.owner_user_id),
@@ -331,6 +411,19 @@ class PublicationScheduleRepository:
         except Exception as exc:
             raise RepositoryUnavailable("stored publication approval is invalid") from exc
 
+    @classmethod
+    def _approval_replay(cls, row, request):
+        record = cls._approval(row)
+        if (record.approval_id != request.approval_id
+                or record.publication_id != request.publication_id
+                or record.decision is not request.decision
+                or record.valid_until != request.valid_until
+                or record.reason != request.reason):
+            raise PublicationScheduleConflict(
+                "approval request already identifies different work"
+            )
+        return record
+
     @staticmethod
     def _schedule(row):
         try:
@@ -346,3 +439,17 @@ class PublicationScheduleRepository:
             )
         except Exception as exc:
             raise RepositoryUnavailable("stored publication schedule is invalid") from exc
+
+    @classmethod
+    def _schedule_replay(cls, row, request):
+        record = cls._schedule(row)
+        if (record.schedule_id != request.schedule_id
+                or record.publication_id != request.publication_id
+                or record.approval_id != request.approval_id
+                or record.local_scheduled_at != request.local_scheduled_at
+                or record.timezone_name != request.timezone_name
+                or record.fold != request.fold):
+            raise PublicationScheduleConflict(
+                "schedule request already identifies different work"
+            )
+        return record

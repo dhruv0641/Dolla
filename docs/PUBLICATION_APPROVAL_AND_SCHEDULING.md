@@ -30,8 +30,12 @@ converts that pair once to UTC and persists all of the following evidence:
 Nonexistent daylight-saving times fail closed. Repeated times require the
 caller to choose fold 0 or 1. The default policy requires five minutes of lead
 time, limits schedules to 90 days ahead and three deliveries per channel/local
-day, and requires a four-hour channel gap. All bounds are validated in the
-domain service and again inside the locked database transaction.
+day, and requires a four-hour channel gap. Local-day bounds use the first valid
+civil instant when a timezone advances at midnight. All bounds are validated
+in the domain service and again inside the locked database transaction. Exact
+idempotent replays are loaded before moving clock/configuration gates, so a
+lost response can recover the immutable approval or schedule after expiry,
+lead time, or later disablement without creating new work.
 
 ## Atomic delivery reservation
 
@@ -51,16 +55,28 @@ workers therefore cannot both win the provider-call barrier. The repository
 readiness checks repeat these conditions before provider authorization is
 requested.
 
-The outbox event is `publication.dispatch_due`. TASK-061 defines and persists
-the event contract but does not install a live provider worker. Operators must
-not treat a scheduled reservation as a published post. A cancelled reservation
-cannot be dispatched, restored, or deleted; a new reviewed publication version
-and approval are required.
+The outbox event is `publication.dispatch_due`.
+`ScheduledPublicationDispatcher` is its executable consumer. It validates the
+strict event envelope, reloads the exact due reservation under the current
+outbox lease, selects only the matching platform executor, and acknowledges the
+job only after that executor returns. A deployment must inject the reviewed
+YouTube, Instagram, and Facebook executor adapters; none is silently configured
+and a missing executor dead-letters safely. Existing publisher state machines
+and the database transition trigger remain the idempotency fence across a crash
+between a provider outcome and outbox acknowledgement. Unknown outcomes are
+never retried blindly and require the platform recovery/reconciliation path.
+
+Operators must not treat a scheduled reservation as a published post. A
+cancelled reservation cannot be dispatched, restored, or deleted; a new
+reviewed publication version and approval are required.
 
 ## Failure and recovery
 
 - Reusing an idempotency key with different evidence is a conflict.
-- Expired, rejected, stale, cross-owner, or mismatched approvals fail closed.
+- Expired, rejected, stale, cross-owner, or mismatched approvals fail closed
+  before initial dispatch. Once the atomic transition reaches
+  `DISPATCH_RESERVED`, later expiry cannot block polling, verification, or
+  recovery of that already-started exact operation.
 - Daily-cap and minimum-gap violations fail before an outbox job is committed.
 - A changed channel, credential reference, destination, publication state, or
   unresolved reconciliation prevents dispatch.
@@ -72,7 +88,7 @@ and approval are required.
 
 Unit and repository-boundary tests use database fakes, and all migrations are
 parsed as PostgreSQL. Live PostgreSQL trigger ordering, transaction contention,
-outbox worker operation, OAuth, provider scheduling behavior, and public
-visibility are not verified. No account was connected and no upload,
+OAuth, concrete provider executor composition, provider scheduling behavior,
+and public visibility are not verified. No account was connected and no upload,
 publication, paid action, or public scheduling request was performed for this
 task.

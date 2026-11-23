@@ -459,7 +459,8 @@ class YouTubePublicationRepository:
                  AND dr.destination_fingerprint = p.destination_fingerprint
                  AND dr.state IN ('SCHEDULED','DISPATCH_RESERVED')
                  AND dr.scheduled_at_utc <= now()
-                 AND da.decision = 'APPROVE' AND da.valid_until > now()
+                 AND da.decision = 'APPROVE'
+                 AND (dr.state = 'DISPATCH_RESERVED' OR da.valid_until > now())
                  AND NOT EXISTS (
                    SELECT 1 FROM publication_reconciliations AS pr
                    WHERE pr.publication_id = p.id AND pr.requires_human_review = true

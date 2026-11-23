@@ -16,6 +16,8 @@ from flowx_os.publishing.scheduling import (
     PublicationScheduleRequest,
     PublicationSchedulingError,
 )
+from flowx_os.workflow.dispatcher import LeasedJob
+from flowx_os.workflow.publication_dispatch import PublicationDispatchEnvelope
 
 
 NOW = datetime(2026, 11, 23, 6, 0, tzinfo=timezone.utc)
@@ -101,6 +103,40 @@ def schedule_row(request, target, outbox_id):
 
 
 class PublicationScheduleRepositoryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_due_dispatch_requires_exact_current_lease_and_evidence(self):
+        publication_id = uuid4()
+        schedule_id = uuid4()
+        outbox_id = uuid4()
+        leased = LeasedJob(
+            id=outbox_id, event_name="publication.dispatch_due",
+            correlation_id=publication_id,
+            payload={
+                "schema_version": 1, "schedule_id": str(schedule_id),
+                "publication_id": str(publication_id), "platform": "YOUTUBE",
+            },
+            attempt_count=1, lease_owner="worker-1",
+            lease_until=NOW + timedelta(minutes=2), max_attempts=5,
+        )
+        envelope = PublicationDispatchEnvelope.from_job(leased)
+        connection = FakeConnection([(
+            outbox_id, schedule_id, publication_id, "owner-1", "YOUTUBE",
+            "SCHEDULED", NOW,
+        )])
+
+        result = await PublicationScheduleRepository(FakePool(connection)).load_due_dispatch(
+            job=leased, envelope=envelope,
+        )
+
+        self.assertEqual(result.outbox_job_id, outbox_id)
+        query, params = connection.calls[0]
+        self.assertIn("o.status = 'LEASED'", query)
+        self.assertIn("o.lease_until > now()", query)
+        self.assertIn("r.state = 'DISPATCH_RESERVED' OR a.valid_until > now()", query)
+        self.assertIn("pr.requires_human_review = true", query)
+        self.assertEqual(params, (
+            schedule_id, publication_id, "YOUTUBE", outbox_id, "worker-1", 1,
+        ))
+
     async def test_approval_locks_and_snapshots_exact_pristine_publication(self):
         request = approval_request()
         target = target_row(request)
@@ -179,6 +215,35 @@ class PublicationScheduleRepositoryTests(unittest.IsolatedAsyncioTestCase):
             ).schedule(
                 conflicting, now=NOW, policy=PublicationSchedulePolicy(enabled=True),
             )
+
+        replay_connection = FakeConnection([existing])
+        replayed = await PublicationScheduleRepository(
+            FakePool(replay_connection)
+        ).schedule(
+            request, now=NOW + timedelta(days=365),
+            policy=PublicationSchedulePolicy(enabled=True),
+        )
+        self.assertEqual(replayed.schedule_id, request.schedule_id)
+        self.assertEqual(len(replay_connection.calls), 1)
+
+    async def test_public_replay_lookups_are_owner_scoped_and_exact(self):
+        approval = approval_request()
+        target = target_row(approval)
+        approval_connection = FakeConnection([approval_row(approval, target)])
+        stored_approval = await PublicationScheduleRepository(
+            FakePool(approval_connection)
+        ).get_approval(approval)
+        self.assertEqual(stored_approval.approval_id, approval.approval_id)
+        self.assertIn("owner_user_id = %s", approval_connection.calls[0][0])
+
+        request = schedule_request(approval)
+        existing = schedule_row(request, target, uuid4())
+        schedule_connection = FakeConnection([existing])
+        stored_schedule = await PublicationScheduleRepository(
+            FakePool(schedule_connection)
+        ).get_schedule(request)
+        self.assertEqual(stored_schedule.schedule_id, request.schedule_id)
+        self.assertIn("owner_user_id = %s", schedule_connection.calls[0][0])
 
 
 if __name__ == "__main__":

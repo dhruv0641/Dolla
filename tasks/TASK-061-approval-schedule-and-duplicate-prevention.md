@@ -43,8 +43,9 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Migration `0022_publication_approval_schedule_duplicate_prevention.sql` stores immutable exact approvals and reservations, serializes channel limits, rejects stale/reconciled evidence, and atomically reserves the first provider mutation.
 - YouTube, Instagram, and Facebook readiness checks require the due approval/reservation and reject human-review reconciliation evidence before provider authorization.
 - `docs/PUBLICATION_APPROVAL_AND_SCHEDULING.md` records configuration, DST, idempotency, recovery, and live-verification limits.
-- Focused command covering all three publishers, reconciliation, scheduling, configuration, repositories, and migrations passed **141 tests**. All 23 migrations parse, `compileall`, diff hygiene, and the 76-node project validator pass.
-- No live PostgreSQL, OAuth, account, provider, upload, scheduling, publication, paid, or public action was performed. Exact-head independent review and the one final full suite remain pending.
+- Initial focused verification passed 141 tests. Independent Caveman review then rejected head `c1ebbc8` with four findings: no due-event consumer, invalid local-day bounds when midnight is skipped, moving-clock replay rejection, and approval expiry blocking already-reserved recovery.
+- Corrections add `ScheduledPublicationDispatcher`, exact leased reservation reload and injected platform executors; compute local-day boundaries from the first valid civil instant; load exact idempotent replays before moving gates; and apply approval expiry only before the atomic dispatch reservation. The expanded focused publishing/reconciliation/scheduling/workflow/configuration/migration gate passes **158 tests**. All 23 migrations parse, `compileall`, diff hygiene, and the 76-node project validator pass.
+- No live PostgreSQL, OAuth, account, concrete provider executor, upload, scheduling, publication, paid, or public action was performed. Exact correction-head independent re-review and the one final full suite remain pending.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

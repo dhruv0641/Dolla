@@ -171,6 +171,7 @@ class InstagramPublicationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("JOIN publication_delivery_reservations AS dr", query)
         self.assertIn("JOIN publication_delivery_approvals AS da", query)
         self.assertIn("dr.scheduled_at_utc <= now()", query)
+        self.assertIn("dr.state = 'DISPATCH_RESERVED' OR da.valid_until > now()", query)
         self.assertIn("pr.requires_human_review = true", query)
 
     async def test_container_and_publish_identities_have_separate_barriers(self):
