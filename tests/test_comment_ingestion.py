@@ -11,14 +11,26 @@ from flowx_os.community.comments import (
     CommentIngestionPolicy,
     CommentIngestionRequest,
     CommentIngestionTarget,
+    CommentReadAuthorization,
     CommentState,
     ProviderComment,
     ProviderCommentBatch,
+    YOUTUBE_COMMENT_READ_SCOPE,
 )
 from flowx_os.publishing.reconciliation import PublicationPlatform
 
 
 NOW = datetime.now(timezone.utc)
+
+
+def make_authorization(target):
+    return CommentReadAuthorization(
+        platform=target.platform,
+        destination_id=target.destination_id,
+        granted_scopes=(YOUTUBE_COMMENT_READ_SCOPE,),
+        checked_at=NOW,
+        valid_until=NOW + timedelta(hours=1),
+    )
 
 
 def make_request(*, page_index=1):
@@ -65,6 +77,7 @@ def make_comment(*, remote_id="comment_1", state=CommentState.ACTIVE, updated_at
 
 
 def make_provider_batch(request, target, **changes):
+    authorization = make_authorization(target)
     values = {
         "request_id": request.request_id,
         "sync_id": request.sync_id,
@@ -79,17 +92,21 @@ def make_provider_batch(request, target, **changes):
         "next_cursor": None,
         "observed_at": NOW,
         "evidence_id": "youtube:comments:etag-1",
+        "authorization_fingerprint": authorization.fingerprint,
     }
     values.update(changes)
     return ProviderCommentBatch(**values)
 
 
-def make_stored(request, target, provider_batch):
+def make_stored(request, target, provider_batch, authorization=None):
+    authorization = authorization or make_authorization(target)
     return CommentIngestionBatch(
         request_id=request.request_id,
         sync_id=request.sync_id,
         publication_id=request.publication_id,
         platform=target.platform,
+        destination_id=target.destination_id,
+        remote_object_id=target.remote_object_id,
         page_index=request.page_index,
         target_fingerprint=target.fingerprint,
         batch_fingerprint=provider_batch.fingerprint,
@@ -100,17 +117,24 @@ def make_stored(request, target, provider_batch):
         evidence_id=provider_batch.evidence_id,
         observed_at=provider_batch.observed_at,
         created_at=NOW,
+        authorization_fingerprint=authorization.fingerprint,
+        authorization_scopes=authorization.granted_scopes,
+        authorization_checked_at=authorization.checked_at,
+        authorization_valid_until=authorization.valid_until,
     )
 
 
 class FakeStore:
-    def __init__(self, target, *, existing=None, error=None):
+    def __init__(self, target, *, existing=None, error=None, network_error_at=None):
         self.target = target
         self.existing = existing
         self.error = error
         self.calls = []
         self.maximum_pages = None
         self.maximum_reconciliation_age_seconds = None
+        self.network_checks = []
+        self.failures = []
+        self.network_error_at = network_error_at
 
     async def get_existing(self, request):
         self.calls.append("existing")
@@ -118,6 +142,7 @@ class FakeStore:
 
     async def reserve(
         self, request, *, maximum_pages, maximum_reconciliation_age_seconds,
+        maximum_provider_attempts, reservation_lease_seconds,
     ):
         self.calls.append("reserve")
         self.maximum_pages = maximum_pages
@@ -126,19 +151,41 @@ class FakeStore:
             raise self.error
         return self.target
 
-    async def record(self, *, request, target, batch):
+    async def assert_network_ready(self, target):
+        self.network_checks.append(target)
+        if self.network_error_at == len(self.network_checks):
+            raise RuntimeError("authorization changed")
+
+    async def record_failure(self, *, request, target, error_code):
+        self.failures.append(error_code)
+
+    async def record(self, *, request, target, batch, authorization):
         self.calls.append("record")
-        return make_stored(request, target, batch)
+        return make_stored(request, target, batch, authorization)
 
 
 class FakeProvider:
-    def __init__(self, result=None, error=None):
+    def __init__(self, result=None, error=None, authorization=None, authorization_error=None):
         self.result = result
         self.error = error
+        self.authorization = authorization
+        self.authorization_error = authorization_error
         self.calls = []
 
+    async def check_authorization(self, **kwargs):
+        self.calls.append(("authorize", kwargs))
+        if self.authorization_error:
+            raise self.authorization_error
+        return self.authorization or CommentReadAuthorization(
+            platform=kwargs["platform"],
+            destination_id=kwargs["destination_id"],
+            granted_scopes=(YOUTUBE_COMMENT_READ_SCOPE,),
+            checked_at=NOW,
+            valid_until=NOW + timedelta(hours=1),
+        )
+
     async def fetch_comments(self, **kwargs):
-        self.calls.append(kwargs)
+        self.calls.append(("fetch", kwargs))
         if self.error:
             raise self.error
         return self.result
@@ -182,7 +229,9 @@ class AuthorizedCommentIngestionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(store.calls, ["existing", "reserve", "record"])
         self.assertEqual(store.maximum_pages, 9)
         self.assertEqual(store.maximum_reconciliation_age_seconds, 3_600)
-        call = provider.calls[0]
+        self.assertEqual([name for name, _ in provider.calls], ["authorize", "fetch"])
+        self.assertEqual(len(store.network_checks), 2)
+        call = provider.calls[1][1]
         self.assertEqual(call["credentials_ref"], target.credentials_ref)
         self.assertEqual(call["remote_object_id"], target.remote_object_id)
         self.assertEqual(call["cursor"], target.cursor)
@@ -213,6 +262,40 @@ class AuthorizedCommentIngestionTests(unittest.IsolatedAsyncioTestCase):
             ).ingest(request)
         self.assertEqual(caught.exception.code, "PROVIDER_UNAVAILABLE")
         self.assertNotIn("do-not-log", str(caught.exception))
+
+    async def test_comment_read_scope_and_final_network_recheck_are_required(self):
+        request = make_request()
+        target = make_target(request)
+        invalid = CommentReadAuthorization(
+            platform=target.platform,
+            destination_id=target.destination_id,
+            granted_scopes=("https://www.googleapis.com/auth/youtube.upload",),
+            checked_at=NOW,
+            valid_until=NOW + timedelta(hours=1),
+        )
+        store = FakeStore(target)
+        provider = FakeProvider(
+            make_provider_batch(request, target), authorization=invalid,
+        )
+        with self.assertRaises(CommentIngestionError) as caught:
+            await AuthorizedCommentIngestor(
+                store=store, provider=provider,
+                policy=CommentIngestionPolicy(enabled=True),
+            ).ingest(request)
+        self.assertEqual(caught.exception.code, "AUTHORIZATION_INVALID")
+        self.assertEqual([name for name, _ in provider.calls], ["authorize"])
+        self.assertEqual(store.failures, ["AUTHORIZATION_INVALID"])
+
+        store = FakeStore(target, network_error_at=2)
+        provider = FakeProvider(make_provider_batch(request, target))
+        with self.assertRaises(CommentIngestionError) as caught:
+            await AuthorizedCommentIngestor(
+                store=store, provider=provider,
+                policy=CommentIngestionPolicy(enabled=True),
+            ).ingest(request)
+        self.assertEqual(caught.exception.code, "NETWORK_NOT_READY")
+        self.assertEqual([name for name, _ in provider.calls], ["authorize"])
+        self.assertEqual(store.failures, ["NETWORK_NOT_READY"])
 
     async def test_every_echoed_identity_and_cursor_are_required(self):
         request = make_request()

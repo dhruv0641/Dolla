@@ -18,7 +18,7 @@ CREATE TABLE comment_ingestion_runs (
       AND next_cursor = btrim(next_cursor)
     )
   ),
-  status text NOT NULL CHECK (status IN ('ACTIVE','COMPLETE')),
+  status text NOT NULL CHECK (status IN ('ACTIVE','COMPLETE','ABANDONED')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CHECK (
@@ -26,7 +26,8 @@ CREATE TABLE comment_ingestion_runs (
       (last_page_index = 0 AND next_cursor IS NULL) OR
       (last_page_index > 0 AND next_cursor IS NOT NULL)
     )) OR
-    (status = 'COMPLETE' AND last_page_index > 0 AND next_cursor IS NULL)
+    (status = 'COMPLETE' AND last_page_index > 0 AND next_cursor IS NULL) OR
+    (status = 'ABANDONED' AND next_cursor IS NULL)
   )
 );
 
@@ -115,6 +116,16 @@ BEGIN
       AND p.status = 'PUBLISHED'
       AND ch.external_channel_id = p.channel_external_id_snapshot
       AND ch.credentials_ref = p.credentials_ref_snapshot
+      AND NOT EXISTS (
+        SELECT 1 FROM publication_reconciliations AS newer
+        WHERE newer.publication_id = p.id
+          AND newer.platform = ch.platform
+          AND (
+            newer.observed_at > r.observed_at OR
+            (newer.observed_at = r.observed_at
+             AND newer.request_id::text > r.request_id::text)
+          )
+      )
     FOR KEY SHARE OF p, ch;
 
   expected_target := expected_comment_ingestion_target(
@@ -159,14 +170,24 @@ CREATE TABLE comment_ingestion_attempts (
   target_fingerprint char(64) NOT NULL CHECK (target_fingerprint ~ '^[0-9a-f]{64}$'),
   page_index integer NOT NULL CHECK (page_index BETWEEN 1 AND 1000),
   cursor_fingerprint char(64) NOT NULL CHECK (cursor_fingerprint ~ '^[0-9a-f]{64}$'),
-  status text NOT NULL CHECK (status IN ('RESERVED','RECORDED')),
+  status text NOT NULL CHECK (status IN ('RESERVED','RECORDED','ABANDONED')),
+  attempt_count integer NOT NULL CHECK (attempt_count BETWEEN 1 AND 10),
+  lease_expires_at timestamptz,
+  last_error_code text CHECK (
+    last_error_code IS NULL OR last_error_code ~ '^[A-Z][A-Z0-9_]{0,63}$'
+  ),
   created_at timestamptz NOT NULL DEFAULT now(),
   recorded_at timestamptz,
+  abandoned_at timestamptz,
   UNIQUE (sync_id, page_index),
   UNIQUE (request_id, sync_id, publication_id),
   CHECK (
-    (status = 'RESERVED' AND recorded_at IS NULL) OR
-    (status = 'RECORDED' AND recorded_at IS NOT NULL)
+    (status = 'RESERVED' AND recorded_at IS NULL AND abandoned_at IS NULL
+      AND lease_expires_at IS NOT NULL) OR
+    (status = 'RECORDED' AND recorded_at IS NOT NULL AND abandoned_at IS NULL
+      AND lease_expires_at IS NULL) OR
+    (status = 'ABANDONED' AND recorded_at IS NULL AND abandoned_at IS NOT NULL
+      AND lease_expires_at IS NULL)
   )
 );
 
@@ -191,7 +212,10 @@ BEGIN
        OR NEW.page_index IS DISTINCT FROM run_value.last_page_index + 1
        OR NEW.cursor_fingerprint IS DISTINCT FROM expected_cursor
        OR run_value.status <> 'ACTIVE'
-       OR NEW.status <> 'RESERVED' OR NEW.recorded_at IS NOT NULL THEN
+       OR NEW.status <> 'RESERVED' OR NEW.attempt_count <> 1
+       OR NEW.lease_expires_at <= clock_timestamp()
+       OR NEW.last_error_code IS NOT NULL
+       OR NEW.recorded_at IS NOT NULL OR NEW.abandoned_at IS NOT NULL THEN
       RAISE EXCEPTION 'comment ingestion reservation is invalid'
         USING ERRCODE = 'check_violation';
     END IF;
@@ -204,11 +228,31 @@ BEGIN
      (OLD.request_id, OLD.sync_id, OLD.publication_id, OLD.owner_user_id,
       OLD.target_fingerprint, OLD.page_index, OLD.cursor_fingerprint,
       OLD.created_at)
-     OR OLD.status <> 'RESERVED' OR NEW.status <> 'RECORDED'
-     OR OLD.recorded_at IS NOT NULL OR NEW.recorded_at IS NULL
-     OR NOT EXISTS (
-       SELECT 1 FROM comment_ingestion_batches
-       WHERE request_id = NEW.request_id
+     OR OLD.status <> 'RESERVED' OR NOT (
+       (NEW.status = 'RESERVED'
+        AND NEW.recorded_at IS NULL AND NEW.abandoned_at IS NULL
+        AND NEW.lease_expires_at IS NOT NULL
+        AND (
+          (NEW.attempt_count = OLD.attempt_count
+           AND NEW.last_error_code IS NOT NULL
+           AND NEW.lease_expires_at <= clock_timestamp()) OR
+          (NEW.attempt_count = OLD.attempt_count + 1
+           AND NEW.last_error_code IS NULL
+           AND NEW.lease_expires_at > OLD.lease_expires_at)
+        )) OR
+       (NEW.status = 'RECORDED'
+        AND NEW.attempt_count = OLD.attempt_count
+        AND NEW.recorded_at IS NOT NULL AND NEW.abandoned_at IS NULL
+        AND NEW.lease_expires_at IS NULL
+        AND EXISTS (
+          SELECT 1 FROM comment_ingestion_batches
+          WHERE request_id = NEW.request_id
+        )) OR
+       (NEW.status = 'ABANDONED'
+        AND NEW.attempt_count = OLD.attempt_count
+        AND NEW.recorded_at IS NULL AND NEW.abandoned_at IS NOT NULL
+        AND NEW.lease_expires_at IS NULL
+        AND NEW.last_error_code = 'RETRY_LIMIT_REACHED')
      ) THEN
     RAISE EXCEPTION 'comment ingestion reservation transition is invalid'
       USING ERRCODE = 'check_violation';
@@ -243,6 +287,11 @@ CREATE TABLE comment_ingestion_batches (
     CHECK (provider_evidence_id ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$'),
   observed_at timestamptz NOT NULL,
   batch_fingerprint char(64) NOT NULL CHECK (batch_fingerprint ~ '^[0-9a-f]{64}$'),
+  authorization_fingerprint char(64) NOT NULL
+    CHECK (authorization_fingerprint ~ '^[0-9a-f]{64}$'),
+  authorization_scopes text[] NOT NULL,
+  authorization_checked_at timestamptz NOT NULL,
+  authorization_valid_until timestamptz NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (request_id, sync_id, publication_id)
     REFERENCES comment_ingestion_attempts(request_id, sync_id, publication_id),
@@ -250,7 +299,8 @@ CREATE TABLE comment_ingestion_batches (
   CHECK (
     cardinality(comment_remote_ids) = comment_count
     AND cardinality(comment_fingerprints) = comment_count
-  )
+  ),
+  CHECK (authorization_valid_until > authorization_checked_at)
 );
 
 CREATE FUNCTION require_comment_ingestion_batch() RETURNS trigger
@@ -264,6 +314,7 @@ DECLARE
   expected_batch text;
   fingerprint_value text;
   remote_id_value text;
+  expected_authorization text;
 BEGIN
   SELECT * INTO run_value FROM comment_ingestion_runs
     WHERE sync_id = NEW.sync_id FOR KEY SHARE;
@@ -278,7 +329,26 @@ BEGIN
       AND local_status = 'PUBLISHED'
       AND remote_state = 'PUBLISHED'
       AND verdict = 'IN_SYNC'
+      AND requires_human_review = false
       AND remote_object_id = NEW.remote_object_id;
+  IF EXISTS (
+    SELECT 1 FROM publication_reconciliations AS newer
+    WHERE newer.publication_id = NEW.publication_id
+      AND newer.platform = NEW.platform
+      AND (
+        newer.observed_at > (
+          SELECT observed_at FROM publication_reconciliations
+          WHERE request_id = run_value.reconciliation_request_id
+        ) OR
+        (newer.observed_at = (
+          SELECT observed_at FROM publication_reconciliations
+          WHERE request_id = run_value.reconciliation_request_id
+        ) AND newer.request_id::text > run_value.reconciliation_request_id::text)
+      )
+  ) THEN
+    RAISE EXCEPTION 'comment ingestion authorization is no longer current'
+      USING ERRCODE = 'check_violation';
+  END IF;
 
   SELECT expected_comment_ingestion_target(
     p.id, b.owner_user_id, ch.platform, p.publication_state_version,
@@ -321,7 +391,7 @@ BEGIN
     END IF;
   END LOOP;
   FOREACH remote_id_value IN ARRAY NEW.comment_remote_ids LOOP
-    IF remote_id_value !~ '^[A-Za-z0-9_-]{1,200}$' THEN
+    IF remote_id_value !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$' THEN
       RAISE EXCEPTION 'comment ingestion batch remote identity list is invalid'
         USING ERRCODE = 'check_violation';
     END IF;
@@ -343,7 +413,15 @@ BEGIN
     NEW.next_cursor_fingerprint,
     to_char(NEW.observed_at AT TIME ZONE 'UTC',
       'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
-    NEW.provider_evidence_id
+    NEW.provider_evidence_id, NEW.authorization_fingerprint
+  ), 'sha256'), 'hex');
+  expected_authorization := encode(digest(concat_ws('|',
+    NEW.platform, NEW.destination_id,
+    array_to_string(NEW.authorization_scopes, ','),
+    to_char(NEW.authorization_checked_at AT TIME ZONE 'UTC',
+      'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+    to_char(NEW.authorization_valid_until AT TIME ZONE 'UTC',
+      'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
   ), 'sha256'), 'hex');
 
   IF run_value.sync_id IS NULL OR attempt_value.request_id IS NULL
@@ -366,6 +444,31 @@ BEGIN
      OR NEW.has_more IS DISTINCT FROM
        (NEW.next_cursor_fingerprint <> encode(digest('', 'sha256'), 'hex'))
      OR NEW.batch_fingerprint IS DISTINCT FROM expected_batch
+     OR NEW.authorization_fingerprint IS DISTINCT FROM expected_authorization
+     OR NEW.authorization_scopes IS DISTINCT FROM ARRAY(
+       SELECT DISTINCT scope_value
+       FROM unnest(NEW.authorization_scopes) AS scope_value
+       ORDER BY scope_value
+     )
+     OR cardinality(NEW.authorization_scopes) = 0
+     OR EXISTS (
+       SELECT 1 FROM unnest(NEW.authorization_scopes) AS scope_value
+       WHERE scope_value !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'
+     )
+     OR (NEW.platform = 'YOUTUBE' AND NOT (
+       'https://www.googleapis.com/auth/youtube.readonly' = ANY(NEW.authorization_scopes)
+     ))
+     OR (NEW.platform = 'INSTAGRAM' AND NOT (
+       'instagram_business_basic' = ANY(NEW.authorization_scopes)
+       AND 'instagram_business_manage_comments' = ANY(NEW.authorization_scopes)
+     ))
+     OR (NEW.platform = 'FACEBOOK' AND NOT (
+       'pages_show_list' = ANY(NEW.authorization_scopes)
+       AND 'pages_read_engagement' = ANY(NEW.authorization_scopes)
+     ))
+     OR NEW.authorization_checked_at < clock_timestamp() - interval '1 hour'
+     OR NEW.authorization_checked_at > clock_timestamp() + interval '2 minutes'
+     OR NEW.authorization_valid_until <= clock_timestamp()
      OR NEW.observed_at < clock_timestamp() - interval '1 hour'
      OR NEW.observed_at > clock_timestamp() + interval '2 minutes' THEN
     RAISE EXCEPTION 'comment ingestion batch evidence is invalid'
@@ -403,14 +506,21 @@ CREATE TABLE community_comment_versions (
   platform text NOT NULL CHECK (platform IN ('YOUTUBE','INSTAGRAM','FACEBOOK')),
   destination_id text NOT NULL CHECK (destination_id ~ '^[A-Za-z0-9_-]{1,200}$'),
   remote_object_id text NOT NULL CHECK (remote_object_id ~ '^[A-Za-z0-9_-]{1,200}$'),
-  remote_comment_id text NOT NULL CHECK (remote_comment_id ~ '^[A-Za-z0-9_-]{1,200}$'),
+  remote_comment_id text NOT NULL
+    CHECK (remote_comment_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$'),
   parent_remote_comment_id text CHECK (
     parent_remote_comment_id IS NULL OR
-    parent_remote_comment_id ~ '^[A-Za-z0-9_-]{1,200}$'
+    parent_remote_comment_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$'
   ),
   author_external_id_hash char(64)
     CHECK (author_external_id_hash IS NULL OR author_external_id_hash ~ '^[0-9a-f]{64}$'),
-  comment_text text CHECK (comment_text IS NULL OR length(comment_text) BETWEEN 1 AND 10000),
+  comment_text text CHECK (
+    comment_text IS NULL OR (
+      length(comment_text) BETWEEN 1 AND 10000
+      AND replace(replace(replace(comment_text, E'\n', ''), E'\r', ''), E'\t', '')
+        !~ '[[:cntrl:]]'
+    )
+  ),
   state text NOT NULL CHECK (state IN ('ACTIVE','EDITED','DELETED')),
   published_at timestamptz NOT NULL,
   provider_updated_at timestamptz NOT NULL,
@@ -595,6 +705,25 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'comment ingestion runs are immutable'
       USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.status = 'ABANDONED' THEN
+    IF (NEW.sync_id, NEW.publication_id, NEW.owner_user_id, NEW.platform,
+        NEW.target_fingerprint, NEW.reconciliation_request_id,
+        NEW.last_page_index, NEW.created_at)
+       IS DISTINCT FROM
+       (OLD.sync_id, OLD.publication_id, OLD.owner_user_id, OLD.platform,
+        OLD.target_fingerprint, OLD.reconciliation_request_id,
+        OLD.last_page_index, OLD.created_at)
+       OR OLD.status <> 'ACTIVE' OR NEW.next_cursor IS NOT NULL
+       OR NEW.updated_at <= OLD.updated_at
+       OR NOT EXISTS (
+         SELECT 1 FROM comment_ingestion_attempts
+         WHERE sync_id = NEW.sync_id AND status = 'ABANDONED'
+       ) THEN
+      RAISE EXCEPTION 'comment ingestion run abandonment is invalid'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    RETURN NEW;
   END IF;
   SELECT * INTO batch_value FROM comment_ingestion_batches
     WHERE sync_id = NEW.sync_id AND page_index = NEW.last_page_index
