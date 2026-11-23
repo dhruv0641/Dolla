@@ -35,7 +35,7 @@ LANGUAGE sql STABLE AS $$
   JOIN render_jobs AS rj
     ON rj.content_id = c.id AND rj.render_version = p.artifact_version AND rj.status = 'DONE'
   JOIN render_job_artifacts AS rja
-    ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'FINAL_VIDEO'
+    ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'EXPORT_VARIANT'
   WHERE p.id = source_publication_id
     AND p.status = 'PUBLISHED' AND p.published_at IS NOT NULL;
 $$;
@@ -91,7 +91,7 @@ BEGIN
     JOIN render_jobs AS rj
       ON rj.content_id = c.id AND rj.render_version = p.artifact_version AND rj.status = 'DONE'
     JOIN render_job_artifacts AS rja
-      ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'FINAL_VIDEO'
+      ON rja.render_job_id = rj.id AND rja.asset_id = p.asset_id AND rja.artifact_role = 'EXPORT_VARIANT'
    WHERE p.id = NEW.publication_id AND p.status = 'PUBLISHED' AND p.published_at IS NOT NULL
    FOR SHARE OF p, c, b, ch, sv, rj, rja;
 

@@ -34,7 +34,7 @@ A descriptive report requires at least two eligible cohorts. Otherwise its statu
 
 ## Persistence and replay
 
-`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. Voice, Flow model and quoted-cost factors follow the exact final render's immutable input asset IDs, not the content item's current voice or currently approved scenes. Every included publication is stored as one typed metadata/metric pair. Deferred database validation requires those pairs to match the report exactly, recomputes group sizes, eligibility, medians and quartiles, and rejects a report with missing or substituted metric evidence. Database triggers also derive request/report fingerprints; updates and deletes are rejected.
+`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. The published `EXPORT_VARIANT` identifies its exact render job; voice, Flow model and quoted-cost factors follow only that job's immutable input asset IDs, not the content item's current voice or currently approved scenes. Every included publication is stored as one typed metadata/metric pair. Deferred database validation requires those pairs to match the report exactly, recomputes group sizes, eligibility, medians and quartiles, and rejects a report with missing or substituted metric evidence. Database triggers also derive request/report fingerprints; updates and deletes are rejected.
 
 ## Operational limits
 

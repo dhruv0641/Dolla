@@ -89,6 +89,8 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("CREATE FUNCTION creative_metadata_source_fingerprint", sql)
         self.assertIn("c.script_version", sql)
         self.assertIn("rja.asset_id = p.asset_id", sql)
+        self.assertEqual(sql.count("rja.artifact_role = 'EXPORT_VARIANT'"), 2)
+        self.assertNotIn("rja.artifact_role = 'FINAL_VIDEO'", sql)
         self.assertIn("rj.render_version = p.artifact_version", sql)
         self.assertIn("tts.asset_id::text IN", sql)
         self.assertIn("asset.id::text IN", sql)
