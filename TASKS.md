@@ -106,11 +106,11 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-063 Windowed snapshots and missing values** — DONE · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) closed · PR [#199](https://github.com/dhruv0641/Dolla/pull/199) merged to `develop` as `ca381a1`; 91 focused/607 full-suite tests, independent review, required checks and post-merge validation passed
 - **TASK-064 Creative metadata and cohort analysis** — DONE · Analytics Engineer · 6h · deps: TASK-063 · Issue [#201](https://github.com/dhruv0641/Dolla/issues/201) closed · PR [#202](https://github.com/dhruv0641/Dolla/pull/202) merged to `develop` as `c727f09`; 61 focused/619 full-suite tests, exact-head independent review, required checks and post-merge validation passed
 - **TASK-065 Evidence-backed recommendations and experiments** — DONE · Analytics Engineer · 8h · deps: TASK-064 · Issue [#204](https://github.com/dhruv0641/Dolla/issues/204) closed · PR [#205](https://github.com/dhruv0641/Dolla/pull/205) merged to `develop` as `83eabf4`; 45 focused/628 full-suite tests, independent review and required/post-merge checks passed
-- **TASK-066 Spend-aware approved feedback loop** — IN_REVIEW · Analytics Engineer · 12h · deps: TASK-065 · Issue [#207](https://github.com/dhruv0641/Dolla/issues/207) · Branch `feature/TASK-066-spend-aware-approved-feedback-loop`
+- **TASK-066 Spend-aware approved feedback loop** — DONE · Analytics Engineer · 12h · deps: TASK-065 · Issue [#207](https://github.com/dhruv0641/Dolla/issues/207) closed · PR [#208](https://github.com/dhruv0641/Dolla/pull/208) merged to `develop` as `af91b19`; 80 focused/639 full-suite tests, independent review and required/post-merge checks passed
 
 ## EPIC-14: Community Management
 
-- **TASK-067 Authorized comment ingestion** — BACKLOG · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060
+- **TASK-067 Authorized comment ingestion** — READY · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060
 - **TASK-068 Theme clustering and safety classification** — BACKLOG · Community Workflow Engineer · 6h · deps: TASK-067
 - **TASK-069 Draft replies and escalation** — BACKLOG · Community Workflow Engineer · 8h · deps: TASK-068
 - **TASK-070 Human approval and official responses** — BACKLOG · Community Workflow Engineer · 12h · deps: TASK-069
@@ -129,13 +129,13 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 70 (TASK-001 through TASK-065 and TASK-072 through TASK-076).
+- DONE: 71 (TASK-001 through TASK-066 and TASK-072 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 1 (TASK-066).
-- READY: 0.
+- IN_REVIEW: 0.
+- READY: 1 (TASK-067).
 - BLOCKED: 0.
-- BACKLOG: 5 (TASK-067 through TASK-071).
+- BACKLOG: 4 (TASK-068 through TASK-071).
 
 ## GitHub delivery references
 
