@@ -40,6 +40,20 @@ from flowx_os.analytics.metrics import (
     MissingValuePolicy,
     load_metric_registry,
 )
+from flowx_os.analytics.recommendations import (
+    AllocationStrategy,
+    AssociationDirection,
+    EvidenceBackedRecommendation,
+    ExperimentPlanner,
+    ExperimentProposal,
+    ExperimentProposalRequest,
+    ExperimentProposalStatus,
+    RecommendationEngine,
+    RecommendationError,
+    RecommendationRequest,
+    RecommendationStatus,
+    StopRule,
+)
 from flowx_os.analytics.snapshots import (
     SnapshotWindowState,
     SnapshotWindowView,
@@ -61,6 +75,11 @@ __all__ = [
     "PlatformMetricObservation", "StoredMetricObservation",
     "MetricDefinition", "MetricDefinitionError", "MetricKind",
     "MetricRegistry", "MetricUnit", "MissingValuePolicy", "load_metric_registry",
+    "AllocationStrategy", "AssociationDirection",
+    "EvidenceBackedRecommendation", "ExperimentPlanner", "ExperimentProposal",
+    "ExperimentProposalRequest", "ExperimentProposalStatus",
+    "RecommendationEngine", "RecommendationError", "RecommendationRequest",
+    "RecommendationStatus", "StopRule",
     "SnapshotWindowState", "SnapshotWindowView", "WindowedSnapshotCoordinator",
     "WindowedSnapshotPlan", "WindowedSnapshotSeries",
 ]

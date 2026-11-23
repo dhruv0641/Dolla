@@ -119,6 +119,35 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("BEFORE UPDATE OR DELETE ON cohort_analysis_reports", sql)
         self.assertIn("BEFORE UPDATE OR DELETE ON cohort_analysis_sources", sql)
 
+    def test_recommendations_and_experiments_are_evidence_bound_and_inert(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0026_evidence_recommendations_experiments.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE analytics_recommendations", sql)
+        self.assertIn("CREATE TABLE analytics_experiment_proposals", sql)
+        self.assertIn("cohort_analysis_request_report_identity", sql)
+        self.assertIn("report_status IS DISTINCT FROM 'DESCRIPTIVE'", sql)
+        self.assertIn("eligible_count < 2", sql)
+        self.assertIn("NEW.recommendation_data->'sources' IS DISTINCT FROM report_data->'sources'", sql)
+        self.assertIn("NEW.recommendation_data->'disclosed_cohorts' IS DISTINCT FROM report_data->'cohorts'", sql)
+        self.assertIn("DESCRIPTIVE_ASSOCIATION_ONLY_NOT_CAUSAL_NO_GUARANTEED_WINNER", sql)
+        self.assertIn("single_variable text NOT NULL", sql)
+        self.assertIn("CHECK (control_target_size = treatment_target_size)", sql)
+        self.assertIn("FIXED_SAMPLE_NO_EARLY_EFFICACY_STOP", sql)
+        self.assertIn("PAUSE_ON_UNKNOWN_AUTH_JOB_OR_SPEND_STATE", sql)
+        self.assertIn("NEW.proposal_data->'human_approval_required' IS DISTINCT FROM 'true'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'execution_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'generation_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'spend_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'account_connection_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'upload_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("NEW.proposal_data->'publishing_authorized' IS DISTINCT FROM 'false'::jsonb", sql)
+        self.assertIn("jsonb_object_keys(NEW.recommendation_data)) <> 25", sql)
+        self.assertIn("jsonb_object_keys(NEW.proposal_data)) <> 30", sql)
+        self.assertIn("recommendation and experiment evidence is immutable", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON analytics_recommendations", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON analytics_experiment_proposals", sql)
+        self.assertIn("Legacy unverified table", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")
