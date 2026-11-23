@@ -109,7 +109,7 @@ def record_row(value, exact, remote):
         exact.source.value, remote.observed_at, remote.evidence_id,
         REGISTRY.version, REGISTRY.fingerprint,
         [item.canonical() for item in remote.values],
-        exact.fingerprint, NOW,
+        exact.fingerprint, "c" * 64, NOW,
     )
 
 
@@ -168,7 +168,9 @@ class MetricObservationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(stored.observation.fingerprint, remote.fingerprint)
         insert_query, insert_params = connection.calls[3]
         self.assertIn("ON CONFLICT (request_id) DO NOTHING", insert_query)
+        self.assertEqual(insert_query.count("%s"), len(insert_params))
         self.assertNotIn(exact.credentials_ref, insert_params)
+        self.assertNotIn(remote.fingerprint, insert_params)
         self.assertIn("status = 'RECORDED'", connection.calls[4][0])
 
     async def test_changed_locked_target_and_changed_replay_conflict(self):

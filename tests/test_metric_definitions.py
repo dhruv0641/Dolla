@@ -1,6 +1,7 @@
 import copy
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -85,6 +86,28 @@ class MetricDefinitionTests(unittest.TestCase):
         self.assertEqual(
             load_metric_registry(self.write(payload)).fingerprint,
             self.registry.fingerprint,
+        )
+
+    def test_migration_registry_matches_checked_in_contract(self):
+        sql = (
+            Path(__file__).resolve().parents[1]
+            / "migrations" / "0023_platform_metric_observations.sql"
+        ).read_text(encoding="utf-8")
+        self.assertIn(self.registry.fingerprint, sql)
+        rows = {
+            metric_id: (platform, kind, unit)
+            for metric_id, platform, kind, unit in re.findall(
+                r"\('platform-metrics-v1','([^']+)','([^']+)','([^']+)','([^']+)'\)",
+                sql,
+            )
+        }
+        self.assertEqual(len(rows), len(self.registry.definitions))
+        self.assertEqual(
+            rows,
+            {
+                item.metric_id: (item.platform.value, item.kind.value, item.unit.value)
+                for item in self.registry.definitions
+            },
         )
 
     def test_unknown_fields_duplicates_and_cross_platform_inputs_fail_closed(self):

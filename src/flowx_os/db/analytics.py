@@ -58,12 +58,12 @@ _RECORD_COLUMNS = """o.request_id, o.publication_id, o.owner_user_id,
     o.platform, o.destination_id, o.remote_object_id, o.window_name,
     o.window_started_at, o.window_ended_at, o.source, o.observed_at,
     o.provider_evidence_id, o.registry_version, o.registry_fingerprint,
-    o.metric_data, o.target_fingerprint, o.created_at"""
+    o.metric_data, o.target_fingerprint, o.observation_fingerprint, o.created_at"""
 _RETURN_COLUMNS = """request_id, publication_id, owner_user_id,
     platform, destination_id, remote_object_id, window_name,
     window_started_at, window_ended_at, source, observed_at,
     provider_evidence_id, registry_version, registry_fingerprint,
-    metric_data, target_fingerprint, created_at"""
+    metric_data, target_fingerprint, observation_fingerprint, created_at"""
 
 
 class MetricObservationRepository:
@@ -246,10 +246,10 @@ class MetricObservationRepository:
                          window_started_at, window_ended_at, source,
                          registry_version, registry_fingerprint, metric_data,
                          collection_status, provider_evidence_id, observed_at,
-                         target_fingerprint, observation_fingerprint)
+                         target_fingerprint)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                %s, %s, %s, %s, %s, %s, %s, %s::jsonb,
-                               %s, %s, %s, %s, %s)
+                               %s, %s, %s, %s)
                        ON CONFLICT (request_id) DO NOTHING
                        RETURNING {_RETURN_COLUMNS}""",
                     (
@@ -265,7 +265,6 @@ class MetricObservationRepository:
                         target.registry_fingerprint, metric_data,
                         observation.status.value, observation.evidence_id,
                         observation.observed_at, target.fingerprint,
-                        observation.fingerprint,
                     ),
                 )
                 row = await cursor.fetchone()
@@ -446,7 +445,7 @@ class MetricObservationRepository:
                 destination_id, remote_object_id, window_name,
                 window_started_at, window_ended_at, source, observed_at,
                 evidence_id, registry_version, registry_fingerprint,
-                metric_data, target_fingerprint, created_at,
+                metric_data, target_fingerprint, storage_fingerprint, created_at,
             ) = row
             if isinstance(metric_data, str):
                 metric_data = json.loads(metric_data)
@@ -473,7 +472,8 @@ class MetricObservationRepository:
             )
             return StoredMetricObservation(
                 observation=observation, owner_user_id=owner_user_id,
-                target_fingerprint=target_fingerprint.strip(), created_at=created_at,
+                target_fingerprint=target_fingerprint.strip(),
+                storage_fingerprint=storage_fingerprint.strip(), created_at=created_at,
             )
         except Exception as exc:
             raise RepositoryUnavailable("stored metric observation is invalid") from exc

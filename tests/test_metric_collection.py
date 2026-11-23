@@ -83,7 +83,8 @@ def observation(
 def stored(value: MetricCollectionRequest, exact: MetricCollectionTarget) -> StoredMetricObservation:
     return StoredMetricObservation(
         observation=observation(value, exact), owner_user_id=value.owner_user_id,
-        target_fingerprint=exact.fingerprint, created_at=NOW,
+        target_fingerprint=exact.fingerprint, storage_fingerprint="c" * 64,
+        created_at=NOW,
     )
 
 
@@ -105,7 +106,8 @@ class FakeStore:
         self.calls.append(("record", request, target, observation, registry))
         return StoredMetricObservation(
             observation=observation, owner_user_id=request.owner_user_id,
-            target_fingerprint=target.fingerprint, created_at=NOW,
+            target_fingerprint=target.fingerprint, storage_fingerprint="c" * 64,
+            created_at=NOW,
         )
 
 
@@ -125,7 +127,8 @@ class FakeProvider:
 def collector(store, provider=None, *, enabled=True, now=NOW):
     return PlatformMetricCollector(
         store=store, provider=provider, registry=REGISTRY,
-        policy=MetricCollectionPolicy(enabled=enabled), now=lambda: now,
+        policy=MetricCollectionPolicy(enabled=enabled),
+        now=now if callable(now) else lambda: now,
     )
 
 
@@ -278,6 +281,18 @@ class MetricCollectionTests(unittest.IsolatedAsyncioTestCase):
                 await collector(FakeStore(exact=exact), FakeProvider(error=private)).collect(value)
             self.assertEqual(caught.exception.code, "PROVIDER_FAILURE")
             self.assertNotIn("private", str(caught.exception))
+
+    async def test_freshness_uses_clock_sampled_after_slow_provider(self):
+        value = request()
+        exact = target(value)
+        completed = NOW + timedelta(minutes=2)
+        samples = iter((NOW, completed))
+        result = await collector(
+            FakeStore(exact=exact),
+            FakeProvider(observation(value, exact, observed_at=completed)),
+            now=lambda: next(samples),
+        ).collect(value)
+        self.assertEqual(result.observation.observed_at, completed)
 
 
 if __name__ == "__main__":

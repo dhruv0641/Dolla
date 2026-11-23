@@ -1,5 +1,74 @@
 -- Immutable owner-scoped platform metric evidence. Provider reads remain disabled by default.
 
+CREATE TABLE analytics_metric_registries (
+  registry_version text PRIMARY KEY
+    CHECK (registry_version ~ '^[a-z][a-z0-9.-]{0,63}$'),
+  registry_fingerprint char(64) NOT NULL UNIQUE
+    CHECK (registry_fingerprint ~ '^[0-9a-f]{64}$'),
+  UNIQUE (registry_version, registry_fingerprint)
+);
+
+INSERT INTO analytics_metric_registries (registry_version, registry_fingerprint)
+VALUES (
+  'platform-metrics-v1',
+  'b994293e90e26358aa2ad15628be4a7b6fac7f53e035bf189b76c16452f6a7e5'
+);
+
+CREATE TABLE analytics_metric_definitions (
+  registry_version text NOT NULL REFERENCES analytics_metric_registries(registry_version),
+  metric_id text NOT NULL CHECK (
+    metric_id ~ '^(youtube|instagram|facebook)[.][a-z][a-z0-9_]{0,63}$'
+  ),
+  platform text NOT NULL CHECK (platform IN ('YOUTUBE','INSTAGRAM','FACEBOOK')),
+  metric_kind text NOT NULL CHECK (metric_kind IN ('RAW','DERIVED')),
+  metric_unit text NOT NULL CHECK (metric_unit IN (
+    'COUNT','SECONDS','MINUTES','MILLISECONDS','RATIO','STRUCTURED'
+  )),
+  PRIMARY KEY (registry_version, metric_id)
+);
+
+INSERT INTO analytics_metric_definitions
+  (registry_version, metric_id, platform, metric_kind, metric_unit)
+VALUES
+  ('platform-metrics-v1','youtube.views','YOUTUBE','RAW','COUNT'),
+  ('platform-metrics-v1','youtube.engaged_views','YOUTUBE','RAW','COUNT'),
+  ('platform-metrics-v1','youtube.watch_time_minutes','YOUTUBE','RAW','MINUTES'),
+  ('platform-metrics-v1','youtube.average_view_duration_seconds','YOUTUBE','RAW','SECONDS'),
+  ('platform-metrics-v1','youtube.likes','YOUTUBE','RAW','COUNT'),
+  ('platform-metrics-v1','youtube.comments','YOUTUBE','RAW','COUNT'),
+  ('platform-metrics-v1','youtube.shares','YOUTUBE','RAW','COUNT'),
+  ('platform-metrics-v1','youtube.engagement_rate_by_views','YOUTUBE','DERIVED','RATIO'),
+  ('platform-metrics-v1','instagram.total_views','INSTAGRAM','RAW','COUNT'),
+  ('platform-metrics-v1','instagram.likes','INSTAGRAM','RAW','COUNT'),
+  ('platform-metrics-v1','instagram.comments','INSTAGRAM','RAW','COUNT'),
+  ('platform-metrics-v1','instagram.shares','INSTAGRAM','RAW','COUNT'),
+  ('platform-metrics-v1','instagram.saves','INSTAGRAM','RAW','COUNT'),
+  ('platform-metrics-v1','instagram.engagement_rate_by_views','INSTAGRAM','DERIVED','RATIO'),
+  ('platform-metrics-v1','facebook.reel_initial_plays','FACEBOOK','RAW','COUNT'),
+  ('platform-metrics-v1','facebook.reel_total_plays','FACEBOOK','RAW','COUNT'),
+  ('platform-metrics-v1','facebook.reel_unique_impressions','FACEBOOK','RAW','COUNT'),
+  ('platform-metrics-v1','facebook.reel_average_watch_ms','FACEBOOK','RAW','MILLISECONDS'),
+  ('platform-metrics-v1','facebook.reel_watch_time_ms','FACEBOOK','RAW','MILLISECONDS'),
+  ('platform-metrics-v1','facebook.reel_follows','FACEBOOK','RAW','COUNT'),
+  ('platform-metrics-v1','facebook.reel_reactions','FACEBOOK','RAW','STRUCTURED'),
+  ('platform-metrics-v1','facebook.reel_social_actions','FACEBOOK','RAW','STRUCTURED');
+
+CREATE FUNCTION guard_analytics_metric_registry_immutable() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'analytics metric registry is immutable'
+    USING ERRCODE = 'check_violation';
+END;
+$$;
+
+CREATE TRIGGER analytics_metric_registries_immutable
+  BEFORE UPDATE OR DELETE ON analytics_metric_registries
+  FOR EACH ROW EXECUTE FUNCTION guard_analytics_metric_registry_immutable();
+
+CREATE TRIGGER analytics_metric_definitions_immutable
+  BEFORE UPDATE OR DELETE ON analytics_metric_definitions
+  FOR EACH ROW EXECUTE FUNCTION guard_analytics_metric_registry_immutable();
+
 CREATE TABLE analytics_metric_collection_attempts (
   request_id uuid PRIMARY KEY,
   publication_id uuid NOT NULL REFERENCES publication_jobs(id),
@@ -24,8 +93,43 @@ CREATE TABLE analytics_metric_collection_attempts (
   CHECK (
     (status = 'RESERVED' AND recorded_at IS NULL) OR
     (status = 'RECORDED' AND recorded_at IS NOT NULL)
-  )
+  ),
+  FOREIGN KEY (registry_version, registry_fingerprint)
+    REFERENCES analytics_metric_registries(registry_version, registry_fingerprint)
 );
+
+CREATE FUNCTION validate_analytics_metric_collection_attempt() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS (
+       SELECT 1 FROM jsonb_array_elements(NEW.metric_ids) AS item(value)
+       WHERE jsonb_typeof(value) <> 'string'
+          OR value #>> '{}' !~ '^(youtube|instagram|facebook)[.][a-z][a-z0-9_]{0,63}$'
+     )
+     OR (SELECT count(*) FROM jsonb_array_elements(NEW.metric_ids)) <>
+        (SELECT count(DISTINCT value #>> '{}') FROM jsonb_array_elements(NEW.metric_ids))
+     OR NEW.metric_ids IS DISTINCT FROM (
+       SELECT jsonb_agg(value ORDER BY value #>> '{}')
+       FROM jsonb_array_elements(NEW.metric_ids) AS item(value)
+     )
+     OR EXISTS (
+       SELECT 1
+       FROM jsonb_array_elements(NEW.metric_ids) AS item(value)
+       LEFT JOIN analytics_metric_definitions AS definition
+         ON definition.registry_version = NEW.registry_version
+        AND definition.metric_id = value #>> '{}'
+       WHERE definition.metric_id IS NULL OR definition.metric_kind <> 'RAW'
+     ) THEN
+    RAISE EXCEPTION 'analytics metric collection request is invalid'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER analytics_metric_collection_attempts_validate_insert
+  BEFORE INSERT ON analytics_metric_collection_attempts
+  FOR EACH ROW EXECUTE FUNCTION validate_analytics_metric_collection_attempt();
 
 CREATE FUNCTION guard_analytics_metric_collection_attempt() RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -234,6 +338,9 @@ BEGIN
        FROM jsonb_array_elements(NEW.metric_data) WITH ORDINALITY AS datum(value, n)
        JOIN jsonb_array_elements(attempt_metric_ids) WITH ORDINALITY AS metric(value, n)
          USING (n)
+       LEFT JOIN analytics_metric_definitions AS definition
+         ON definition.registry_version = NEW.registry_version
+        AND definition.metric_id = metric.value #>> '{}'
        WHERE CASE
          WHEN jsonb_typeof(datum.value) IS DISTINCT FROM 'object' THEN true
          ELSE
@@ -242,10 +349,40 @@ BEGIN
            ])
            OR (SELECT count(*) FROM jsonb_object_keys(datum.value)) <> 4
            OR datum.value->>'metric_id' IS DISTINCT FROM metric.value #>> '{}'
+           OR definition.metric_id IS NULL
+           OR definition.metric_kind <> 'RAW'
+           OR definition.platform <> NEW.platform
            OR datum.value->>'availability' NOT IN ('AVAILABLE','UNAVAILABLE')
            OR (datum.value->>'availability' = 'AVAILABLE' AND (
-                 jsonb_typeof(datum.value->'value') NOT IN ('number','object')
-                 OR datum.value->'unavailable_reason' <> 'null'::jsonb))
+                 datum.value->'unavailable_reason' <> 'null'::jsonb
+                 OR CASE
+                   WHEN definition.metric_unit = 'STRUCTURED' THEN
+                     CASE WHEN jsonb_typeof(datum.value->'value') = 'object' THEN
+                       (SELECT count(*) FROM jsonb_object_keys(datum.value->'value'))
+                         NOT BETWEEN 1 AND 100
+                       OR EXISTS (
+                         SELECT 1 FROM jsonb_each(datum.value->'value') AS component(key, value)
+                         WHERE key !~ '^[A-Za-z][A-Za-z0-9_.:-]{0,63}$'
+                            OR jsonb_typeof(value) <> 'number'
+                            OR CASE WHEN jsonb_typeof(value) = 'number' THEN
+                                 (value #>> '{}')::numeric < 0
+                                 OR (value #>> '{}')::numeric > 9223372036854775807
+                                 OR (value #>> '{}')::numeric <> trunc((value #>> '{}')::numeric)
+                               ELSE true END
+                       )
+                     ELSE true END
+                   WHEN definition.metric_unit IN (
+                     'COUNT','SECONDS','MINUTES','MILLISECONDS'
+                   ) THEN
+                     CASE WHEN jsonb_typeof(datum.value->'value') = 'number' THEN
+                       (datum.value->'value' #>> '{}')::numeric < 0
+                       OR (datum.value->'value' #>> '{}')::numeric > 9223372036854775807
+                       OR (definition.metric_unit = 'COUNT' AND
+                           (datum.value->'value' #>> '{}')::numeric <>
+                             trunc((datum.value->'value' #>> '{}')::numeric))
+                     ELSE true END
+                   ELSE true
+                 END))
            OR (datum.value->>'availability' = 'UNAVAILABLE' AND (
                  datum.value->'value' <> 'null'::jsonb
                  OR datum.value->>'unavailable_reason' NOT IN (
@@ -264,6 +401,11 @@ BEGIN
     RAISE EXCEPTION 'analytics metric observation evidence is invalid'
       USING ERRCODE = 'check_violation';
   END IF;
+  NEW.observation_fingerprint := encode(digest(concat_ws('|',
+    NEW.request_id::text, NEW.target_fingerprint, NEW.provider_evidence_id,
+    to_char(NEW.observed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+    NEW.metric_data::text
+  ), 'sha256'), 'hex');
   RETURN NEW;
 END;
 $$;

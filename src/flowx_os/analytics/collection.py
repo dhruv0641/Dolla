@@ -370,6 +370,7 @@ class StoredMetricObservation:
     observation: PlatformMetricObservation
     owner_user_id: str
     target_fingerprint: str
+    storage_fingerprint: str
     created_at: datetime
 
     def __post_init__(self) -> None:
@@ -377,6 +378,7 @@ class StoredMetricObservation:
             not isinstance(self.observation, PlatformMetricObservation)
             or _SAFE_OWNER.fullmatch(self.owner_user_id or "") is None
             or _HEX64.fullmatch(self.target_fingerprint or "") is None
+            or _HEX64.fullmatch(self.storage_fingerprint or "") is None
             or not _aware_utc(self.created_at)
         ):
             raise ValueError("stored metric observation is invalid")
@@ -458,10 +460,12 @@ class PlatformMetricCollector:
             return target_or_record
         target = target_or_record
         self._validate_target(request, target)
-        now = self._now()
-        if not _aware_utc(now):
+        before_provider = self._now()
+        if not _aware_utc(before_provider):
             raise AnalyticsCollectionError("CLOCK_INVALID", "analytics collection clock is invalid")
-        if now + timedelta(seconds=self._policy.maximum_clock_skew_seconds) < target.window_ended_at:
+        if before_provider + timedelta(
+            seconds=self._policy.maximum_clock_skew_seconds
+        ) < target.window_ended_at:
             raise AnalyticsCollectionError("WINDOW_NOT_READY", "analytics collection window is not complete")
         try:
             observation = await self._provider.collect(
@@ -483,7 +487,10 @@ class PlatformMetricCollector:
             raise AnalyticsCollectionError(
                 "PROVIDER_FAILURE", "analytics provider read failed",
             ) from exc
-        self._validate_observation(target, observation, now=now)
+        after_provider = self._now()
+        if not _aware_utc(after_provider) or after_provider < before_provider:
+            raise AnalyticsCollectionError("CLOCK_INVALID", "analytics collection clock is invalid")
+        self._validate_observation(target, observation, now=after_provider)
         return await self._store.record(
             request=request, target=target, observation=observation,
             registry=self._registry,

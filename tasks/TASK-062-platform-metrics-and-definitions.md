@@ -59,13 +59,20 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Added `FLOWX_PLATFORM_ANALYTICS_ENABLED=false`, operator documentation and
   official provider-definition references. No provider adapter, OAuth session,
   live read, account connection or external action was configured or invoked.
-- Focused verification: `python -m unittest -q
+- Focused verification after independent-review corrections: `python -m unittest -q
   tests.test_metric_definitions tests.test_metric_collection
   tests.test_metric_observation_repository tests.test_config
   tests.test_migrations tests.test_publication_reconciliation
-  tests.test_publication_reconciliation_repository` — 78 tests passed.
+  tests.test_publication_reconciliation_repository` — 80 tests passed.
   `python -m compileall -q src`, `git diff --check`, PostgreSQL parsing through
   the migration suite and `python scripts/validate_project_plan.py` also pass.
-- Remaining gate: independent exact-head review, then the single final full
+- Caveman rejected the first review head because database evidence did not yet
+  validate unit-specific JSON shapes or derive its fingerprint, and freshness
+  used the clock sampled before the provider call. The correction adds an
+  immutable database registry, raw/platform/unit validation for every datum,
+  bounded scalar and structured values, database-derived observation
+  fingerprints returned to the application, and a fresh post-provider clock
+  sample with a slow-provider regression.
+- Remaining gate: independent correction-head review, then the single final full
   suite and GitHub PR/CI. Production PostgreSQL and live provider behavior
   remain explicitly unverified.
