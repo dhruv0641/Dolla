@@ -47,7 +47,11 @@ def _bounded_untrusted_text(value: str | None, *, maximum: int) -> bool:
         isinstance(value, str)
         and 1 <= len(value) <= maximum
         and value.strip() == value
-        and not any(ord(character) < 32 and character not in "\n\r\t" for character in value)
+        and not any(
+            (ord(character) < 32 and character not in "\n\r\t")
+            or ord(character) == 127
+            for character in value
+        )
     )
 
 
@@ -135,6 +139,9 @@ class CommentIngestionRequest:
 
 @dataclass(frozen=True, slots=True)
 class CommentIngestionTarget:
+    reservation_request_id: UUID
+    reservation_sync_id: UUID
+    reservation_generation: int
     publication_id: UUID
     owner_user_id: str
     platform: PublicationPlatform
@@ -156,7 +163,11 @@ class CommentIngestionTarget:
     def __post_init__(self) -> None:
         expected_destination = _sha256(f"{self.destination_id}|{self.credentials_ref}")
         if (
-            not isinstance(self.publication_id, UUID)
+            not isinstance(self.reservation_request_id, UUID)
+            or not isinstance(self.reservation_sync_id, UUID)
+            or type(self.reservation_generation) is not int
+            or not 1 <= self.reservation_generation <= 10
+            or not isinstance(self.publication_id, UUID)
             or _SAFE_OWNER.fullmatch(self.owner_user_id or "") is None
             or not isinstance(self.platform, PublicationPlatform)
             or type(self.publication_state_version) is not int
@@ -587,6 +598,17 @@ class AuthorizedCommentIngestor:
                 reserved.code, "comment ingestion retry limit requires a new sync",
             )
         target = reserved
+        if (
+            not isinstance(target, CommentIngestionTarget)
+            or target.reservation_request_id != request.request_id
+            or target.reservation_sync_id != request.sync_id
+            or target.publication_id != request.publication_id
+            or target.owner_user_id != request.owner_user_id
+            or target.page_index != request.page_index
+        ):
+            raise CommentIngestionError(
+                "RESERVATION_INVALID", "comment ingestion reservation is invalid",
+            )
         authorization_now = datetime.now(timezone.utc)
         if (
             target.reconciliation_observed_at

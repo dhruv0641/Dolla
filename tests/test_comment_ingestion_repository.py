@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import hashlib
 import unittest
@@ -180,7 +181,10 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_reserved_request_is_not_read_from_provider_again(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         run = (
             request.publication_id,
             request.owner_user_id,
@@ -230,10 +234,56 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
             "INSERT INTO comment_ingestion" in query for query, _ in connection.calls
         ))
 
+    async def test_stale_worker_generation_is_fenced_from_network_failure_and_record(self):
+        request = make_request()
+        row = target_row(request)
+        stale = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
+        connection = FakeConnection([row, None])
+        with self.assertRaises(CommentIngestionConflict):
+            await CommentIngestionRepository(FakePool(connection)).assert_network_ready(stale)
+        self.assertIn("attempt_count = %s", connection.calls[1][0])
+        self.assertEqual(connection.calls[1][1][-1], 1)
+
+        connection = FakeConnection([None])
+        with self.assertRaises(CommentIngestionConflict):
+            await CommentIngestionRepository(FakePool(connection)).record_failure(
+                request=request, target=stale, error_code="PROVIDER_UNAVAILABLE",
+            )
+        self.assertIn("attempt_count = %s", connection.calls[0][0])
+        self.assertEqual(connection.calls[0][1][-1], 1)
+
+        batch = provider_batch(request, stale)
+        run = (
+            request.publication_id, request.owner_user_id, "YOUTUBE",
+            stale.fingerprint, stale.reconciliation_request_id, 0, None, "ACTIVE",
+        )
+        replacement_attempt = (
+            request.sync_id, request.publication_id, request.owner_user_id,
+            stale.fingerprint, 1, stale.cursor_fingerprint, "RESERVED", 2, True,
+        )
+        connection = FakeConnection([None, row, run, replacement_attempt])
+        with self.assertRaises(CommentIngestionConflict):
+            await CommentIngestionRepository(FakePool(connection)).record(
+                request=request,
+                target=stale,
+                batch=batch,
+                authorization=make_authorization(stale),
+            )
+        self.assertFalse(any(
+            "INSERT INTO comment_ingestion_batches" in query
+            for query, _ in connection.calls
+        ))
+
     async def test_expired_read_lease_retries_exact_request_and_abandons_at_bound(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         run = (
             request.publication_id,
             request.owner_user_id,
@@ -263,7 +313,7 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
             maximum_provider_attempts=3,
             reservation_lease_seconds=120,
         )
-        self.assertEqual(retried, target)
+        self.assertEqual(retried, replace(target, reservation_generation=2))
         self.assertIn("attempt_count = attempt_count + 1", connection.calls[-1][0])
 
         terminal_attempt = retry_attempt[:-2] + (3, True)
@@ -287,7 +337,10 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_record_persists_minimized_version_and_advances_run(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         batch = provider_batch(request, target)
         run = (
             request.publication_id,
@@ -307,6 +360,8 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
             1,
             target.cursor_fingerprint,
             "RESERVED",
+            1,
+            True,
         )
         returned = stored_row(request, target, batch)
         version_id = uuid4()
@@ -343,7 +398,10 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_record_rechecks_exact_target_before_writes(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         batch = provider_batch(request, target)
         changed = list(row)
         changed[3] = 4
@@ -361,7 +419,10 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_exact_overlapping_comment_version_is_linked_without_reinsert(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         batch = provider_batch(request, target)
         run = (
             request.publication_id,
@@ -381,6 +442,8 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
             1,
             target.cursor_fingerprint,
             "RESERVED",
+            1,
+            True,
         )
         version_id = uuid4()
         connection = FakeConnection([
@@ -413,7 +476,10 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_get_existing_is_owner_scoped(self):
         request = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         batch = provider_batch(request, target)
         connection = FakeConnection([stored_row(request, target, batch)])
         result = await CommentIngestionRepository(FakePool(connection)).get_existing(request)
@@ -424,9 +490,13 @@ class CommentIngestionRepositoryTests(unittest.IsolatedAsyncioTestCase):
         request = make_request()
         other = make_request()
         row = target_row(request)
-        target = CommentIngestionRepository._target(row, page_index=1, page_cursor=None)
+        target = CommentIngestionRepository._target(
+            row, request=request, page_index=1, page_cursor=None,
+            reservation_generation=1,
+        )
         forged = provider_batch(other, CommentIngestionRepository._target(
-            target_row(other), page_index=1, page_cursor=None,
+            target_row(other), request=other, page_index=1, page_cursor=None,
+            reservation_generation=1,
         ))
         connection = FakeConnection()
         with self.assertRaises(ValueError):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from flowx_os.community.comments import (
@@ -187,7 +188,13 @@ class CommentIngestionRepository:
                         )
                     if request.page_index != 1:
                         raise CommentIngestionConflict("a comment sync must start at page one")
-                    target = self._target(target_row, page_index=1, page_cursor=None)
+                    target = self._target(
+                        target_row,
+                        request=request,
+                        page_index=1,
+                        page_cursor=None,
+                        reservation_generation=1,
+                    )
                     cursor = await connection.execute(
                         """INSERT INTO comment_ingestion_runs
                              (sync_id, publication_id, owner_user_id, platform,
@@ -218,7 +225,11 @@ class CommentIngestionRepository:
                         run_status,
                     ) = run
                     target = self._target(
-                        target_row, page_index=request.page_index, page_cursor=next_cursor,
+                        target_row,
+                        request=request,
+                        page_index=request.page_index,
+                        page_cursor=next_cursor,
+                        reservation_generation=1,
                     )
                     if (
                         run_publication != request.publication_id
@@ -269,6 +280,7 @@ class CommentIngestionRepository:
                         attempt_count,
                         lease_expired,
                     ) = attempt
+                    target = replace(target, reservation_generation=attempt_count)
                     if (
                         attempt_sync != request.sync_id
                         or attempt_publication != request.publication_id
@@ -341,7 +353,9 @@ class CommentIngestionRepository:
                         raise CommentIngestionConflict(
                             "comment ingestion retry could not be leased"
                         )
-                    return target
+                    return replace(
+                        target, reservation_generation=attempt_count + 1,
+                    )
 
                 cursor = await connection.execute(
                     """SELECT request_id
@@ -399,11 +413,46 @@ class CommentIngestionRepository:
                         "comment ingestion authorization is not ready"
                     )
                 current = self._target(
-                    row, page_index=target.page_index, page_cursor=target.cursor,
+                    row,
+                    request=CommentIngestionRequest(
+                        request_id=target.reservation_request_id,
+                        sync_id=target.reservation_sync_id,
+                        publication_id=target.publication_id,
+                        owner_user_id=target.owner_user_id,
+                        page_index=target.page_index,
+                    ),
+                    page_index=target.page_index,
+                    page_cursor=target.cursor,
+                    reservation_generation=target.reservation_generation,
                 )
                 if current != target:
                     raise CommentIngestionConflict(
                         "comment ingestion authorization changed"
+                    )
+                cursor = await connection.execute(
+                    """SELECT request_id
+                       FROM comment_ingestion_attempts
+                       WHERE request_id = %s AND sync_id = %s
+                         AND publication_id = %s AND owner_user_id = %s
+                         AND target_fingerprint = %s AND page_index = %s
+                         AND cursor_fingerprint = %s AND status = 'RESERVED'
+                         AND attempt_count = %s
+                         AND lease_expires_at > clock_timestamp()
+                       FOR KEY SHARE""",
+                    (
+                        target.reservation_request_id,
+                        target.reservation_sync_id,
+                        target.publication_id,
+                        target.owner_user_id,
+                        target.fingerprint,
+                        target.page_index,
+                        target.cursor_fingerprint,
+                        target.reservation_generation,
+                    ),
+                )
+                if await cursor.fetchone() is None:
+                    raise CommentIngestionConflict(
+                        "comment ingestion lease changed"
                     )
         except (
             CommentIngestionConflict,
@@ -424,6 +473,8 @@ class CommentIngestionRepository:
         if (
             not isinstance(request, CommentIngestionRequest)
             or not isinstance(target, CommentIngestionTarget)
+            or target.reservation_request_id != request.request_id
+            or target.reservation_sync_id != request.sync_id
             or not isinstance(error_code, str)
             or not error_code
             or len(error_code) > 64
@@ -441,6 +492,8 @@ class CommentIngestionRepository:
                          AND publication_id = %s AND owner_user_id = %s
                          AND target_fingerprint = %s
                          AND page_index = %s AND status = 'RESERVED'
+                         AND attempt_count = %s
+                         AND lease_expires_at > clock_timestamp()
                        RETURNING request_id""",
                     (
                         error_code,
@@ -450,6 +503,7 @@ class CommentIngestionRepository:
                         request.owner_user_id,
                         target.fingerprint,
                         request.page_index,
+                        target.reservation_generation,
                     ),
                 )
                 if await cursor.fetchone() is None:
@@ -484,7 +538,11 @@ class CommentIngestionRepository:
                 if current_row is None:
                     raise CommentIngestionNotFound("eligible publication not found")
                 current = self._target(
-                    current_row, page_index=target.page_index, page_cursor=target.cursor,
+                    current_row,
+                    request=request,
+                    page_index=target.page_index,
+                    page_cursor=target.cursor,
+                    reservation_generation=target.reservation_generation,
                 )
                 if current != target:
                     raise CommentIngestionConflict(
@@ -517,7 +575,9 @@ class CommentIngestionRepository:
 
                 cursor = await connection.execute(
                     """SELECT sync_id, publication_id, owner_user_id,
-                              target_fingerprint, page_index, cursor_fingerprint, status
+                              target_fingerprint, page_index, cursor_fingerprint,
+                              status, attempt_count,
+                              lease_expires_at > clock_timestamp() AS lease_current
                        FROM comment_ingestion_attempts
                        WHERE request_id = %s
                        FOR UPDATE""",
@@ -534,6 +594,8 @@ class CommentIngestionRepository:
                     or attempt[4] != request.page_index
                     or attempt[5].strip() != target.cursor_fingerprint
                     or attempt[6] != "RESERVED"
+                    or attempt[7] != target.reservation_generation
+                    or attempt[8] is not True
                 ):
                     raise CommentIngestionConflict("comment ingestion reservation changed")
 
@@ -762,6 +824,8 @@ class CommentIngestionRepository:
         if (
             target.publication_id != request.publication_id
             or target.owner_user_id != request.owner_user_id
+            or target.reservation_request_id != request.request_id
+            or target.reservation_sync_id != request.sync_id
             or target.page_index != request.page_index
             or batch.request_id != request.request_id
             or batch.sync_id != request.sync_id
@@ -778,7 +842,14 @@ class CommentIngestionRepository:
             raise ValueError("comment ingestion evidence identity is invalid")
 
     @staticmethod
-    def _target(row, *, page_index: int, page_cursor: str | None) -> CommentIngestionTarget:
+    def _target(
+        row,
+        *,
+        request: CommentIngestionRequest,
+        page_index: int,
+        page_cursor: str | None,
+        reservation_generation: int,
+    ) -> CommentIngestionTarget:
         try:
             (
                 publication_id,
@@ -798,6 +869,9 @@ class CommentIngestionRepository:
                 reconciliation_observed_at,
             ) = row
             return CommentIngestionTarget(
+                reservation_request_id=request.request_id,
+                reservation_sync_id=request.sync_id,
+                reservation_generation=reservation_generation,
                 publication_id=publication_id,
                 owner_user_id=owner_user_id,
                 platform=PublicationPlatform(platform),

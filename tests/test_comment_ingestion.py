@@ -41,6 +41,9 @@ def make_target(request, *, cursor=None, reconciled_at=NOW):
     credentials = "secretref://os/youtube-owner-1"
     destination = "channel_1"
     return CommentIngestionTarget(
+        reservation_request_id=request.request_id,
+        reservation_sync_id=request.sync_id,
+        reservation_generation=1,
         publication_id=request.publication_id,
         owner_user_id=request.owner_user_id,
         platform=PublicationPlatform.YOUTUBE,
@@ -363,6 +366,8 @@ class AuthorizedCommentIngestionTests(unittest.IsolatedAsyncioTestCase):
             replace(deleted, text="retained deleted content")
         with self.assertRaises(ValueError):
             replace(active, text="\x00provider instruction")
+        with self.assertRaises(ValueError):
+            replace(active, text="provider instruction\x7f")
 
     def test_batch_rejects_duplicates_and_requires_cursor_state_consistency(self):
         request = make_request()
