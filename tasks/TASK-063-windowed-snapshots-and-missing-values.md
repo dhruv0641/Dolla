@@ -69,3 +69,9 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   consistent Instagram identity paired with YouTube metric IDs. Series assembly
   now binds the observation platform and every raw datum to the plan's registry
   platform/unit contract; the exact cross-platform forgery is a regression test.
+- Caveman accepted exact correction head
+  `511c132d323f32539f5a667360a1cddfd974ec05` with no critical/P1/P2
+  findings after independently verifying the forgery and fractional COUNT fail,
+  all five windows, readiness, uniqueness, replay and missing-value behavior.
+- The single final full suite passed all 607 tests. Remaining gate: GitHub
+  PR/required CI and protected-branch merge.
