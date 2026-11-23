@@ -12,6 +12,8 @@ from flowx_os.publishing.reconciliation import (
     PublicationReconciliationTarget,
     ReconciliationVerdict,
     RemotePublicationState,
+    PlatformReconciliationError,
+    classify_publication_state,
 )
 
 
@@ -80,22 +82,92 @@ class PublicationReconciliationRepository:
         except Exception as exc:
             raise RepositoryUnavailable("publication reconciliation storage is unavailable") from exc
 
-    async def load_target(
-        self, request: PlatformReconciliationRequest,
-    ) -> PublicationReconciliationTarget:
+    async def reserve(
+        self, request: PlatformReconciliationRequest, *, maximum_attempts: int,
+    ) -> PublicationReconciliationTarget | PublicationReconciliationRecord:
         if not isinstance(request, PlatformReconciliationRequest):
             raise ValueError("platform reconciliation request is required")
+        if type(maximum_attempts) is not int or not 1 <= maximum_attempts <= 1_000:
+            raise ValueError("platform reconciliation attempt bound is invalid")
         try:
             async with unit_of_work(self._pool) as connection:
                 cursor = await connection.execute(
-                    _TARGET_SELECT + " FOR KEY SHARE OF p, ch", 
+                    _TARGET_SELECT + " FOR UPDATE OF p",
                     (request.publication_id, request.owner_user_id),
                 )
                 row = await cursor.fetchone()
                 if row is None:
                     raise PublicationReconciliationNotFound("publication not found")
-                return self._target(row)
-        except (PublicationReconciliationNotFound, ValueError):
+                target = self._target(row)
+                if target.remote_object_id is None:
+                    raise PlatformReconciliationError(
+                        "REMOTE_ID_UNAVAILABLE", "exact remote publication identity is unavailable",
+                    )
+                cursor = await connection.execute(
+                    """SELECT publication_id, owner_user_id, target_fingerprint,
+                              attempt_index, status
+                       FROM publication_reconciliation_attempts
+                       WHERE request_id = %s
+                       FOR UPDATE""",
+                    (request.request_id,),
+                )
+                attempt = await cursor.fetchone()
+                if attempt is not None:
+                    publication_id, owner_user_id, fingerprint, _, status = attempt
+                    if (publication_id != request.publication_id
+                            or owner_user_id != request.owner_user_id
+                            or fingerprint.strip() != target.fingerprint):
+                        raise PublicationReconciliationConflict(
+                            "reconciliation request already identifies different work"
+                        )
+                    if status == "RECORDED":
+                        existing = await self._find_existing(connection, request)
+                        if existing is None:
+                            raise RepositoryUnavailable(
+                                "recorded reconciliation evidence is unavailable"
+                            )
+                        return self._record(existing)
+                    raise PlatformReconciliationError(
+                        "REQUEST_OUTCOME_UNKNOWN",
+                        "reconciliation request is already reserved and requires operator review",
+                    )
+                cursor = await connection.execute(
+                    """SELECT count(*)
+                       FROM publication_reconciliation_attempts
+                       WHERE publication_id = %s""",
+                    (request.publication_id,),
+                )
+                count_row = await cursor.fetchone()
+                attempt_count = count_row[0] if count_row is not None else 0
+                if type(attempt_count) is not int or attempt_count < 0:
+                    raise RepositoryUnavailable("stored reconciliation attempt count is invalid")
+                if attempt_count >= maximum_attempts:
+                    raise PlatformReconciliationError(
+                        "OBSERVATION_LIMIT_REACHED",
+                        "platform observation limit requires operator review",
+                    )
+                cursor = await connection.execute(
+                    """INSERT INTO publication_reconciliation_attempts
+                         (request_id, publication_id, owner_user_id,
+                          target_fingerprint, attempt_index, status)
+                       VALUES (%s, %s, %s, %s, %s, 'RESERVED')
+                       RETURNING request_id""",
+                    (
+                        request.request_id, request.publication_id,
+                        request.owner_user_id, target.fingerprint, attempt_count + 1,
+                    ),
+                )
+                if await cursor.fetchone() is None:
+                    raise PublicationReconciliationConflict(
+                        "reconciliation request could not be reserved"
+                    )
+                return target
+        except (
+            PlatformReconciliationError,
+            PublicationReconciliationConflict,
+            PublicationReconciliationNotFound,
+            ValueError,
+        ):
             raise
         except Exception as exc:
             raise RepositoryUnavailable("publication reconciliation storage is unavailable") from exc
@@ -111,6 +183,17 @@ class PublicationReconciliationRepository:
                 or not isinstance(observation, PlatformPublicationObservation)
                 or not isinstance(verdict, ReconciliationVerdict)):
             raise ValueError("platform reconciliation evidence is invalid")
+        if (target.publication_id != request.publication_id
+                or target.owner_user_id != request.owner_user_id
+                or observation.request_id != request.request_id
+                or observation.publication_id != target.publication_id
+                or observation.platform is not target.platform
+                or observation.destination_id != target.destination_id
+                or observation.remote_object_id != target.remote_object_id
+                or verdict is not classify_publication_state(
+                    target.local_status, observation.state,
+                )):
+            raise ValueError("platform reconciliation evidence identity is invalid")
         try:
             async with unit_of_work(self._pool) as connection:
                 existing = await self._find_existing(connection, request)
@@ -129,6 +212,39 @@ class PublicationReconciliationRepository:
                 if current != target:
                     raise PublicationReconciliationConflict(
                         "publication changed while reconciliation was in progress"
+                    )
+                cursor = await connection.execute(
+                    """SELECT publication_id, owner_user_id, target_fingerprint,
+                              attempt_index, status
+                       FROM publication_reconciliation_attempts
+                       WHERE request_id = %s
+                       FOR UPDATE""",
+                    (request.request_id,),
+                )
+                attempt = await cursor.fetchone()
+                if attempt is None:
+                    raise PublicationReconciliationConflict(
+                        "reconciliation request was not reserved"
+                    )
+                attempt_publication, attempt_owner, attempt_target, _, attempt_status = attempt
+                if (attempt_publication != request.publication_id
+                        or attempt_owner != request.owner_user_id
+                        or attempt_target.strip() != target.fingerprint):
+                    raise PublicationReconciliationConflict(
+                        "reconciliation reservation identifies different work"
+                    )
+                if attempt_status == "RECORDED":
+                    existing = await self._find_existing(connection, request)
+                    if existing is None:
+                        raise RepositoryUnavailable(
+                            "recorded reconciliation evidence is unavailable"
+                        )
+                    return self._require_replay(
+                        existing, target=target, observation=observation, verdict=verdict,
+                    )
+                if attempt_status != "RESERVED":
+                    raise PublicationReconciliationConflict(
+                        "reconciliation reservation state is invalid"
                     )
                 cursor = await connection.execute(
                     f"""INSERT INTO publication_reconciliations
@@ -156,6 +272,17 @@ class PublicationReconciliationRepository:
                 )
                 row = await cursor.fetchone()
                 if row is not None:
+                    cursor = await connection.execute(
+                        """UPDATE publication_reconciliation_attempts
+                           SET status = 'RECORDED', recorded_at = now()
+                           WHERE request_id = %s AND status = 'RESERVED'
+                           RETURNING request_id""",
+                        (request.request_id,),
+                    )
+                    if await cursor.fetchone() is None:
+                        raise PublicationReconciliationConflict(
+                            "reconciliation reservation could not be completed"
+                        )
                     return self._record(row)
                 existing = await self._find_existing(connection, request)
                 if existing is None:

@@ -63,6 +63,7 @@ from flowx_os.publishing.reconciliation import (
     PublicationReconciliationTarget,
     ReconciliationVerdict,
     RemotePublicationState,
+    classify_publication_state,
 )
 
 __all__ = [
@@ -87,4 +88,5 @@ __all__ = [
     "PlatformReconciliationRequest", "PublicationPlatform",
     "PublicationReconciliationRecord", "PublicationReconciliationTarget",
     "ReconciliationVerdict", "RemotePublicationState",
+    "classify_publication_state",
 ]

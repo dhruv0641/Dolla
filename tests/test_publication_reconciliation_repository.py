@@ -14,6 +14,7 @@ from flowx_os.publishing.reconciliation import (
     PublicationPlatform,
     ReconciliationVerdict,
     RemotePublicationState,
+    PlatformReconciliationError,
 )
 
 
@@ -88,19 +89,22 @@ def record_row(value, target, remote, *, verdict="IN_SYNC"):
 
 
 class PublicationReconciliationRepositoryTests(unittest.IsolatedAsyncioTestCase):
-    async def test_load_target_is_owner_scoped_and_requires_current_channel(self):
+    async def test_reserve_is_owner_scoped_and_requires_current_channel(self):
         value = request()
-        connection = FakeConnection([target_row(value)])
+        connection = FakeConnection([
+            target_row(value), None, (0,), (value.request_id,),
+        ])
         target = await PublicationReconciliationRepository(
             FakePool(connection)
-        ).load_target(value)
+        ).reserve(value, maximum_attempts=25)
         query, params = connection.calls[0]
         self.assertEqual(target.platform, PublicationPlatform.YOUTUBE)
         self.assertEqual(params, (value.publication_id, value.owner_user_id))
         self.assertIn("ch.enabled = true", query)
         self.assertIn("permissions_status = 'VALID'", query)
         self.assertIn("publication_contract = 'YOUTUBE_V1'", query)
-        self.assertIn("FOR KEY SHARE", query)
+        self.assertIn("FOR UPDATE OF p", query)
+        self.assertIn("publication_reconciliation_attempts", connection.calls[3][0])
 
     async def test_get_existing_is_owner_scoped_and_parses_immutable_record(self):
         value = request()
@@ -135,15 +139,21 @@ class PublicationReconciliationRepositoryTests(unittest.IsolatedAsyncioTestCase)
         target = PublicationReconciliationRepository._target(row)
         remote = observation(value, target)
         returned = record_row(value, target, remote)
-        connection = FakeConnection([None, row, returned])
+        attempt = (
+            value.publication_id, value.owner_user_id, target.fingerprint, 1, "RESERVED",
+        )
+        connection = FakeConnection([
+            None, row, attempt, returned, (value.request_id,),
+        ])
         record = await PublicationReconciliationRepository(FakePool(connection)).record(
             request=value, target=target, observation=remote,
             verdict=ReconciliationVerdict.IN_SYNC,
         )
         self.assertEqual(record.observation_fingerprint, remote.fingerprint)
-        insert = connection.calls[2]
+        insert = connection.calls[3]
         self.assertIn("ON CONFLICT (request_id) DO NOTHING", insert[0])
         self.assertNotIn(target.credentials_ref, insert[1])
+        self.assertIn("status = 'RECORDED'", connection.calls[4][0])
 
     async def test_changed_idempotent_replay_conflicts(self):
         value = request()
@@ -167,6 +177,66 @@ class PublicationReconciliationRepositoryTests(unittest.IsolatedAsyncioTestCase)
         connection = FakeConnection([tuple(row)])
         with self.assertRaises(PublicationReconciliationConflict):
             await PublicationReconciliationRepository(FakePool(connection)).get_existing(value)
+
+    async def test_new_request_is_rejected_at_persisted_attempt_bound(self):
+        value = request()
+        connection = FakeConnection([target_row(value), None, (3,)])
+        with self.assertRaises(PlatformReconciliationError) as caught:
+            await PublicationReconciliationRepository(FakePool(connection)).reserve(
+                value, maximum_attempts=3,
+            )
+        self.assertEqual(caught.exception.code, "OBSERVATION_LIMIT_REACHED")
+        self.assertFalse(any(
+            "INSERT INTO publication_reconciliation_attempts" in query
+            for query, _ in connection.calls
+        ))
+
+    async def test_reserved_request_is_not_observed_again(self):
+        value = request()
+        row = target_row(value)
+        target = PublicationReconciliationRepository._target(row)
+        attempt = (
+            value.publication_id, value.owner_user_id, target.fingerprint, 1, "RESERVED",
+        )
+        connection = FakeConnection([row, attempt])
+        with self.assertRaises(PlatformReconciliationError) as caught:
+            await PublicationReconciliationRepository(FakePool(connection)).reserve(
+                value, maximum_attempts=25,
+            )
+        self.assertEqual(caught.exception.code, "REQUEST_OUTCOME_UNKNOWN")
+
+    async def test_repository_rejects_forged_identity_or_verdict_before_sql(self):
+        value = request()
+        target = PublicationReconciliationRepository._target(target_row(value))
+        remote = observation(value, target)
+        forged = PlatformPublicationObservation(
+            request_id=uuid4(), publication_id=value.publication_id,
+            platform=target.platform, destination_id=target.destination_id,
+            remote_object_id=target.remote_object_id,
+            state=RemotePublicationState.PUBLISHED,
+            observed_at=remote.observed_at, evidence_id=remote.evidence_id,
+            remote_url=remote.remote_url,
+        )
+        connection = FakeConnection()
+        repository = PublicationReconciliationRepository(FakePool(connection))
+        with self.assertRaises(ValueError):
+            await repository.record(
+                request=value, target=target, observation=forged,
+                verdict=ReconciliationVerdict.IN_SYNC,
+            )
+        deleted = PlatformPublicationObservation(
+            request_id=value.request_id, publication_id=value.publication_id,
+            platform=target.platform, destination_id=target.destination_id,
+            remote_object_id=target.remote_object_id,
+            state=RemotePublicationState.DELETED,
+            observed_at=remote.observed_at, evidence_id=remote.evidence_id,
+        )
+        with self.assertRaises(ValueError):
+            await repository.record(
+                request=value, target=target, observation=deleted,
+                verdict=ReconciliationVerdict.IN_SYNC,
+            )
+        self.assertEqual(connection.calls, [])
 
 
 if __name__ == "__main__":

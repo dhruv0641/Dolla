@@ -90,13 +90,18 @@ class FakeStore:
         self.target = target
         self.existing = existing
         self.calls = []
+        self.maximum_attempts = None
+        self.reserve_error = None
 
     async def get_existing(self, request):
         self.calls.append("existing")
         return self.existing
 
-    async def load_target(self, request):
-        self.calls.append("target")
+    async def reserve(self, request, *, maximum_attempts):
+        self.calls.append("reserve")
+        self.maximum_attempts = maximum_attempts
+        if self.reserve_error:
+            raise self.reserve_error
         return self.target
 
     async def record(self, *, request, target, observation, verdict):
@@ -154,7 +159,8 @@ class PlatformPublicationReconciliationTests(unittest.IsolatedAsyncioTestCase):
         ).reconcile(request)
         self.assertEqual(result.verdict, ReconciliationVerdict.IN_SYNC)
         self.assertFalse(result.requires_human_review)
-        self.assertEqual(store.calls, ["existing", "target", "record"])
+        self.assertEqual(store.calls, ["existing", "reserve", "record"])
+        self.assertEqual(store.maximum_attempts, 25)
         call = observer.calls[0]
         self.assertEqual(call["remote_object_id"], target.remote_object_id)
         self.assertEqual(call["credentials_ref"], target.credentials_ref)
@@ -183,6 +189,26 @@ class PlatformPublicationReconciliationTests(unittest.IsolatedAsyncioTestCase):
             await reconciler.reconcile(request)
         self.assertEqual(caught.exception.code, "OBSERVATION_UNAVAILABLE")
         self.assertNotIn("secret", str(caught.exception))
+
+    async def test_persisted_attempt_limit_fails_before_provider_read(self):
+        request = make_request()
+        target = make_target(request)
+        store = FakeStore(target)
+        store.reserve_error = PlatformReconciliationError(
+            "OBSERVATION_LIMIT_REACHED", "platform observation limit requires operator review",
+        )
+        observer = FakeObserver(error=AssertionError("must not call provider"))
+        reconciler = PlatformPublicationReconciler(
+            store=store, observer=observer,
+            policy=PlatformReconciliationPolicy(
+                enabled=True, maximum_observations_per_publication=3,
+            ),
+        )
+        with self.assertRaises(PlatformReconciliationError) as caught:
+            await reconciler.reconcile(request)
+        self.assertEqual(caught.exception.code, "OBSERVATION_LIMIT_REACHED")
+        self.assertEqual(store.maximum_attempts, 3)
+        self.assertEqual(observer.calls, [])
 
     async def test_stale_and_future_observations_fail_closed(self):
         request = make_request()
@@ -260,6 +286,15 @@ class PlatformPublicationReconciliationTests(unittest.IsolatedAsyncioTestCase):
         record = make_record(request, target, observation, ReconciliationVerdict.IN_SYNC)
         with self.assertRaises(ValueError):
             replace(record, requires_human_review=True)
+
+    def test_record_verdict_must_match_local_and_remote_state(self):
+        request = make_request()
+        target = make_target(request)
+        observation = make_observation(
+            request, target, state=RemotePublicationState.DELETED, remote_url=None,
+        )
+        with self.assertRaises(ValueError):
+            make_record(request, target, observation, ReconciliationVerdict.IN_SYNC)
 
 
 if __name__ == "__main__":

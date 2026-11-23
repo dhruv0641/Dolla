@@ -46,6 +46,44 @@ class ReconciliationVerdict(StrEnum):
     UNKNOWN = "UNKNOWN"
 
 
+def classify_publication_state(
+    local_status: str, remote_state: RemotePublicationState,
+) -> ReconciliationVerdict:
+    """Return the only valid verdict for one local/remote state pair."""
+    if local_status not in _LOCAL_STATUSES or not isinstance(remote_state, RemotePublicationState):
+        raise ValueError("publication states are invalid")
+    if remote_state is RemotePublicationState.UNKNOWN:
+        return ReconciliationVerdict.UNKNOWN
+    if local_status == "PUBLISHED":
+        if remote_state is RemotePublicationState.PUBLISHED:
+            return ReconciliationVerdict.IN_SYNC
+        if remote_state is RemotePublicationState.PROCESSING:
+            return ReconciliationVerdict.LOCAL_AHEAD
+        return ReconciliationVerdict.CONFLICT
+    if local_status == "CANCELLED":
+        return (
+            ReconciliationVerdict.IN_SYNC
+            if remote_state in {RemotePublicationState.ABSENT, RemotePublicationState.DELETED}
+            else ReconciliationVerdict.CONFLICT
+        )
+    if local_status == "FAILED":
+        return (
+            ReconciliationVerdict.IN_SYNC
+            if remote_state is RemotePublicationState.FAILED
+            else ReconciliationVerdict.CONFLICT
+        )
+    if remote_state is RemotePublicationState.PUBLISHED:
+        return ReconciliationVerdict.REMOTE_AHEAD
+    if remote_state is RemotePublicationState.PROCESSING:
+        return ReconciliationVerdict.IN_SYNC
+    if remote_state is RemotePublicationState.ABSENT:
+        return (
+            ReconciliationVerdict.IN_SYNC
+            if local_status == "DRAFT" else ReconciliationVerdict.LOCAL_AHEAD
+        )
+    return ReconciliationVerdict.CONFLICT
+
+
 class PlatformReconciliationError(RuntimeError):
     """Stable, operator-safe reconciliation error."""
 
@@ -200,6 +238,9 @@ class PublicationReconciliationRecord:
                 or not _canonical_url(self.platform, self.remote_object_id, self.remote_url)
                 or _SAFE_EVIDENCE_ID.fullmatch(self.evidence_id or "") is None
                 or not _aware(self.observed_at) or not _aware(self.created_at)
+                or self.verdict is not classify_publication_state(
+                    self.local_status, self.remote_state,
+                )
                 or self.requires_human_review is not (
                     self.verdict in {
                         ReconciliationVerdict.REMOTE_AHEAD,
@@ -216,13 +257,16 @@ class PlatformReconciliationPolicy:
     enabled: bool = False
     maximum_observation_age_seconds: int = 300
     maximum_clock_skew_seconds: int = 30
+    maximum_observations_per_publication: int = 25
 
     def __post_init__(self) -> None:
         if (type(self.enabled) is not bool
                 or type(self.maximum_observation_age_seconds) is not int
                 or not 30 <= self.maximum_observation_age_seconds <= 3_600
                 or type(self.maximum_clock_skew_seconds) is not int
-                or not 0 <= self.maximum_clock_skew_seconds <= 120):
+                or not 0 <= self.maximum_clock_skew_seconds <= 120
+                or type(self.maximum_observations_per_publication) is not int
+                or not 1 <= self.maximum_observations_per_publication <= 1_000):
             raise ValueError("platform reconciliation policy is invalid")
 
 
@@ -239,9 +283,9 @@ class PublicationReconciliationStore(Protocol):
         self, request: PlatformReconciliationRequest,
     ) -> PublicationReconciliationRecord | None: ...
 
-    async def load_target(
-        self, request: PlatformReconciliationRequest,
-    ) -> PublicationReconciliationTarget: ...
+    async def reserve(
+        self, request: PlatformReconciliationRequest, *, maximum_attempts: int,
+    ) -> PublicationReconciliationTarget | PublicationReconciliationRecord: ...
 
     async def record(
         self, *, request: PlatformReconciliationRequest,
@@ -275,7 +319,12 @@ class PlatformPublicationReconciler:
             raise PlatformReconciliationError(
                 "CAPABILITY_DISABLED", "platform reconciliation is disabled",
             )
-        target = await self._store.load_target(request)
+        reserved = await self._store.reserve(
+            request, maximum_attempts=self._policy.maximum_observations_per_publication,
+        )
+        if isinstance(reserved, PublicationReconciliationRecord):
+            return reserved
+        target = reserved
         if target.remote_object_id is None:
             raise PlatformReconciliationError(
                 "REMOTE_ID_UNAVAILABLE", "exact remote publication identity is unavailable",
@@ -296,7 +345,7 @@ class PlatformPublicationReconciler:
                 "OBSERVATION_UNAVAILABLE", "platform observation is unavailable",
             ) from exc
         self._validate_observation(request, target, observation)
-        verdict = self.classify(target.local_status, observation.state)
+        verdict = classify_publication_state(target.local_status, observation.state)
         return await self._store.record(
             request=request, target=target, observation=observation, verdict=verdict,
         )
@@ -333,35 +382,4 @@ class PlatformPublicationReconciler:
 
     @staticmethod
     def classify(local_status: str, remote_state: RemotePublicationState) -> ReconciliationVerdict:
-        if local_status not in _LOCAL_STATUSES or not isinstance(remote_state, RemotePublicationState):
-            raise ValueError("publication states are invalid")
-        if remote_state is RemotePublicationState.UNKNOWN:
-            return ReconciliationVerdict.UNKNOWN
-        if local_status == "PUBLISHED":
-            if remote_state is RemotePublicationState.PUBLISHED:
-                return ReconciliationVerdict.IN_SYNC
-            if remote_state is RemotePublicationState.PROCESSING:
-                return ReconciliationVerdict.LOCAL_AHEAD
-            return ReconciliationVerdict.CONFLICT
-        if local_status == "CANCELLED":
-            return (
-                ReconciliationVerdict.IN_SYNC
-                if remote_state in {RemotePublicationState.ABSENT, RemotePublicationState.DELETED}
-                else ReconciliationVerdict.CONFLICT
-            )
-        if local_status == "FAILED":
-            return (
-                ReconciliationVerdict.IN_SYNC
-                if remote_state is RemotePublicationState.FAILED
-                else ReconciliationVerdict.CONFLICT
-            )
-        if remote_state is RemotePublicationState.PUBLISHED:
-            return ReconciliationVerdict.REMOTE_AHEAD
-        if remote_state is RemotePublicationState.PROCESSING:
-            return ReconciliationVerdict.IN_SYNC
-        if remote_state is RemotePublicationState.ABSENT:
-            return (
-                ReconciliationVerdict.IN_SYNC
-                if local_status == "DRAFT" else ReconciliationVerdict.LOCAL_AHEAD
-            )
-        return ReconciliationVerdict.CONFLICT
+        return classify_publication_state(local_status, remote_state)

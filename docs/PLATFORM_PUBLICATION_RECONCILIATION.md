@@ -48,10 +48,21 @@ change therefore rejects the stale observation instead of attaching it to a
 different state.
 
 Reconciliation rows are immutable and cannot be deleted. `request_id` is
-unique, and target/observation fingerprints bind an exact replay. A completed
-request returns its stored result without another provider call; changed
-evidence conflicts. Provider evidence is represented by a bounded opaque ID,
-not a raw response. All divergence and unknown outcomes require human review.
+unique, and target/observation fingerprints bind an exact replay. Before any
+provider read, persistence locks the publication and inserts a durable
+`RESERVED` attempt. The default policy admits at most 25 attempts per
+publication; the schema also imposes a finite hard ceiling. A completed request
+returns its stored result without another provider call. A reserved request
+whose outcome was not recorded fails closed for operator review instead of
+calling the provider again, while changed evidence conflicts.
+
+Repository checks and the database insert trigger independently require the
+request, owner, publication, platform, channel, contract, state version,
+destination and remote-object identities to match the locked publication. The
+database derives the only valid verdict from the stored local/remote state pair,
+so bypassing the service cannot label conflicting evidence `IN_SYNC`. Provider
+evidence is represented by a bounded opaque ID, not a raw response. All
+divergence and unknown outcomes require human review.
 
 ## Verification limits
 

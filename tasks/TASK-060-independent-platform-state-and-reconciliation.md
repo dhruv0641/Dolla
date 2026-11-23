@@ -52,12 +52,14 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   and remote-object identities and satisfy bounded freshness plus platform URL
   rules. Raw provider responses, errors and credential references are not
   persisted.
-- Migration 0021 adds monotonic publication state versions and immutable,
-  idempotent reconciliation history. Persistence locks and rechecks the full
-  owner/channel/contract/destination/local-state snapshot after the remote read.
+- Migration 0021 adds monotonic publication state versions, durable bounded
+  pre-read reservations and immutable idempotent reconciliation history.
+  Persistence locks and rechecks the full owner/channel/contract/destination/
+  local-state snapshot after the remote read. Repository and SQL guards derive
+  the only valid verdict and reject forged or unrelated evidence.
 - Divergence and unknown verdicts require human review; exact completed request
   replays return without another provider call.
-- Current local verification: 122 focused reconciliation/publishing/config/
+- Current local verification: 127 focused reconciliation/publishing/config/
   migration tests pass; all 22 migration files parse, compileall, diff hygiene
   and the 76-task dependency validator pass. Independent review and the final
   full suite remain pending.
