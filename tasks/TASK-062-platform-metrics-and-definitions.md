@@ -7,6 +7,7 @@
 - **Estimated complexity:** 16 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
 - **GitHub issue:** [#195](https://github.com/dhruv0641/Dolla/issues/195)
+- **Pull request:** [#196](https://github.com/dhruv0641/Dolla/pull/196)
 - **Branch:** `feature/TASK-062-platform-metrics-definitions`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
