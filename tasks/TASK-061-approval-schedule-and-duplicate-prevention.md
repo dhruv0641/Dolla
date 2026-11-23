@@ -5,7 +5,7 @@
 - **Priority:** P2
 - **Dependencies:** TASK-060
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#192](https://github.com/dhruv0641/Dolla/issues/192)
 - **Implementation PR:** [#193](https://github.com/dhruv0641/Dolla/pull/193)
@@ -47,7 +47,8 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Initial focused verification passed 141 tests. Independent Caveman review then rejected head `c1ebbc8` with four findings: no due-event consumer, invalid local-day bounds when midnight is skipped, moving-clock replay rejection, and approval expiry blocking already-reserved recovery.
 - Corrections add `ScheduledPublicationDispatcher`, exact leased reservation reload and injected platform executors; compute local-day boundaries from the first valid civil instant; load exact idempotent replays before moving gates; and apply approval expiry only before the atomic dispatch reservation. The expanded focused publishing/reconciliation/scheduling/workflow/configuration/migration gate passes **158 tests**. All 23 migrations parse, `compileall`, diff hygiene, and the 76-node project validator pass.
 - Independent Caveman accepted exact correction head `9a1216322a43d5369893c6a97c61efbad9dc25c7` with no remaining finding after verifying all four corrections, owner isolation, leased evidence, atomicity, safe ambiguity handling and platform recovery.
-- The single final full suite passed **571 tests**. No live PostgreSQL, OAuth, account, concrete provider executor, upload, scheduling, publication, paid, or public action was performed. PR checks and merge remain pending.
+- The single final full suite passed **571 tests**. Both required PR checks and post-merge validation passed; PR [#193](https://github.com/dhruv0641/Dolla/pull/193) merged only to protected `develop` as `f6c177f8e12f395afd508732142e744321cc0be2`, closing issue #192.
+- No live PostgreSQL, OAuth, account, concrete provider executor, upload, scheduling, publication, paid, or public action was performed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

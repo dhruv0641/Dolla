@@ -98,7 +98,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-058 Instagram Reels publisher and verification** — DONE · Publishing Integration Engineer · 16h · deps: TASK-057 · Issue [#183](https://github.com/dhruv0641/Dolla/issues/183) · PR [#184](https://github.com/dhruv0641/Dolla/pull/184) merged to `develop` as `49943dd`; 78 focused/500 full-suite tests, independent review and required/post-merge checks passed; no live Meta action claimed
 - **TASK-059 Facebook Page Reels publisher and verification** — DONE · Publishing Integration Engineer · 4h · deps: TASK-058 · Issue [#186](https://github.com/dhruv0641/Dolla/issues/186) · PR [#187](https://github.com/dhruv0641/Dolla/pull/187) merged to `develop` as `8f8a8f3`; 104 focused/526 full-suite tests, independent review and required/post-merge checks passed; no live Meta action claimed
 - **TASK-060 Independent platform state and reconciliation** — DONE · Publishing Integration Engineer · 6h · deps: TASK-059 · Issue [#189](https://github.com/dhruv0641/Dolla/issues/189) · PR [#190](https://github.com/dhruv0641/Dolla/pull/190) merged to `develop` as `e105095`; 127 focused/549 full-suite tests, independent review and required/post-merge checks passed; no live provider action claimed
-- **TASK-061 Approval, schedule and duplicate prevention** — IN_REVIEW · Publishing Integration Engineer · 8h · deps: TASK-060 · Issue [#192](https://github.com/dhruv0641/Dolla/issues/192) · PR [#193](https://github.com/dhruv0641/Dolla/pull/193) · Branch `feature/TASK-061-approval-schedule-duplicate-prevention`
+- **TASK-061 Approval, schedule and duplicate prevention** — DONE · Publishing Integration Engineer · 8h · deps: TASK-060 · Issue [#192](https://github.com/dhruv0641/Dolla/issues/192) closed · PR [#193](https://github.com/dhruv0641/Dolla/pull/193) merged to `develop` as `f6c177f`; 158 focused/571 full-suite tests, independent review and required/post-merge checks passed
 
 ## EPIC-13: Analytics and Growth
 
@@ -129,10 +129,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 65 (TASK-001 through TASK-060 and TASK-072 through TASK-076).
+- DONE: 66 (TASK-001 through TASK-061 and TASK-072 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 1 (TASK-061).
+- IN_REVIEW: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 10 (TASK-062 through TASK-071).
