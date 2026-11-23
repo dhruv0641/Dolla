@@ -153,11 +153,11 @@ class CommunityResponseRepository:
                 if publication is None:
                     raise CommunityResponseNotFound("approved response evidence not found")
                 cursor = await connection.execute(
-                    """SELECT p.id FROM publication_jobs AS p
-                       WHERE p.id = %s FOR UPDATE""",
+                    "SELECT lock_community_response_publication(%s)",
                     (publication[0],),
                 )
-                if await cursor.fetchone() is None:
+                locked = await cursor.fetchone()
+                if locked is None or locked[0] is not True:
                     raise CommunityResponseNotFound("approved publication not found")
                 cursor = await connection.execute(
                     """SELECT a.record_fingerprint, a.draft_fingerprint,
@@ -220,11 +220,11 @@ class CommunityResponseRepository:
         try:
             async with unit_of_work(self._pool) as connection:
                 cursor = await connection.execute(
-                    """SELECT p.id FROM publication_jobs AS p
-                       WHERE p.id = %s FOR UPDATE""",
+                    "SELECT lock_community_response_publication(%s)",
                     (claim.publication_id,),
                 )
-                if await cursor.fetchone() is None:
+                locked = await cursor.fetchone()
+                if locked is None or locked[0] is not True:
                     raise CommunityResponseConflict("official response publication is unavailable")
                 cursor = await connection.execute(
                     """SELECT 1
@@ -476,6 +476,16 @@ class CommunityResponseRepository:
 
     @staticmethod
     async def _draft_row(connection, request, *, lock):
+        if lock:
+            cursor = await connection.execute(
+                """SELECT lock_community_response_publication(d.publication_id)
+                   FROM community_reply_draft_records AS d
+                   WHERE d.request_id = %s AND d.owner_user_id = %s""",
+                (request.draft_request_id, request.owner_user_id),
+            )
+            locked = await cursor.fetchone()
+            if locked is None or locked[0] is not True:
+                return None
         cursor = await connection.execute(
             """SELECT d.request_id, d.owner_user_id, d.publication_id,
                       d.comment_version_id, d.record_fingerprint,
@@ -489,7 +499,7 @@ class CommunityResponseRepository:
                JOIN social_channels AS ch ON ch.id = p.channel_id
                JOIN brands AS b ON b.id = ch.brand_id
                WHERE d.request_id = %s AND d.owner_user_id = %s
-                 AND b.owner_user_id = %s""" + (" FOR UPDATE OF p" if lock else ""),
+                 AND b.owner_user_id = %s""",
             (request.draft_request_id, request.owner_user_id, request.owner_user_id),
         )
         return await cursor.fetchone()

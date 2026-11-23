@@ -98,6 +98,24 @@ BEGIN
 END;
 $$;
 
+CREATE FUNCTION lock_community_response_publication(publication_id_value uuid)
+RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+  locked_id uuid;
+BEGIN
+  SELECT id INTO locked_id FROM public.publication_jobs
+    WHERE id = publication_id_value FOR UPDATE;
+  RETURN locked_id IS NOT NULL;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION lock_community_response_publication(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION lock_community_response_publication(uuid)
+  TO flowx_community_approval_writer, flowx_community_response_runtime;
+
 CREATE FUNCTION guard_community_response_approval_immutable() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -262,7 +280,9 @@ CREATE TABLE community_official_responses (
 );
 
 CREATE FUNCTION require_community_official_response_insert() RETURNS trigger
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
 DECLARE
   approval community_response_approvals%ROWTYPE;
   draft community_reply_draft_records%ROWTYPE;
@@ -343,7 +363,9 @@ END;
 $$;
 
 CREATE FUNCTION guard_community_official_response_update() RETURNS trigger
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
 DECLARE
   network_ready boolean;
   expected_authorization text;
@@ -571,6 +593,8 @@ BEGIN
     IF OLD.remote_response_id IS NOT NULL OR NEW.remote_response_id IS NULL
        OR OLD.recovery_evidence_id IS NOT NULL
        OR NEW.recovery_evidence_id IS NULL OR NEW.identity_recovered_at IS NULL
+       OR NEW.identity_recovered_at <= OLD.mutation_reserved_at
+       OR NEW.identity_recovered_at > clock_timestamp()
        OR (NEW.authorization_fingerprint, NEW.authorization_scopes,
            NEW.authorization_checked_at, NEW.authorization_valid_until,
            NEW.mutation_reserved_at, NEW.receipt_state, NEW.receipt_fingerprint,
@@ -613,7 +637,8 @@ BEGIN
        OR (NEW.receipt_state IS NULL AND NEW.recovery_evidence_id IS NULL)
        OR NEW.verification_evidence_id IS NULL
        OR NEW.verification_observed_at IS NULL
-       OR NEW.verification_observed_at < NEW.mutation_reserved_at
+       OR NEW.verification_observed_at <
+          COALESCE(NEW.identity_recovered_at, NEW.mutation_reserved_at)
        OR NEW.verification_observed_at > clock_timestamp()
        OR NEW.verification_fingerprint IS DISTINCT FROM expected_verification
        OR NEW.verification_platform IS DISTINCT FROM NEW.platform

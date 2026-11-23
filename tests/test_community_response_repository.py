@@ -118,23 +118,23 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_load_approval_target_is_owner_scoped_current_and_locked(self):
         value = target()
         request, _ = approval(value)
-        connection = Connection([target_row(value)])
+        connection = Connection([(True,), target_row(value)])
         loaded = await self.repository(connection).load_approvable_draft(request)
         self.assertEqual(loaded, value)
-        query, params = connection.calls[0]
+        self.assertIn("lock_community_response_publication", connection.calls[0][0])
+        query, params = connection.calls[1]
         self.assertIn("community_comments_current", query)
-        self.assertIn("FOR UPDATE OF p", query)
         self.assertEqual(params, (value.draft_request_id, value.owner_user_id, value.owner_user_id))
 
     async def test_save_approval_rechecks_target_and_inserts_role_evidence(self):
         value = target()
         request, record = approval(value)
-        connection = Connection([target_row(value), approval_row(record)])
+        connection = Connection([(True,), target_row(value), approval_row(record)])
         stored = await self.repository(connection).save_approval(
             request, value, record,
         )
         self.assertEqual(stored, record)
-        query, params = connection.calls[1]
+        query, params = connection.calls[2]
         self.assertIn("record_community_response_approval", query)
         self.assertIn(Role.REVIEWER.value, params)
 
@@ -151,14 +151,14 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
             value.remote_comment_id,
         )
         connection = Connection([
-            None, (value.publication_id,), (value.publication_id,),
+            None, (value.publication_id,), (True,),
             evidence, claim_row(claim),
         ])
         stored = await self.repository(connection).claim(request)
         self.assertEqual(stored, claim)
         sql = "\n".join(query for query, _ in connection.calls)
         self.assertIn("a.valid_until > clock_timestamp()", sql)
-        self.assertIn("WHERE p.id = %s FOR UPDATE", sql)
+        self.assertIn("lock_community_response_publication", sql)
         self.assertIn("INSERT INTO community_official_responses", sql)
 
     async def test_mutation_reservation_is_single_winner_with_exact_authorization(self):
@@ -187,9 +187,9 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
         _, record = approval(value)
         request = OfficialResponseRequest(uuid4(), record.request.approval_id, value.owner_user_id, NOW)
         claim = response_claim(value, request, record)
-        connection = Connection([(value.publication_id,), (1,)])
+        connection = Connection([(True,), (1,)])
         await self.repository(connection).assert_network_ready(claim)
-        self.assertIn("WHERE p.id = %s FOR UPDATE", connection.calls[0][0])
+        self.assertIn("lock_community_response_publication", connection.calls[0][0])
         self.assertNotIn("community_comments_current", connection.calls[0][0])
         self.assertIn("community_comments_current", connection.calls[1][0])
 
