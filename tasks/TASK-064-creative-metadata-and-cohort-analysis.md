@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-063
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#201](https://github.com/dhruv0641/Dolla/issues/201)
+- **Branch:** `feature/TASK-064-creative-metadata-cohort-analysis`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
