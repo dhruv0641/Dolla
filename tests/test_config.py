@@ -25,6 +25,7 @@ class SettingsTests(unittest.TestCase):
         self.assertFalse(settings.community_analysis_enabled)
         self.assertFalse(settings.community_reply_drafting_enabled)
         self.assertFalse(settings.community_official_responses_enabled)
+        self.assertFalse(settings.community_insights_enabled)
 
     def test_secret_references_are_retained_as_references(self) -> None:
         settings = Settings.from_env(
@@ -117,6 +118,12 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(enabled.community_official_responses_enabled)
         with self.assertRaises(ConfigurationError):
             Settings.from_env({"FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED": "yes"})
+
+    def test_community_insights_require_explicit_boolean_enablement(self) -> None:
+        enabled = Settings.from_env({"FLOWX_COMMUNITY_INSIGHTS_ENABLED": "true"})
+        self.assertTrue(enabled.community_insights_enabled)
+        with self.assertRaises(ConfigurationError):
+            Settings.from_env({"FLOWX_COMMUNITY_INSIGHTS_ENABLED": "yes"})
 
     def test_empty_storage_path_is_rejected(self) -> None:
         with self.assertRaisesRegex(ConfigurationError, "FLOWX_STORAGE_ROOT"):
