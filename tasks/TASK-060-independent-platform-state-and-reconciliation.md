@@ -5,9 +5,11 @@
 - **Priority:** P2
 - **Dependencies:** TASK-059
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
 - **Related source documents:** ARCHITECTURE
-- **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
+- **GitHub issue:** [#189](https://github.com/dhruv0641/Dolla/issues/189)
+- **Branch:** `feature/TASK-060-independent-platform-state-reconciliation`
+- **Blockers:** No blocker for disabled-by-default local implementation. Live provider reconciliation requires separately authorized OAuth accounts and remains outside development verification.
 
 ## User Story
 As a FLOW AI Content OS operator, I want independent platform state and reconciliation, so the platform can progress safely through a traceable production lifecycle.
