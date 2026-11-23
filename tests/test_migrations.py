@@ -82,6 +82,22 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("CREATE UNIQUE INDEX analytics_metric_snapshot_identity", sql)
         self.assertIn("publication_id, window_name, registry_version, metric_ids", sql)
 
+    def test_creative_cohorts_are_owner_scoped_versioned_and_immutable(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0025_creative_metadata_cohort_analysis.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE creative_metadata_snapshots", sql)
+        self.assertIn("UNIQUE (publication_id, schema_version)", sql)
+        self.assertIn("jsonb_array_length(factors) = 13", sql)
+        self.assertIn("FOR SHARE OF p, c, b, ch, sv", sql)
+        self.assertIn("creative metadata snapshot evidence is invalid", sql)
+        self.assertIn("CREATE TABLE cohort_analysis_reports", sql)
+        self.assertIn("DESCRIPTIVE_ASSOCIATION_ONLY_NOT_CAUSAL", sql)
+        self.assertIn("analytics_metric_definitions", sql)
+        self.assertIn("cohort analysis source lineage is invalid", sql)
+        self.assertIn("creative cohort evidence is immutable", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON creative_metadata_snapshots", sql)
+        self.assertIn("BEFORE UPDATE OR DELETE ON cohort_analysis_reports", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")

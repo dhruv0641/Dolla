@@ -1,5 +1,20 @@
 """Versioned analytics contracts."""
 
+from flowx_os.analytics.cohorts import (
+    CohortAnalysisReport,
+    CohortAnalysisRequest,
+    CohortBand,
+    CohortCandidate,
+    CohortExclusionReason,
+    CohortReportStatus,
+    CohortSummary,
+    CreativeCohortAnalyzer,
+    CreativeFactor,
+    CreativeFactorDatum,
+    CreativeMetadataSnapshot,
+    FactorAvailability,
+    FactorUnavailableReason,
+)
 from flowx_os.analytics.collection import (
     AnalyticsCollectionError,
     AnalyticsSource,
@@ -33,6 +48,11 @@ from flowx_os.analytics.snapshots import (
 )
 
 __all__ = [
+    "CohortAnalysisReport", "CohortAnalysisRequest", "CohortBand",
+    "CohortCandidate", "CohortExclusionReason", "CohortReportStatus",
+    "CohortSummary", "CreativeCohortAnalyzer", "CreativeFactor",
+    "CreativeFactorDatum", "CreativeMetadataSnapshot", "FactorAvailability",
+    "FactorUnavailableReason",
     "AnalyticsCollectionError", "AnalyticsSource", "CollectionWindow",
     "MetricAvailability", "MetricCollectionPolicy", "MetricCollectionRequest",
     "MetricCollectionStatus", "MetricCollectionTarget", "MetricDatum",
