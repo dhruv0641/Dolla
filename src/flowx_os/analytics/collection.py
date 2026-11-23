@@ -420,6 +420,7 @@ class MetricObservationStore(Protocol):
 
     async def reserve(
         self, request: MetricCollectionRequest, *, registry: MetricRegistry,
+        now: datetime,
     ) -> MetricCollectionTarget | StoredMetricObservation: ...
 
     async def record(
@@ -454,15 +455,17 @@ class PlatformMetricCollector:
             raise AnalyticsCollectionError("CAPABILITY_DISABLED", "analytics collection is disabled")
         if self._provider is None:
             raise AnalyticsCollectionError("PROVIDER_UNAVAILABLE", "analytics provider is unavailable")
-        target_or_record = await self._store.reserve(request, registry=self._registry)
+        before_provider = self._now()
+        if not _aware_utc(before_provider):
+            raise AnalyticsCollectionError("CLOCK_INVALID", "analytics collection clock is invalid")
+        target_or_record = await self._store.reserve(
+            request, registry=self._registry, now=before_provider,
+        )
         if isinstance(target_or_record, StoredMetricObservation):
             self._validate_existing(request, target_or_record)
             return target_or_record
         target = target_or_record
         self._validate_target(request, target)
-        before_provider = self._now()
-        if not _aware_utc(before_provider):
-            raise AnalyticsCollectionError("CLOCK_INVALID", "analytics collection clock is invalid")
         if before_provider + timedelta(
             seconds=self._policy.maximum_clock_skew_seconds
         ) < target.window_ended_at:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta
 
 from flowx_os.analytics.collection import (
     AnalyticsCollectionError,
@@ -86,8 +87,15 @@ class MetricObservationRepository:
 
     async def reserve(
         self, request: MetricCollectionRequest, *, registry: MetricRegistry,
+        now: datetime,
     ) -> MetricCollectionTarget | StoredMetricObservation:
-        if not isinstance(request, MetricCollectionRequest) or not isinstance(registry, MetricRegistry):
+        if (
+            not isinstance(request, MetricCollectionRequest)
+            or not isinstance(registry, MetricRegistry)
+            or not isinstance(now, datetime)
+            or now.tzinfo is None
+            or now.utcoffset() != timedelta(0)
+        ):
             raise ValueError("metric collection reservation is invalid")
         try:
             async with unit_of_work(self._pool) as connection:
@@ -99,6 +107,10 @@ class MetricObservationRepository:
                 if row is None:
                     raise MetricObservationNotFound("published object not found")
                 target = self._target(row, request=request, registry=registry)
+                if target.window_ended_at > now:
+                    raise AnalyticsCollectionError(
+                        "WINDOW_NOT_READY", "metric collection window is not complete",
+                    )
                 cursor = await connection.execute(
                     """SELECT publication_id, owner_user_id, request_fingerprint,
                               target_fingerprint, window_name, metric_ids,
@@ -109,6 +121,7 @@ class MetricObservationRepository:
                     (request.request_id,),
                 )
                 attempt = await cursor.fetchone()
+                metric_ids_json = json.dumps(request.metric_ids, separators=(",", ":"))
                 if attempt is not None:
                     self._require_attempt(attempt, request=request, target=target)
                     if attempt[-1] == "RECORDED":
@@ -121,8 +134,25 @@ class MetricObservationRepository:
                                 "stored metric evidence identifies a different target"
                             )
                         return stored
-                    return target
-                metric_ids_json = json.dumps(request.metric_ids, separators=(",", ":"))
+                    raise AnalyticsCollectionError(
+                        "REQUEST_OUTCOME_UNKNOWN",
+                        "metric collection request is already reserved and requires operator review",
+                    )
+                cursor = await connection.execute(
+                    """SELECT request_id
+                       FROM analytics_metric_collection_attempts
+                       WHERE publication_id = %s AND window_name = %s
+                         AND registry_version = %s AND metric_ids = %s::jsonb
+                       FOR UPDATE""",
+                    (
+                        request.publication_id, request.window.value,
+                        registry.version, metric_ids_json,
+                    ),
+                )
+                if await cursor.fetchone() is not None:
+                    raise MetricObservationConflict(
+                        "snapshot identity already belongs to another request"
+                    )
                 cursor = await connection.execute(
                     """INSERT INTO analytics_metric_collection_attempts
                          (request_id, publication_id, owner_user_id,

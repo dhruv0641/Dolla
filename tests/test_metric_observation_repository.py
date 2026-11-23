@@ -5,6 +5,7 @@ import unittest
 from uuid import uuid4
 
 from flowx_os.analytics.collection import (
+    AnalyticsCollectionError,
     AnalyticsSource,
     CollectionWindow,
     MetricAvailability,
@@ -117,9 +118,9 @@ class MetricObservationRepositoryTests(unittest.IsolatedAsyncioTestCase):
     async def test_reservation_is_owner_scoped_and_requires_verified_publication(self):
         value = request()
         row = target_row(value)
-        connection = FakeConnection([row, None, (value.request_id,)])
+        connection = FakeConnection([row, None, None, (value.request_id,)])
         exact = await MetricObservationRepository(FakePool(connection)).reserve(
-            value, registry=REGISTRY,
+            value, registry=REGISTRY, now=NOW,
         )
         query, params = connection.calls[0]
         self.assertEqual(params, (value.publication_id, value.owner_user_id))
@@ -128,19 +129,47 @@ class MetricObservationRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("permissions_status = 'VALID'", query)
         self.assertIn("FOR UPDATE OF p", query)
         self.assertEqual(exact.remote_object_id, "video_1")
-        self.assertIn("analytics_metric_collection_attempts", connection.calls[2][0])
-        self.assertNotIn(exact.credentials_ref, connection.calls[2][1])
+        self.assertIn("analytics_metric_collection_attempts", connection.calls[3][0])
+        self.assertNotIn(exact.credentials_ref, connection.calls[3][1])
 
-    async def test_reserved_replay_returns_same_target_without_duplicate_insert(self):
+    async def test_reserved_replay_fails_closed_without_duplicate_provider_read(self):
         value = request()
         row = target_row(value)
         exact = MetricObservationRepository._target(row, request=value, registry=REGISTRY)
         connection = FakeConnection([row, attempt_row(value, exact)])
-        replay = await MetricObservationRepository(FakePool(connection)).reserve(
-            value, registry=REGISTRY,
-        )
-        self.assertEqual(replay, exact)
+        with self.assertRaises(AnalyticsCollectionError) as caught:
+            await MetricObservationRepository(FakePool(connection)).reserve(
+                value, registry=REGISTRY, now=NOW,
+            )
+        self.assertEqual(caught.exception.code, "REQUEST_OUTCOME_UNKNOWN")
         self.assertFalse(any("INSERT INTO analytics_metric_collection_attempts" in q for q, _ in connection.calls))
+
+    async def test_future_window_is_rejected_before_reservation(self):
+        value = request()
+        row = target_row(value)
+        connection = FakeConnection([row])
+        with self.assertRaises(AnalyticsCollectionError) as caught:
+            await MetricObservationRepository(FakePool(connection)).reserve(
+                value, registry=REGISTRY, now=NOW - timedelta(hours=2),
+            )
+        self.assertEqual(caught.exception.code, "WINDOW_NOT_READY")
+        self.assertFalse(any(
+            "analytics_metric_collection_attempts" in query
+            for query, _ in connection.calls
+        ))
+
+    async def test_different_request_cannot_claim_same_snapshot_identity(self):
+        value = request()
+        row = target_row(value)
+        connection = FakeConnection([row, None, (uuid4(),)])
+        with self.assertRaises(MetricObservationConflict):
+            await MetricObservationRepository(FakePool(connection)).reserve(
+                value, registry=REGISTRY, now=NOW,
+            )
+        self.assertFalse(any(
+            "INSERT INTO analytics_metric_collection_attempts" in query
+            for query, _ in connection.calls
+        ))
 
     async def test_get_existing_is_owner_scoped_and_parses_explicit_values(self):
         value = request()
