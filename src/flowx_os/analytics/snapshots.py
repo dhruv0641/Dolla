@@ -265,4 +265,3 @@ class WindowedSnapshotCoordinator:
         if plan.window_ends_at(window) > now:
             raise AnalyticsCollectionError("WINDOW_NOT_READY", "snapshot window is not complete")
         return await self._collector.collect(plan.request_for(window, registry=self._registry))
-
