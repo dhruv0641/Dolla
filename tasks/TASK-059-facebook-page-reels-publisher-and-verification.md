@@ -5,10 +5,11 @@
 - **Priority:** P2
 - **Dependencies:** TASK-058
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#186](https://github.com/dhruv0641/Dolla/issues/186)
 - **Branch:** `feature/TASK-059-facebook-page-reels-publisher-verification`
+- **Pull request:** [#187](https://github.com/dhruv0641/Dolla/pull/187), merged to `develop` as `8f8a8f32516b987b33f91a7c4d29ec3cfea43340`
 - **Blockers:** No blocker for disabled-by-default local implementation. Live Meta Page eligibility, OAuth, account connection, hosted or resumable transfer, upload/container creation and publication require separate explicit authorization and remain outside development verification.
 
 ## User Story
@@ -64,3 +65,6 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - External limit: no Facebook Login, Page connection, token resolution, upload
   session, binary transfer, publish request or public action was performed. Live
   PostgreSQL and Meta Graph/rupload behavior remain unverified.
+- Delivery evidence: PR #187 passed both required checks, was marked ready only
+  after the exact-head independent review, and merged only to protected
+  `develop`; issue #186 is closed and post-merge project validation passed.
