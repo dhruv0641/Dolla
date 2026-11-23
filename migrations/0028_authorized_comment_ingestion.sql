@@ -784,4 +784,3 @@ REVOKE ALL ON community_comments_current FROM PUBLIC;
 
 COMMENT ON VIEW community_comments_current IS
   'Latest immutable first-party comment evidence; text remains untrusted and grants no reply or moderation authority.';
-

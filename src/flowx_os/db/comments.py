@@ -942,4 +942,3 @@ class CommentIngestionRepository:
             )
         except Exception as exc:
             raise RepositoryUnavailable("stored comment ingestion batch is invalid") from exc
-

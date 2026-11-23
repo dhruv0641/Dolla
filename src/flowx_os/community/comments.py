@@ -758,4 +758,3 @@ class AuthorizedCommentIngestor:
             raise CommentIngestionError(
                 "BATCH_STALE", "comment provider response is outside the allowed time window",
             )
-
