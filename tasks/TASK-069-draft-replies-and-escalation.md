@@ -5,9 +5,10 @@
 - **Priority:** P2
 - **Dependencies:** TASK-068
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **GitHub issue:** [#216](https://github.com/dhruv0641/Dolla/issues/216)
 - **Branch:** `feature/TASK-069-draft-replies-escalation`
+- **Pull request:** [#217](https://github.com/dhruv0641/Dolla/pull/217), merged to `develop` as `2ddb6c21800d95868b3a5e2313906432e1cb5d11`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -28,9 +29,9 @@ Deliver draft replies and escalation as an independently verifiable capability w
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
