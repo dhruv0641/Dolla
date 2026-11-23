@@ -52,10 +52,10 @@ def _receipt_fingerprint(receipt: ProviderResponseReceipt) -> str:
 
 class CommunityResponseRepository:
     def __init__(
-        self, pool: ConnectionPool, *, approval_pool: ConnectionPool | None = None,
+        self, pool: ConnectionPool, *, approval_pool: ConnectionPool,
     ) -> None:
         self._pool = pool
-        self._approval_pool = approval_pool or pool
+        self._approval_pool = approval_pool
 
     async def load_approvable_draft(
         self, request: ResponseApprovalRequest,

@@ -110,11 +110,16 @@ def claim_row(value):
 
 
 class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
+    @staticmethod
+    def repository(connection):
+        pool = Pool(connection)
+        return CommunityResponseRepository(pool, approval_pool=pool)
+
     async def test_load_approval_target_is_owner_scoped_current_and_locked(self):
         value = target()
         request, _ = approval(value)
         connection = Connection([target_row(value)])
-        loaded = await CommunityResponseRepository(Pool(connection)).load_approvable_draft(request)
+        loaded = await self.repository(connection).load_approvable_draft(request)
         self.assertEqual(loaded, value)
         query, params = connection.calls[0]
         self.assertIn("community_comments_current", query)
@@ -125,7 +130,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
         value = target()
         request, record = approval(value)
         connection = Connection([target_row(value), approval_row(record)])
-        stored = await CommunityResponseRepository(Pool(connection)).save_approval(
+        stored = await self.repository(connection).save_approval(
             request, value, record,
         )
         self.assertEqual(stored, record)
@@ -149,7 +154,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
             None, (value.publication_id,), (value.publication_id,),
             evidence, claim_row(claim),
         ])
-        stored = await CommunityResponseRepository(Pool(connection)).claim(request)
+        stored = await self.repository(connection).claim(request)
         self.assertEqual(stored, claim)
         sql = "\n".join(query for query, _ in connection.calls)
         self.assertIn("a.valid_until > clock_timestamp()", sql)
@@ -168,7 +173,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
             NOW + timedelta(minutes=5),
         )
         connection = Connection([claim_row(reserved)])
-        stored = await CommunityResponseRepository(Pool(connection)).reserve_mutation(
+        stored = await self.repository(connection).reserve_mutation(
             claim, authorization,
         )
         self.assertEqual(stored.state, ResponseState.MUTATION_RESERVED)
@@ -183,7 +188,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
         request = OfficialResponseRequest(uuid4(), record.request.approval_id, value.owner_user_id, NOW)
         claim = response_claim(value, request, record)
         connection = Connection([(value.publication_id,), (1,)])
-        await CommunityResponseRepository(Pool(connection)).assert_network_ready(claim)
+        await self.repository(connection).assert_network_ready(claim)
         self.assertIn("WHERE p.id = %s FOR UPDATE", connection.calls[0][0])
         self.assertNotIn("community_comments_current", connection.calls[0][0])
         self.assertIn("community_comments_current", connection.calls[1][0])
@@ -199,7 +204,7 @@ class CommunityResponseRepositoryTests(unittest.IsolatedAsyncioTestCase):
             NOW + timedelta(minutes=5),
         )
         connection = Connection([claim_row(claim)])
-        stored = await CommunityResponseRepository(Pool(connection)).refresh_mutation_authorization(
+        stored = await self.repository(connection).refresh_mutation_authorization(
             claim, authorization,
         )
         self.assertEqual(stored, claim)
