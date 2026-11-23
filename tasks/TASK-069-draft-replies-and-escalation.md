@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-068
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#216](https://github.com/dhruv0641/Dolla/issues/216)
+- **Branch:** `feature/TASK-069-draft-replies-escalation`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -34,6 +36,14 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
+
+## Implementation Evidence
+- `ReplyDraftService` emits fixed, non-personalized `community-reply-v1` templates only for clean, current TASK-068 evidence. It never interpolates untrusted comment text and every draft requires later human approval.
+- Any safety signal or review flag produces an escalation with no draft; critical signals are urgent. Deleted content cannot be drafted.
+- Migration 0030 binds owner, publication, latest analysis, current immutable comment version and classification; it independently recomputes deterministic decisions and fingerprints, stores `outbound_action_authorized=false`, and prevents updates/deletes.
+- `FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED` defaults to `false`; no model/provider, reply-posting, moderation, account, publishing, spend or Flow method exists.
+- Focused comment/analysis/reply/config/migration verification passes 89 tests and the single final full suite passes 688 tests. All 31 migrations and 342 statements parse, including nine statements in migration 0030; compileall, project validation and diff hygiene pass. Independent Caveman review accepted exact functional head `75206c1e542c39fa6d6993a9977749358d2e9ee5` with no remaining P0-P2 findings.
+- Docker Engine and `psql` are unavailable, so live PostgreSQL trigger/locking/concurrency behavior and operator escalation quality remain unverified.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

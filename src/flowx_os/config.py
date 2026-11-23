@@ -52,6 +52,7 @@ class Settings:
     platform_analytics_enabled: bool
     comment_ingestion_enabled: bool
     community_analysis_enabled: bool
+    community_reply_drafting_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -140,6 +141,13 @@ class Settings:
         ).strip().lower()
         if community_analysis_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_COMMUNITY_ANALYSIS_ENABLED must be true or false.")
+        community_reply_drafting_enabled = env.get(
+            "FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED", "false"
+        ).strip().lower()
+        if community_reply_drafting_enabled not in {"true", "false"}:
+            raise ConfigurationError(
+                "FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED must be true or false."
+            )
 
         return cls(
             environment=environment,
@@ -158,4 +166,5 @@ class Settings:
             platform_analytics_enabled=analytics_enabled == "true",
             comment_ingestion_enabled=comment_ingestion_enabled == "true",
             community_analysis_enabled=community_analysis_enabled == "true",
+            community_reply_drafting_enabled=community_reply_drafting_enabled == "true",
         )

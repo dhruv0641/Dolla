@@ -495,6 +495,30 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("community analysis evidence is immutable", sql)
         self.assertIn("REVOKE ALL ON community_analysis_reports FROM PUBLIC", sql)
 
+    def test_reply_drafts_are_classification_bound_escalated_and_inert(self):
+        migration = (
+            Path(__file__).resolve().parents[1]
+            / "migrations"
+            / "0030_community_reply_drafts_escalation.sql"
+        )
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE community_reply_draft_records", sql)
+        self.assertIn("expected_community_reply_draft", sql)
+        self.assertIn("community_analysis_reports", sql)
+        self.assertIn("community_comment_classifications", sql)
+        self.assertIn("community_comments_current", sql)
+        self.assertIn("FOR UPDATE OF p", sql)
+        self.assertIn("DRAFT_REQUIRES_HUMAN_APPROVAL", sql)
+        self.assertIn("ESCALATED_NO_DRAFT", sql)
+        self.assertIn("CONTENT_UNAVAILABLE_NO_DRAFT", sql)
+        self.assertIn("safety_category_value <> 'NO_DETECTED_SIGNAL'", sql)
+        self.assertIn("safety_severity_value = 'CRITICAL'", sql)
+        self.assertIn("human_approval_required = true", sql)
+        self.assertIn("outbound_action_authorized = false", sql)
+        self.assertIn("community reply draft evidence is invalid", sql)
+        self.assertIn("community reply draft evidence is immutable", sql)
+        self.assertIn("REVOKE ALL ON community_reply_draft_records FROM PUBLIC", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
