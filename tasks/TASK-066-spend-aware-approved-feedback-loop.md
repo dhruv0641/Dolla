@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-065
 - **Estimated complexity:** 12 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#207](https://github.com/dhruv0641/Dolla/issues/207)
+- **Branch:** `feature/TASK-066-spend-aware-approved-feedback-loop`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
