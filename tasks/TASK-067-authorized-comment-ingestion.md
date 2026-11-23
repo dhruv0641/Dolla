@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-011, TASK-057, TASK-060
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **Issue:** [#210](https://github.com/dhruv0641/Dolla/issues/210)
+- **Branch:** `feature/TASK-067-authorized-comment-ingestion`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
