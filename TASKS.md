@@ -113,8 +113,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-067 Authorized comment ingestion** — DONE · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) closed · PR [#211](https://github.com/dhruv0641/Dolla/pull/211) merged to `develop` as `c4810f0`; 108 focused/661 full-suite tests, independent review and required/post-merge checks passed
 - **TASK-068 Theme clustering and safety classification** — DONE · Community Workflow Engineer · 6h · deps: TASK-067 · Issue [#213](https://github.com/dhruv0641/Dolla/issues/213) closed · PR [#214](https://github.com/dhruv0641/Dolla/pull/214) merged to `develop` as `31b68e9`; 77 focused/676 full-suite tests, independent review and required/post-merge checks passed
 - **TASK-069 Draft replies and escalation** — DONE · Community Workflow Engineer · 8h · deps: TASK-068 · Issue [#216](https://github.com/dhruv0641/Dolla/issues/216) closed · PR [#217](https://github.com/dhruv0641/Dolla/pull/217) merged to `develop` as `2ddb6c2`; 89 focused/688 full-suite tests, independent review and required/post-merge checks passed
-- **TASK-070 Human approval and official responses** — IN_PROGRESS · Community Workflow Engineer · 12h · deps: TASK-069 · Issue [#219](https://github.com/dhruv0641/Dolla/issues/219) · Branch `feature/TASK-070-human-approval-official-responses`
-- **TASK-071 Community insights to research** — BACKLOG · Community Workflow Engineer · 16h · deps: TASK-070
+- **TASK-070 Human approval and official responses** — DONE · Community Workflow Engineer · 12h · deps: TASK-069 · Issue [#219](https://github.com/dhruv0641/Dolla/issues/219) closed · PR [#220](https://github.com/dhruv0641/Dolla/pull/220) merged to `develop` as `1902302`; 87 focused/712 full-suite tests, independent review and required/post-merge checks passed
+- **TASK-071 Community insights to research** — READY · Community Workflow Engineer · 16h · deps: TASK-070
 
 ## EPIC-15: Security Observability and Deployment
 
@@ -129,13 +129,13 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 74 (TASK-001 through TASK-069 and TASK-072 through TASK-076).
+- DONE: 75 (TASK-001 through TASK-070 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-070).
+- IN_PROGRESS: 0.
 - IN_REVIEW: 0.
-- READY: 0.
+- READY: 1 (TASK-071).
 - BLOCKED: 0.
-- BACKLOG: 1 (TASK-071).
+- BACKLOG: 0.
 
 ## GitHub delivery references
 
