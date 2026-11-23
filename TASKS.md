@@ -105,7 +105,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-062 Platform metrics and definitions** — DONE · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) closed · PR [#196](https://github.com/dhruv0641/Dolla/pull/196) merged to `develop` as `251eb0b`; 80 focused/596 full-suite tests, independent review, required checks and post-merge validation passed
 - **TASK-063 Windowed snapshots and missing values** — DONE · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) closed · PR [#199](https://github.com/dhruv0641/Dolla/pull/199) merged to `develop` as `ca381a1`; 91 focused/607 full-suite tests, independent review, required checks and post-merge validation passed
 - **TASK-064 Creative metadata and cohort analysis** — DONE · Analytics Engineer · 6h · deps: TASK-063 · Issue [#201](https://github.com/dhruv0641/Dolla/issues/201) closed · PR [#202](https://github.com/dhruv0641/Dolla/pull/202) merged to `develop` as `c727f09`; 61 focused/619 full-suite tests, exact-head independent review, required checks and post-merge validation passed
-- **TASK-065 Evidence-backed recommendations and experiments** — IN_PROGRESS · Analytics Engineer · 8h · deps: TASK-064 · Issue [#204](https://github.com/dhruv0641/Dolla/issues/204) · Branch `feature/TASK-065-evidence-backed-recommendations-experiments`
+- **TASK-065 Evidence-backed recommendations and experiments** — IN_REVIEW · Analytics Engineer · 8h · deps: TASK-064 · Issue [#204](https://github.com/dhruv0641/Dolla/issues/204) · Branch `feature/TASK-065-evidence-backed-recommendations-experiments`
 - **TASK-066 Spend-aware approved feedback loop** — BACKLOG · Analytics Engineer · 12h · deps: TASK-065
 
 ## EPIC-14: Community Management
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 69 (TASK-001 through TASK-064 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-065).
-- IN_REVIEW: 0.
+- IN_PROGRESS: 0.
+- IN_REVIEW: 1 (TASK-065).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 6 (TASK-066 through TASK-071).
