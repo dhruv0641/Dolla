@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-067
 - **Estimated complexity:** 6 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#213](https://github.com/dhruv0641/Dolla/issues/213)
+- **Branch:** `feature/TASK-068-theme-clustering-safety`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
