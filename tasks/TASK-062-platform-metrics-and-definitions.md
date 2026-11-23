@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-006, TASK-057, TASK-060
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** BACKLOG
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#195](https://github.com/dhruv0641/Dolla/issues/195)
+- **Branch:** `feature/TASK-062-platform-metrics-definitions`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
