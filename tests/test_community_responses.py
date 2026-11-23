@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
-import pytest
+import unittest
 
 from flowx_os.auth.tokens import Principal, Role
 from flowx_os.community.comments import CommentState
@@ -196,255 +196,245 @@ def install_claim(value, store, transport, request, approval):
     transport.proof = replace(transport.proof, text_fingerprint=value.text_fingerprint)
 
 
-@pytest.mark.asyncio
-async def test_reviewer_approves_exact_clean_draft():
-    value, store, _, instance = service()
-    request = approval_request(value)
-    record = await instance.decide(
-        request, Principal(REVIEWER, frozenset({Role.REVIEWER})), now=NOW,
-    )
-    assert record.request == request
-    assert record.draft_fingerprint == value.fingerprint
-    assert store.saved == record
-
-
-@pytest.mark.asyncio
-async def test_admin_can_reject_an_escalated_record_but_cannot_approve_it():
-    value = draft(
-        disposition=ReplyDisposition.ESCALATED_NO_DRAFT, draft_text=None,
-        escalation_reasons=("safety-harassment",),
-    )
-    _, _, _, instance = service(value)
-    rejected = approval_request(
-        value, decision=ApprovalDecision.REJECT, reviewer_role=Role.ADMIN,
-    )
-    assert (await instance.decide(
-        rejected, Principal(REVIEWER, frozenset({Role.ADMIN})), now=NOW,
-    )).request.decision is ApprovalDecision.REJECT
-    approved = approval_request(value, reviewer_role=Role.ADMIN)
-    with pytest.raises(CommunityResponseError, match="cannot be approved"):
-        await instance.decide(
-            approved, Principal(REVIEWER, frozenset({Role.ADMIN})), now=NOW,
+class CommunityResponseServiceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_reviewer_approves_exact_clean_draft(self):
+        value, store, _, instance = service()
+        request = approval_request(value)
+        record = await instance.decide(
+            request, Principal(REVIEWER, frozenset({Role.REVIEWER})), now=NOW,
         )
+        assert record.request == request
+        assert record.draft_fingerprint == value.fingerprint
+        assert store.saved == record
 
 
-@pytest.mark.asyncio
-async def test_operator_or_different_subject_cannot_decide():
-    value, _, _, instance = service()
-    request = approval_request(value)
-    for principal in (
-        Principal(REVIEWER, frozenset({Role.OPERATOR})),
-        Principal("other", frozenset({Role.REVIEWER})),
-    ):
-        with pytest.raises(CommunityResponseError) as caught:
-            await instance.decide(request, principal, now=NOW)
-        assert caught.value.code == "REVIEWER_NOT_AUTHORIZED"
-
-
-@pytest.mark.asyncio
-async def test_official_response_is_disabled_by_default():
-    value, _, _, instance = service(enabled=False)
-    request = response_request(uuid4())
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "RESPONSES_DISABLED"
-
-
-@pytest.mark.asyncio
-async def test_success_requires_reservation_and_independent_remote_proof():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    result = await instance.respond(request, now=NOW)
-    assert result.state is ResponseState.RESPONDED
-    assert result.remote_response_id == "reply123"
-    assert store.reserve_calls == 1
-    assert transport.create_calls == 1
-    assert transport.authorization_calls == 2
-    assert transport.get_calls == 1
-    assert store.ready_calls == 3
-
-
-@pytest.mark.asyncio
-async def test_insufficient_or_stale_authorization_fails_before_mutation():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    transport.authorization = replace(transport.authorization, granted_scopes=("youtube.readonly",))
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "AUTHORIZATION_INVALID"
-    assert transport.create_calls == 0
-    transport.authorization = ReplyAuthorization(
-        PublicationPlatform.YOUTUBE, "UCchannel", (YOUTUBE_REPLY_SCOPE,),
-        NOW - timedelta(minutes=6), NOW + timedelta(minutes=1),
-    )
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "AUTHORIZATION_INVALID"
-
-
-@pytest.mark.asyncio
-async def test_authorization_is_rechecked_after_reservation_before_mutation():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    revoked = replace(transport.authorization, granted_scopes=("youtube.readonly",))
-    transport.authorization_sequence = [transport.authorization, revoked]
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "AUTHORIZATION_INVALID"
-    assert store.reserve_calls == 1
-    assert transport.authorization_calls == 2
-    assert transport.create_calls == 0
-    assert store.failure is caught.value
-    assert not store.failure.ambiguous
-
-
-@pytest.mark.asyncio
-async def test_transport_exception_is_ambiguous_and_never_auto_retried():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    transport.raise_create = True
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "TRANSPORT_OUTCOME_UNKNOWN"
-    assert caught.value.ambiguous
-    assert store.failure is caught.value
-    store.claim_value = replace(store.claim_value, state=ResponseState.VERIFY_PENDING)
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "RESPONSE_OUTCOME_UNKNOWN"
-    assert transport.create_calls == 1
-
-
-@pytest.mark.asyncio
-async def test_mismatched_receipt_is_ambiguous_and_not_verified():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    transport.receipt = replace(transport.receipt, parent_remote_comment_id="other")
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "REMOTE_RESPONSE_INVALID"
-    assert caught.value.ambiguous
-    assert transport.get_calls == 0
-
-
-@pytest.mark.asyncio
-async def test_unknown_receipt_requires_identity_recovery_then_read_only_verification():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    transport.receipt = replace(
-        transport.receipt, state=ProviderMutationState.UNKNOWN,
-        remote_response_id=None,
-    )
-    result = await instance.respond(request, now=NOW)
-    assert result.state is ResponseState.VERIFY_PENDING
-    await instance.recover_identity(request, "reply123", "operator-read-123")
-    result = await instance.reconcile(request, now=NOW)
-    assert result.state is ResponseState.RESPONDED
-    assert transport.create_calls == 1
-
-
-@pytest.mark.asyncio
-async def test_remote_proof_must_match_exact_parent_and_text():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    store.claim_value = replace(
-        store.claim_value, state=ResponseState.VERIFY_PENDING,
-        remote_response_id="reply123",
-    )
-    transport.proof = replace(transport.proof, parent_remote_comment_id="other")
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "REMOTE_PROOF_INVALID"
-    assert transport.create_calls == 0
-
-
-@pytest.mark.asyncio
-async def test_future_remote_proof_is_rejected():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    store.claim_value = replace(
-        store.claim_value, state=ResponseState.VERIFY_PENDING,
-        remote_response_id="reply123",
-    )
-    transport.proof = replace(transport.proof, observed_at=NOW + timedelta(seconds=1))
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "REMOTE_PROOF_INVALID"
-
-
-@pytest.mark.asyncio
-async def test_injected_store_cannot_change_claim_identity_or_final_result():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    store.corrupt_reservation = True
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "STORED_CLAIM_INVALID"
-    assert transport.create_calls == 0
-
-    install_claim(value, store, transport, request, approval)
-    store.claim_value = replace(
-        store.claim_value, state=ResponseState.VERIFY_PENDING,
-        remote_response_id="reply123",
-    )
-    store.corrupt_reservation = False
-    store.corrupt_verification = True
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.respond(request, now=NOW)
-    assert caught.value.code == "VERIFICATION_RESULT_INVALID"
-
-
-@pytest.mark.asyncio
-async def test_terminal_response_replays_without_network():
-    value, store, transport, instance = service()
-    approval = approval_request(value)
-    request = response_request(approval.approval_id)
-    install_claim(value, store, transport, request, approval)
-    store.claim_value = replace(
-        store.claim_value, state=ResponseState.RESPONDED,
-        remote_response_id="reply123",
-    )
-    result = await instance.respond(request, now=NOW)
-    assert result.state is ResponseState.RESPONDED
-    assert store.ready_calls == transport.create_calls == transport.get_calls == 0
-
-
-def test_approval_expiry_and_unsafe_reason_are_rejected():
-    value = draft()
-    with pytest.raises(ValueError):
-        approval_request(value, valid_until=NOW + timedelta(days=2))
-    with pytest.raises(ValueError):
-        approval_request(value, reason="token=super-secret")
-
-
-@pytest.mark.asyncio
-async def test_expired_or_future_approval_is_rejected_before_store_access():
-    value, store, _, instance = service()
-    expired = approval_request(
-        value, decided_at=NOW - timedelta(hours=2),
-        valid_until=NOW - timedelta(hours=1),
-    )
-    with pytest.raises(CommunityResponseError) as caught:
-        await instance.decide(
-            expired, Principal(REVIEWER, frozenset({Role.REVIEWER})), now=NOW,
+    async def test_admin_can_reject_an_escalated_record_but_cannot_approve_it(self):
+        value = draft(
+            disposition=ReplyDisposition.ESCALATED_NO_DRAFT, draft_text=None,
+            escalation_reasons=("safety-harassment",),
         )
-    assert caught.value.code == "APPROVAL_TIME_INVALID"
-    assert store.saved is None
+        _, _, _, instance = service(value)
+        rejected = approval_request(
+            value, decision=ApprovalDecision.REJECT, reviewer_role=Role.ADMIN,
+        )
+        assert (await instance.decide(
+            rejected, Principal(REVIEWER, frozenset({Role.ADMIN})), now=NOW,
+        )).request.decision is ApprovalDecision.REJECT
+        approved = approval_request(value, reviewer_role=Role.ADMIN)
+        with self.assertRaisesRegex(CommunityResponseError, "cannot be approved"):
+            await instance.decide(
+                approved, Principal(REVIEWER, frozenset({Role.ADMIN})), now=NOW,
+            )
+
+
+    async def test_operator_or_different_subject_cannot_decide(self):
+        value, _, _, instance = service()
+        request = approval_request(value)
+        for principal in (
+            Principal(REVIEWER, frozenset({Role.OPERATOR})),
+            Principal("other", frozenset({Role.REVIEWER})),
+        ):
+            with self.assertRaises(CommunityResponseError) as caught:
+                await instance.decide(request, principal, now=NOW)
+            assert caught.exception.code == "REVIEWER_NOT_AUTHORIZED"
+
+
+    async def test_official_response_is_disabled_by_default(self):
+        value, _, _, instance = service(enabled=False)
+        request = response_request(uuid4())
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "RESPONSES_DISABLED"
+
+
+    async def test_success_requires_reservation_and_independent_remote_proof(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        result = await instance.respond(request, now=NOW)
+        assert result.state is ResponseState.RESPONDED
+        assert result.remote_response_id == "reply123"
+        assert store.reserve_calls == 1
+        assert transport.create_calls == 1
+        assert transport.authorization_calls == 2
+        assert transport.get_calls == 1
+        assert store.ready_calls == 3
+
+
+    async def test_insufficient_or_stale_authorization_fails_before_mutation(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        transport.authorization = replace(transport.authorization, granted_scopes=("youtube.readonly",))
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "AUTHORIZATION_INVALID"
+        assert transport.create_calls == 0
+        transport.authorization = ReplyAuthorization(
+            PublicationPlatform.YOUTUBE, "UCchannel", (YOUTUBE_REPLY_SCOPE,),
+            NOW - timedelta(minutes=6), NOW + timedelta(minutes=1),
+        )
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "AUTHORIZATION_INVALID"
+
+
+    async def test_authorization_is_rechecked_after_reservation_before_mutation(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        revoked = replace(transport.authorization, granted_scopes=("youtube.readonly",))
+        transport.authorization_sequence = [transport.authorization, revoked]
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "AUTHORIZATION_INVALID"
+        assert store.reserve_calls == 1
+        assert transport.authorization_calls == 2
+        assert transport.create_calls == 0
+        assert store.failure is caught.exception
+        assert not store.failure.ambiguous
+
+
+    async def test_transport_exception_is_ambiguous_and_never_auto_retried(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        transport.raise_create = True
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "TRANSPORT_OUTCOME_UNKNOWN"
+        assert caught.exception.ambiguous
+        assert store.failure is caught.exception
+        store.claim_value = replace(store.claim_value, state=ResponseState.VERIFY_PENDING)
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "RESPONSE_OUTCOME_UNKNOWN"
+        assert transport.create_calls == 1
+
+
+    async def test_mismatched_receipt_is_ambiguous_and_not_verified(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        transport.receipt = replace(transport.receipt, parent_remote_comment_id="other")
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "REMOTE_RESPONSE_INVALID"
+        assert caught.exception.ambiguous
+        assert transport.get_calls == 0
+
+
+    async def test_unknown_receipt_requires_identity_recovery_then_read_only_verification(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        transport.receipt = replace(
+            transport.receipt, state=ProviderMutationState.UNKNOWN,
+            remote_response_id=None,
+        )
+        result = await instance.respond(request, now=NOW)
+        assert result.state is ResponseState.VERIFY_PENDING
+        await instance.recover_identity(request, "reply123", "operator-read-123")
+        result = await instance.reconcile(request, now=NOW)
+        assert result.state is ResponseState.RESPONDED
+        assert transport.create_calls == 1
+
+
+    async def test_remote_proof_must_match_exact_parent_and_text(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        store.claim_value = replace(
+            store.claim_value, state=ResponseState.VERIFY_PENDING,
+            remote_response_id="reply123",
+        )
+        transport.proof = replace(transport.proof, parent_remote_comment_id="other")
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "REMOTE_PROOF_INVALID"
+        assert transport.create_calls == 0
+
+
+    async def test_future_remote_proof_is_rejected(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        store.claim_value = replace(
+            store.claim_value, state=ResponseState.VERIFY_PENDING,
+            remote_response_id="reply123",
+        )
+        transport.proof = replace(transport.proof, observed_at=NOW + timedelta(seconds=1))
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "REMOTE_PROOF_INVALID"
+
+
+    async def test_injected_store_cannot_change_claim_identity_or_final_result(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        store.corrupt_reservation = True
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "STORED_CLAIM_INVALID"
+        assert transport.create_calls == 0
+
+        install_claim(value, store, transport, request, approval)
+        store.claim_value = replace(
+            store.claim_value, state=ResponseState.VERIFY_PENDING,
+            remote_response_id="reply123",
+        )
+        store.corrupt_reservation = False
+        store.corrupt_verification = True
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.respond(request, now=NOW)
+        assert caught.exception.code == "VERIFICATION_RESULT_INVALID"
+
+
+    async def test_terminal_response_replays_without_network(self):
+        value, store, transport, instance = service()
+        approval = approval_request(value)
+        request = response_request(approval.approval_id)
+        install_claim(value, store, transport, request, approval)
+        store.claim_value = replace(
+            store.claim_value, state=ResponseState.RESPONDED,
+            remote_response_id="reply123",
+        )
+        result = await instance.respond(request, now=NOW)
+        assert result.state is ResponseState.RESPONDED
+        assert store.ready_calls == transport.create_calls == transport.get_calls == 0
+
+
+    def test_approval_expiry_and_unsafe_reason_are_rejected(self):
+        value = draft()
+        with self.assertRaises(ValueError):
+            approval_request(value, valid_until=NOW + timedelta(days=2))
+        with self.assertRaises(ValueError):
+            approval_request(value, reason="token=super-secret")
+
+
+    async def test_expired_or_future_approval_is_rejected_before_store_access(self):
+        value, store, _, instance = service()
+        expired = approval_request(
+            value, decided_at=NOW - timedelta(hours=2),
+            valid_until=NOW - timedelta(hours=1),
+        )
+        with self.assertRaises(CommunityResponseError) as caught:
+            await instance.decide(
+                expired, Principal(REVIEWER, frozenset({Role.REVIEWER})), now=NOW,
+            )
+        assert caught.exception.code == "APPROVAL_TIME_INVALID"
+        assert store.saved is None
+
+
+if __name__ == '__main__':
+    unittest.main()
