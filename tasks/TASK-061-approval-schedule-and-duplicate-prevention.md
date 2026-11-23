@@ -8,6 +8,7 @@
 - **Status:** IN_REVIEW
 - **Related source documents:** ARCHITECTURE
 - **GitHub issue:** [#192](https://github.com/dhruv0641/Dolla/issues/192)
+- **Implementation PR:** [#193](https://github.com/dhruv0641/Dolla/pull/193)
 - **Branch:** `feature/TASK-061-approval-schedule-duplicate-prevention`
 - **Blockers:** No blocker for disabled-by-default local implementation. Live scheduling and publication require separately authorized platform accounts and remain outside development verification.
 
