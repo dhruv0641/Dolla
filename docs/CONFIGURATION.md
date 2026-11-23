@@ -8,6 +8,8 @@ Copy `.env.example` to `.env` for local development. `.env` is ignored by Git. T
 
 Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google AI Pro entitlements, Flow account credentials, YouTube OAuth, and Meta OAuth use separate references. Leave optional references unset until the corresponding integration is authorized. No credentials are required to run planning validation or the configuration unit tests.
 
+`FLOWX_COMMENT_INGESTION_ENABLED` defaults to `false`. Turning it on only enables the application boundary described in `AUTHORIZED_COMMENT_INGESTION.md`; it does not connect an account, resolve a credential reference, install a provider adapter, retrieve a comment, or authorize a reply. A deployment must separately supply an official provider implementation and current owned-channel authorization. Unknown authorization or reconciliation state fails closed.
+
 Example local check:
 
 ```powershell
