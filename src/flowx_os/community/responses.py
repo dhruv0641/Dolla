@@ -527,15 +527,26 @@ class CommunityResponseService:
         prior_claim = claim
         claim = await self._store.reserve_mutation(claim, authorization)
         self._require_claim_transition(prior_claim, claim, ResponseState.MUTATION_RESERVED)
-        rechecked_authorization = await self._authorization(claim, now)
-        claim_after_recheck = await self._store.refresh_mutation_authorization(
-            claim, rechecked_authorization,
-        )
-        self._require_claim_transition(
-            claim, claim_after_recheck, ResponseState.MUTATION_RESERVED,
-        )
-        claim = claim_after_recheck
-        await self._store.assert_network_ready(claim)
+        try:
+            rechecked_authorization = await self._authorization(claim, now)
+            claim_after_recheck = await self._store.refresh_mutation_authorization(
+                claim, rechecked_authorization,
+            )
+            self._require_claim_transition(
+                claim, claim_after_recheck, ResponseState.MUTATION_RESERVED,
+            )
+            claim = claim_after_recheck
+            await self._store.assert_network_ready(claim)
+        except CommunityResponseError as exc:
+            await self._store.record_transport_failure(claim, exc)
+            raise
+        except Exception as exc:
+            error = CommunityResponseError(
+                "PRE_MUTATION_REVALIDATION_FAILED",
+                "official response pre-mutation revalidation failed",
+            )
+            await self._store.record_transport_failure(claim, error)
+            raise error from exc
         try:
             receipt = await self._transport.create_response(
                 credentials_ref=claim.credentials_ref, platform=claim.platform,

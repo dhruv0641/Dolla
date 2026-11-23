@@ -300,6 +300,8 @@ async def test_authorization_is_rechecked_after_reservation_before_mutation():
     assert store.reserve_calls == 1
     assert transport.authorization_calls == 2
     assert transport.create_calls == 0
+    assert store.failure is caught.value
+    assert not store.failure.ambiguous
 
 
 @pytest.mark.asyncio
