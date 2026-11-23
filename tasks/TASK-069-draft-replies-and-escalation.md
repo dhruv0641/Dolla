@@ -42,7 +42,7 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Any safety signal or review flag produces an escalation with no draft; critical signals are urgent. Deleted content cannot be drafted.
 - Migration 0030 binds owner, publication, latest analysis, current immutable comment version and classification; it independently recomputes deterministic decisions and fingerprints, stores `outbound_action_authorized=false`, and prevents updates/deletes.
 - `FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED` defaults to `false`; no model/provider, reply-posting, moderation, account, publishing, spend or Flow method exists.
-- Focused comment/analysis/reply/config/migration verification passes 89 tests. All 31 migrations and 342 statements parse, including nine statements in migration 0030; compileall, project validation and diff hygiene pass.
+- Focused comment/analysis/reply/config/migration verification passes 89 tests and the single final full suite passes 688 tests. All 31 migrations and 342 statements parse, including nine statements in migration 0030; compileall, project validation and diff hygiene pass. Independent Caveman review accepted exact functional head `75206c1e542c39fa6d6993a9977749358d2e9ee5` with no remaining P0-P2 findings.
 - Docker Engine and `psql` are unavailable, so live PostgreSQL trigger/locking/concurrency behavior and operator escalation quality remain unverified.
 
 ## Definition of Done
