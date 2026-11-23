@@ -22,6 +22,7 @@ class SettingsTests(unittest.TestCase):
         self.assertFalse(settings.publication_scheduling_enabled)
         self.assertFalse(settings.platform_analytics_enabled)
         self.assertFalse(settings.comment_ingestion_enabled)
+        self.assertFalse(settings.community_analysis_enabled)
 
     def test_secret_references_are_retained_as_references(self) -> None:
         settings = Settings.from_env(
@@ -96,6 +97,12 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(enabled.comment_ingestion_enabled)
         with self.assertRaises(ConfigurationError):
             Settings.from_env({"FLOWX_COMMENT_INGESTION_ENABLED": "yes"})
+
+    def test_community_analysis_requires_explicit_boolean_enablement(self) -> None:
+        enabled = Settings.from_env({"FLOWX_COMMUNITY_ANALYSIS_ENABLED": "true"})
+        self.assertTrue(enabled.community_analysis_enabled)
+        with self.assertRaises(ConfigurationError):
+            Settings.from_env({"FLOWX_COMMUNITY_ANALYSIS_ENABLED": "yes"})
 
     def test_empty_storage_path_is_rejected(self) -> None:
         with self.assertRaisesRegex(ConfigurationError, "FLOWX_STORAGE_ROOT"):

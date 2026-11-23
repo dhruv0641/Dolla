@@ -37,5 +37,12 @@ Relevant application service, tests, migration (if needed), configuration and do
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
 
+## Implementation Evidence
+- `CommunityAnalyzer` implements bounded local `community-theme-v1` and `community-safety-v1` rules over the exact latest complete TASK-067 snapshot. `NO_DETECTED_SIGNAL` is explicitly not a safety guarantee, and all matched safety signals require human review.
+- Migration `0029_community_theme_safety_analysis.sql` stores immutable reports, per-comment classifications and clusters; database triggers independently verify current owner/source lineage, fixed policy results, fingerprints, completeness and `outbound_action_authorized=false`.
+- `FLOWX_COMMUNITY_ANALYSIS_ENABLED` defaults to `false`; no model/provider, reply, moderation, account, publishing, spend or Flow method exists in this boundary.
+- Focused community/config/migration verification passes 75 tests. All 30 migrations and 333 statements parse, including 21 statements in migration 0029; compileall, project-plan validation and diff hygiene pass.
+- Docker is installed but its Linux engine is unavailable, and `psql` is unavailable. Live PostgreSQL trigger/concurrency behavior, linguistic calibration, multilingual recall, adversarial evasion and operator escalation quality remain unverified.
+
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

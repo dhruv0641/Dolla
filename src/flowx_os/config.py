@@ -51,6 +51,7 @@ class Settings:
     publication_scheduling_enabled: bool
     platform_analytics_enabled: bool
     comment_ingestion_enabled: bool
+    community_analysis_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -134,6 +135,11 @@ class Settings:
         ).strip().lower()
         if comment_ingestion_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_COMMENT_INGESTION_ENABLED must be true or false.")
+        community_analysis_enabled = env.get(
+            "FLOWX_COMMUNITY_ANALYSIS_ENABLED", "false"
+        ).strip().lower()
+        if community_analysis_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_COMMUNITY_ANALYSIS_ENABLED must be true or false.")
 
         return cls(
             environment=environment,
@@ -151,4 +157,5 @@ class Settings:
             publication_scheduling_enabled=scheduling_enabled == "true",
             platform_analytics_enabled=analytics_enabled == "true",
             comment_ingestion_enabled=comment_ingestion_enabled == "true",
+            community_analysis_enabled=community_analysis_enabled == "true",
         )
