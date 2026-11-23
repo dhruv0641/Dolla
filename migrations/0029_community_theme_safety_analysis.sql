@@ -28,7 +28,7 @@ CREATE TABLE community_analysis_reports (
     CHECK (outbound_action_authorized = false),
   CHECK (analyzed_comment_count + deleted_comment_count = total_comment_count),
   CHECK (review_required_count <= analyzed_comment_count),
-  CHECK (created_at >= requested_at),
+  CHECK (created_at = requested_at),
   CHECK (status = CASE WHEN total_comment_count = 0 THEN 'EMPTY' ELSE 'CLASSIFIED' END),
   UNIQUE (
     publication_id, ingestion_sync_id, theme_taxonomy_version,
@@ -239,6 +239,7 @@ BEGIN
      OR NEW.owner_user_id IS DISTINCT FROM current_owner
      OR NEW.owner_user_id IS DISTINCT FROM run_value.owner_user_id
      OR NEW.requested_at < run_value.updated_at
+     OR NEW.requested_at > clock_timestamp()
      OR NEW.theme_taxonomy_version <> 'community-theme-v1'
      OR NEW.safety_policy_version <> 'community-safety-v1'
      OR NEW.total_comment_count IS DISTINCT FROM current_total

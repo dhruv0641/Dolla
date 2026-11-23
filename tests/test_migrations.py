@@ -489,6 +489,8 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("safety.personal_data", sql)
         self.assertIn("source_snapshot_fingerprint", sql)
         self.assertIn("outbound_action_authorized = false", sql)
+        self.assertIn("CHECK (created_at = requested_at)", sql)
+        self.assertIn("NEW.requested_at > clock_timestamp()", sql)
         self.assertIn("community analysis evidence is incomplete at commit", sql)
         self.assertIn("community analysis evidence is immutable", sql)
         self.assertIn("REVOKE ALL ON community_analysis_reports FROM PUBLIC", sql)
