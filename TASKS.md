@@ -112,7 +112,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-067 Authorized comment ingestion** — DONE · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) closed · PR [#211](https://github.com/dhruv0641/Dolla/pull/211) merged to `develop` as `c4810f0`; 108 focused/661 full-suite tests, independent review and required/post-merge checks passed
 - **TASK-068 Theme clustering and safety classification** — DONE · Community Workflow Engineer · 6h · deps: TASK-067 · Issue [#213](https://github.com/dhruv0641/Dolla/issues/213) closed · PR [#214](https://github.com/dhruv0641/Dolla/pull/214) merged to `develop` as `31b68e9`; 77 focused/676 full-suite tests, independent review and required/post-merge checks passed
-- **TASK-069 Draft replies and escalation** — READY · Community Workflow Engineer · 8h · deps: TASK-068
+- **TASK-069 Draft replies and escalation** — IN_PROGRESS · Community Workflow Engineer · 8h · deps: TASK-068 · Issue [#216](https://github.com/dhruv0641/Dolla/issues/216) · Branch `feature/TASK-069-draft-replies-escalation`
 - **TASK-070 Human approval and official responses** — BACKLOG · Community Workflow Engineer · 12h · deps: TASK-069
 - **TASK-071 Community insights to research** — BACKLOG · Community Workflow Engineer · 16h · deps: TASK-070
 
@@ -131,9 +131,9 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 73 (TASK-001 through TASK-068 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 0.
+- IN_PROGRESS: 1 (TASK-069).
 - IN_REVIEW: 0.
-- READY: 1 (TASK-069).
+- READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 2 (TASK-070 through TASK-071).
 

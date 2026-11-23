@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-068
 - **Estimated complexity:** 8 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#216](https://github.com/dhruv0641/Dolla/issues/216)
+- **Branch:** `feature/TASK-069-draft-replies-escalation`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
