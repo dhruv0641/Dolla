@@ -534,6 +534,10 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("record_community_response_approval", sql)
         self.assertIn("lock_community_response_publication", sql)
         self.assertIn("SECURITY DEFINER", sql)
+        self.assertLess(
+            sql.index("CREATE ROLE flowx_community_approval_writer"),
+            sql.index("GRANT EXECUTE ON FUNCTION lock_community_response_publication"),
+        )
         self.assertIn("draft.disposition <> 'DRAFT_REQUIRES_HUMAN_APPROVAL'", sql)
         self.assertIn("community_comments_current", sql)
         self.assertIn("WHERE p.id = NEW.publication_id FOR UPDATE", sql)

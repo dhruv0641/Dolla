@@ -113,8 +113,6 @@ END;
 $$;
 
 REVOKE EXECUTE ON FUNCTION lock_community_response_publication(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION lock_community_response_publication(uuid)
-  TO flowx_community_approval_writer, flowx_community_response_runtime;
 
 CREATE FUNCTION guard_community_response_approval_immutable() RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -147,6 +145,9 @@ BEGIN
   END IF;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION lock_community_response_publication(uuid)
+  TO flowx_community_approval_writer, flowx_community_response_runtime;
 
 CREATE FUNCTION record_community_response_approval(
   approval_id_value uuid,
