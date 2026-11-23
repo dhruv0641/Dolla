@@ -14,6 +14,8 @@ Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google
 
 `FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED` defaults to `false`. Enabling it permits only the fixed local `community-reply-v1` templates and escalation records documented in `COMMUNITY_REPLY_DRAFTS.md`. Comment text is never interpolated into a template. Every draft still requires human approval and grants no posting, moderation or provider authority.
 
+`FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED` defaults to `false`. Enabling it permits the separately injected official response transport only after an exact reviewer/admin approval and fresh provider authorization. It does not connect accounts, resolve credentials, grant moderation authority or make an unverified provider receipt final. See `COMMUNITY_OFFICIAL_RESPONSES.md`.
+
 Example local check:
 
 ```powershell

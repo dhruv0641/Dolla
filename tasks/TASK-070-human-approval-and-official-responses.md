@@ -28,9 +28,9 @@ Deliver human approval and official responses as an independently verifiable cap
 Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and configuration.
+- [x] Errors, state transitions and security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
@@ -39,3 +39,13 @@ Relevant application service, tests, migration (if needed), configuration and do
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.
+
+## Implementation Evidence
+
+- Added typed reviewer/admin approvals over one exact TASK-069 draft, including role, owner, immutable text/classification evidence, expiry and rejection handling. Safety escalations, deleted comments and non-draft records cannot be approved.
+- Added a disabled-by-default transport protocol and response service for YouTube, Instagram and Facebook official interfaces. Fresh exact-destination scopes, a database-backed single-winner mutation reservation, fail-closed receipt validation, unknown-outcome recovery and independent official reads are mandatory.
+- Added migration `0031_community_human_approval_official_responses.sql`. PostgreSQL independently rechecks current owner/publication/channel/comment/latest-analysis evidence before mutation, recomputes authorization/receipt/verification fingerprints, limits legal state transitions and protects immutable approval/terminal history.
+- Added repository boundaries, configuration (`FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED=false`), operator documentation and domain/repository/migration/config regressions.
+- Focused verification on 2026-11-24: 84 tests passed across TASK-067 through TASK-070 community boundaries, configuration and every migration parser check. `compileall`, diff hygiene and the 76-task project validator passed.
+- External limits: no concrete provider adapter, OAuth/account connection, credential resolution or response execution was configured or invoked. Live PostgreSQL triggers/concurrency and real provider authorization/revocation/recovery remain unverified, so production readiness is not claimed.
+- Independent Technical Reviewer: pending exact-commit Caveman review.

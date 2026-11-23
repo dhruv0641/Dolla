@@ -519,6 +519,34 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("community reply draft evidence is immutable", sql)
         self.assertIn("REVOKE ALL ON community_reply_draft_records FROM PUBLIC", sql)
 
+    def test_official_responses_require_exact_approval_reservation_and_remote_proof(self):
+        migration = (
+            Path(__file__).resolve().parents[1]
+            / "migrations"
+            / "0031_community_human_approval_official_responses.sql"
+        )
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE community_response_approvals", sql)
+        self.assertIn("CREATE TABLE community_official_responses", sql)
+        self.assertIn("reviewer_role IN ('admin','reviewer')", sql)
+        self.assertIn("draft.disposition <> 'DRAFT_REQUIRES_HUMAN_APPROVAL'", sql)
+        self.assertIn("community_comments_current", sql)
+        self.assertIn("FOR UPDATE OF p", sql)
+        self.assertIn("MUTATION_RESERVED", sql)
+        self.assertIn("youtube.force-ssl", sql)
+        self.assertIn("instagram_business_manage_comments", sql)
+        self.assertIn("pages_manage_engagement", sql)
+        self.assertIn("recovery_evidence_id", sql)
+        self.assertIn("verification_fingerprint", sql)
+        self.assertIn("verification_parent_comment_id", sql)
+        self.assertIn("expected_authorization", sql)
+        self.assertIn("expected_receipt", sql)
+        self.assertIn("interval '300 seconds'", sql)
+        self.assertIn("NEW.verification_visible IS DISTINCT FROM true", sql)
+        self.assertIn("official response state transition is invalid", sql)
+        self.assertIn("response approval is immutable", sql)
+        self.assertIn("REVOKE ALL ON community_official_responses FROM PUBLIC", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
