@@ -287,4 +287,3 @@ CREATE TRIGGER analytics_metric_observations_prevent_update
 CREATE TRIGGER analytics_metric_observations_prevent_delete
   BEFORE DELETE ON analytics_metric_observations
   FOR EACH ROW EXECUTE FUNCTION guard_analytics_metric_observation_immutable();
-

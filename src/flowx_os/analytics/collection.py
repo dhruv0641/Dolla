@@ -570,4 +570,3 @@ class PlatformMetricCollector:
                 datum.validate_for(self._registry)
         except ValueError as exc:
             raise AnalyticsCollectionError("OBSERVATION_INVALID", "analytics metric value is invalid") from exc
-

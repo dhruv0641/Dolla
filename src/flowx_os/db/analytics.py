@@ -477,4 +477,3 @@ class MetricObservationRepository:
             )
         except Exception as exc:
             raise RepositoryUnavailable("stored metric observation is invalid") from exc
-

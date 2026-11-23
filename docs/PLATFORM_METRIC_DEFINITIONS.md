@@ -102,4 +102,3 @@ request, production PostgreSQL migration or live metric comparison has been
 performed. Consequently this capability is implemented but not live-integration
 or production verified. TASK-063 owns scheduled window snapshots and downstream
 missing-value reporting behavior.
-
