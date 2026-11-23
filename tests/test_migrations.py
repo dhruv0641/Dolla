@@ -429,6 +429,32 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("Facebook publication claim evidence is immutable", sql)
         self.assertIn("prevent_facebook_publication_delete", sql)
 
+    def test_comment_ingestion_is_authorized_bounded_idempotent_and_immutable(self):
+        migration = (
+            Path(__file__).resolve().parents[1]
+            / "migrations"
+            / "0028_authorized_comment_ingestion.sql"
+        )
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE comment_ingestion_runs", sql)
+        self.assertIn("CREATE TABLE comment_ingestion_attempts", sql)
+        self.assertIn("CREATE TABLE comment_ingestion_batches", sql)
+        self.assertIn("CREATE TABLE community_comment_versions", sql)
+        self.assertIn("CREATE VIEW community_comments_current", sql)
+        self.assertIn("uq_comment_ingestion_active_publication", sql)
+        self.assertIn("UNIQUE (sync_id, page_index)", sql)
+        self.assertIn("verdict = 'IN_SYNC'", sql)
+        self.assertIn("remote_state = 'PUBLISHED'", sql)
+        self.assertIn("ch.permissions_status", sql)
+        self.assertIn("expected_comment_ingestion_target", sql)
+        self.assertIn("comment ingestion reservation is invalid", sql)
+        self.assertIn("comment ingestion batch evidence is invalid", sql)
+        self.assertIn("community comment version evidence is invalid", sql)
+        self.assertIn("author_external_id_hash", sql)
+        self.assertIn("state = 'DELETED'", sql)
+        self.assertIn("comment ingestion evidence is immutable", sql)
+        self.assertIn("REVOKE ALL ON community_comment_versions FROM PUBLIC", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

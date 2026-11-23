@@ -110,7 +110,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-14: Community Management
 
-- **TASK-067 Authorized comment ingestion** — IN_PROGRESS · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) · Branch `feature/TASK-067-authorized-comment-ingestion`
+- **TASK-067 Authorized comment ingestion** — IN_REVIEW · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) · Branch `feature/TASK-067-authorized-comment-ingestion`
 - **TASK-068 Theme clustering and safety classification** — BACKLOG · Community Workflow Engineer · 6h · deps: TASK-067
 - **TASK-069 Draft replies and escalation** — BACKLOG · Community Workflow Engineer · 8h · deps: TASK-068
 - **TASK-070 Human approval and official responses** — BACKLOG · Community Workflow Engineer · 12h · deps: TASK-069
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 71 (TASK-001 through TASK-066 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-067).
-- IN_REVIEW: 0.
+- IN_PROGRESS: 0.
+- IN_REVIEW: 1 (TASK-067).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 4 (TASK-068 through TASK-071).
