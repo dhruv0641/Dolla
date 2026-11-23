@@ -5,7 +5,9 @@
 - **Priority:** P2
 - **Dependencies:** TASK-070
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_PROGRESS
+- **GitHub issue:** [#222](https://github.com/dhruv0641/Dolla/issues/222)
+- **Branch:** `feature/TASK-071-community-insights-research`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
