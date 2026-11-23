@@ -5,7 +5,7 @@
 - **Priority:** P2
 - **Dependencies:** TASK-062
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **GitHub issue:** [#198](https://github.com/dhruv0641/Dolla/issues/198)
 - **Pull request:** [#199](https://github.com/dhruv0641/Dolla/pull/199)
 - **Branch:** `feature/TASK-063-windowed-snapshots-missing-values`
@@ -74,5 +74,7 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
   `511c132d323f32539f5a667360a1cddfd974ec05` with no critical/P1/P2
   findings after independently verifying the forgery and fractional COUNT fail,
   all five windows, readiness, uniqueness, replay and missing-value behavior.
-- The single final full suite passed all 607 tests. Remaining gate: GitHub
-  PR/required CI and protected-branch merge.
+- The single final full suite passed all 607 tests. PR #199 passed both required checks
+  and merged only to protected `develop` as
+  `ca381a16e2c43adbf1d5b38ffed258ebfdd28000`; issue #198 closed and
+  post-merge validation passed.

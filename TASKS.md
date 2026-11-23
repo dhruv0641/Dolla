@@ -103,7 +103,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-13: Analytics and Growth
 
 - **TASK-062 Platform metrics and definitions** — DONE · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) closed · PR [#196](https://github.com/dhruv0641/Dolla/pull/196) merged to `develop` as `251eb0b`; 80 focused/596 full-suite tests, independent review, required checks and post-merge validation passed
-- **TASK-063 Windowed snapshots and missing values** — IN_REVIEW · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) · PR [#199](https://github.com/dhruv0641/Dolla/pull/199) targets `develop`; Caveman accepted exact code head `511c132`; 91 focused/607 full-suite tests, all migration parses, compilation, diff hygiene and project validation pass; required CI pending
+- **TASK-063 Windowed snapshots and missing values** — DONE · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) closed · PR [#199](https://github.com/dhruv0641/Dolla/pull/199) merged to `develop` as `ca381a1`; 91 focused/607 full-suite tests, independent review, required checks and post-merge validation passed
 - **TASK-064 Creative metadata and cohort analysis** — BACKLOG · Analytics Engineer · 6h · deps: TASK-063
 - **TASK-065 Evidence-backed recommendations and experiments** — BACKLOG · Analytics Engineer · 8h · deps: TASK-064
 - **TASK-066 Spend-aware approved feedback loop** — BACKLOG · Analytics Engineer · 12h · deps: TASK-065
@@ -129,10 +129,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 67 (TASK-001 through TASK-062 and TASK-072 through TASK-076).
+- DONE: 68 (TASK-001 through TASK-063 and TASK-072 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 1 (TASK-063).
+- IN_REVIEW: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 8 (TASK-064 through TASK-071).
