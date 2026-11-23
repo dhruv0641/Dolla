@@ -225,6 +225,28 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("terminal Instagram publication state is immutable", sql)
         self.assertIn("Instagram publication evidence is immutable", sql)
 
+    def test_facebook_reels_have_three_mutation_barriers_and_remote_proof(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0020_facebook_reels_publication_verification.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("publication_contract = 'FACEBOOK_REELS_V1'", sql)
+        self.assertIn("require_facebook_publication_claim", sql)
+        self.assertIn("FACEBOOK_REELS_V1", sql)
+        self.assertIn("rd.decision", sql)
+        self.assertIn("START_RESERVED", sql)
+        self.assertIn("UPLOAD_RESERVED", sql)
+        self.assertIn("PUBLISH_RESERVED", sql)
+        self.assertIn("UNEXPECTED_SCHEDULED_REEL", sql)
+        self.assertIn("PUBLISH_RECEIPT_UNKNOWN", sql)
+        self.assertIn("Facebook start reservation must be pristine", sql)
+        self.assertIn("Facebook remote identities are immutable once observed", sql)
+        self.assertIn("Facebook publishable video evidence is invalid", sql)
+        self.assertIn("video_status' IS DISTINCT FROM 'ready'", sql)
+        self.assertIn("publish_status' IS DISTINCT FROM 'published'", sql)
+        self.assertIn("page_id_value IS DISTINCT FROM NEW.channel_external_id_snapshot", sql)
+        self.assertIn("terminal Facebook publication state is immutable", sql)
+        self.assertIn("Facebook publication claim evidence is immutable", sql)
+        self.assertIn("prevent_facebook_publication_delete", sql)
+
 
 if __name__ == "__main__":
     unittest.main()
