@@ -5,7 +5,7 @@
 - **Priority:** P2
 - **Dependencies:** TASK-011, TASK-057, TASK-060
 - **Estimated complexity:** 4 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Issue:** [#210](https://github.com/dhruv0641/Dolla/issues/210)
 - **PR:** [#211](https://github.com/dhruv0641/Dolla/pull/211)
 - **Branch:** `feature/TASK-067-authorized-comment-ingestion`
@@ -52,4 +52,4 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Verification after correction: 108 focused tests passed; 29 migrations containing 312 statements parsed, including 40 statements in migration 0028; compilation, diff hygiene and the 76-task project validator passed.
 - Live PostgreSQL execution, provider adapters, OAuth/account access, provider reads, privacy/retention approval and end-to-end verification remain unverified. Docker is installed but its daemon is unavailable. No external or public action occurred.
 
-Independent Caveman review accepted exact functional head `86ec81c` with no P0–P2 findings. Its successor `e46e749` contains only verified EOF whitespace cleanup. The single final full suite passed all 661 tests. Draft implementation PR [#211](https://github.com/dhruv0641/Dolla/pull/211) targets protected `develop`; required checks are pending.
+Independent Caveman review accepted exact functional head `86ec81c` with no P0–P2 findings. Its successor `e46e749` contains only verified EOF whitespace cleanup. The single final full suite passed all 661 tests. Implementation PR [#211](https://github.com/dhruv0641/Dolla/pull/211) passed both required checks, merged only to protected `develop` as `c4810f00725e8e08adaeb8c4d0d5e8c5c8e49e7a`, closed issue #210 and passed post-merge validation. TASK-067 is DONE.
