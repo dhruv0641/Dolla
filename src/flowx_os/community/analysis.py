@@ -535,6 +535,10 @@ class CommunityAnalyzer:
     ) -> CommunityAnalysisReport:
         if not isinstance(request, CommunityAnalysisRequest) or not _aware_utc(now):
             raise ValueError("community analysis invocation is invalid")
+        if now < request.requested_at:
+            raise CommunityAnalysisError(
+                "REQUEST_FROM_FUTURE", "community analysis request is in the future",
+            )
         if not self._policy.enabled:
             raise CommunityAnalysisError(
                 "ANALYSIS_DISABLED", "community analysis is disabled by policy",
@@ -561,13 +565,13 @@ class CommunityAnalyzer:
             raise CommunityAnalysisError(
                 "REQUEST_PRECEDES_EVIDENCE", "analysis request predates comment evidence",
             )
-        report = self._build_report(request=request, snapshot=snapshot, now=now)
+        report = self._build_report(request=request, snapshot=snapshot)
         return await self._store.persist(request, snapshot, report)
 
     @classmethod
     def _build_report(
         cls, *, request: CommunityAnalysisRequest,
-        snapshot: CommunityEvidenceSnapshot, now: datetime,
+        snapshot: CommunityEvidenceSnapshot,
     ) -> CommunityAnalysisReport:
         classifications = tuple(cls._classify(item) for item in snapshot.comments)
         active = tuple(
@@ -599,7 +603,7 @@ class CommunityAnalyzer:
             request.theme_taxonomy_version, request.safety_policy_version, status.value,
             str(len(classifications)), str(len(active)), str(deleted_count),
             str(review_count), str(len(clusters)), _timestamp(request.requested_at),
-            _timestamp(now), "false",
+            _timestamp(request.requested_at), "false",
         )
         return CommunityAnalysisReport(
             request_id=request.request_id, owner_user_id=request.owner_user_id,
@@ -612,7 +616,7 @@ class CommunityAnalyzer:
             total_comment_count=len(classifications), analyzed_comment_count=len(active),
             deleted_comment_count=deleted_count, review_required_count=review_count,
             classifications=classifications, clusters=tuple(clusters),
-            requested_at=request.requested_at, created_at=now,
+            requested_at=request.requested_at, created_at=request.requested_at,
             report_fingerprint=_sha256("|".join(report_values)),
         )
 

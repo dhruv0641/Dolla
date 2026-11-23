@@ -175,6 +175,19 @@ class CommunityAnalysisTests(unittest.IsolatedAsyncioTestCase):
             ).analyze(request, now=NOW)
         self.assertEqual(limit_error.exception.code, "COMMENT_LIMIT_EXCEEDED")
 
+    async def test_future_request_fails_before_snapshot_access(self):
+        publication_id = uuid4()
+        store = FakeStore(snapshot(publication_id))
+        request = CommunityAnalysisRequest(
+            uuid4(), "owner-1", publication_id, NOW + timedelta(seconds=1),
+        )
+        with self.assertRaises(CommunityAnalysisError) as raised:
+            await CommunityAnalyzer(
+                store, CommunityAnalysisPolicy(enabled=True),
+            ).analyze(request, now=NOW)
+        self.assertEqual(raised.exception.code, "REQUEST_FROM_FUTURE")
+        self.assertEqual(store.loads, 0)
+
     async def test_empty_snapshot_is_explicit_and_has_no_clusters(self):
         publication_id = uuid4()
         evidence = CommunityEvidenceSnapshot(

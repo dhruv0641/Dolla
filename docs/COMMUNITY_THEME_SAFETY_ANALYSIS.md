@@ -29,7 +29,7 @@ Version `community-safety-v1` identifies bounded lexical signals for prompt inje
 
 `NO_DETECTED_SIGNAL` means only that this exact heuristic version found no configured lexical signal. It is not a moderation decision, policy certification or claim that the text is safe. Obfuscation, unsupported languages, context, sarcasm, images and novel abuse can evade lexical rules. Operators must treat comment text as untrusted and use human judgment for consequential decisions. Future policy changes require a new version rather than mutating historical results.
 
-Stable fail-closed errors include `ANALYSIS_DISABLED`, `POLICY_VERSION_UNAVAILABLE`, `INGESTION_NOT_COMPLETE`, `COMMENT_LIMIT_EXCEEDED`, `REQUEST_PRECEDES_EVIDENCE` and `EVIDENCE_IDENTITY_MISMATCH`. Storage conflicts distinguish changed evidence or reused idempotency identities without exposing another owner's data.
+Stable fail-closed errors include `ANALYSIS_DISABLED`, `POLICY_VERSION_UNAVAILABLE`, `INGESTION_NOT_COMPLETE`, `COMMENT_LIMIT_EXCEEDED`, `REQUEST_PRECEDES_EVIDENCE`, `REQUEST_FROM_FUTURE` and `EVIDENCE_IDENTITY_MISMATCH`. The immutable report time is the request's timestamp, so concurrent workers constructing the same exact request produce the same fingerprint. Storage conflicts distinguish changed evidence or reused idempotency identities without exposing another owner's data.
 
 ## Explicit non-authority
 

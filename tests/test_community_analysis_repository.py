@@ -139,7 +139,7 @@ class CommunityAnalysisRepositoryTests(unittest.IsolatedAsyncioTestCase):
         rows = [comment_row(value), comment_row(value, deleted=True)]
         source = evidence(value, run, rows)
         report = CommunityAnalyzer._build_report(
-            request=value, snapshot=source, now=NOW + timedelta(seconds=1),
+            request=value, snapshot=source,
         )
         payloads = [
             None, (value.publication_id,), run, rows, (value.request_id,),
@@ -163,7 +163,7 @@ class CommunityAnalysisRepositoryTests(unittest.IsolatedAsyncioTestCase):
         rows = [comment_row(value)]
         source = evidence(value, run, rows)
         report = CommunityAnalyzer._build_report(
-            request=value, snapshot=source, now=NOW + timedelta(seconds=1),
+            request=value, snapshot=source,
         )
         classifications = [(
             item.comment_version_id, item.remote_comment_id, item.comment_fingerprint,
