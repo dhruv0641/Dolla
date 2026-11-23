@@ -102,7 +102,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-13: Analytics and Growth
 
-- **TASK-062 Platform metrics and definitions** — IN_REVIEW · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) · PR [#196](https://github.com/dhruv0641/Dolla/pull/196) targets `develop`; Caveman accepted exact code head `7c879e4` after all findings closed; 80 focused/596 full-suite tests, compilation, migration parsing, diff hygiene and plan validation pass; required CI pending
+- **TASK-062 Platform metrics and definitions** — DONE · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) closed · PR [#196](https://github.com/dhruv0641/Dolla/pull/196) merged to `develop` as `251eb0b`; 80 focused/596 full-suite tests, independent review, required checks and post-merge validation passed
 - **TASK-063 Windowed snapshots and missing values** — BACKLOG · Analytics Engineer · 4h · deps: TASK-062
 - **TASK-064 Creative metadata and cohort analysis** — BACKLOG · Analytics Engineer · 6h · deps: TASK-063
 - **TASK-065 Evidence-backed recommendations and experiments** — BACKLOG · Analytics Engineer · 8h · deps: TASK-064
@@ -129,10 +129,10 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Epics: 15
 - Tasks: 76
 - Estimated effort: 698 engineering hours
-- DONE: 66 (TASK-001 through TASK-061 and TASK-072 through TASK-076).
+- DONE: 67 (TASK-001 through TASK-062 and TASK-072 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 1 (TASK-062).
+- IN_REVIEW: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 9 (TASK-063 through TASK-071).

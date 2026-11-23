@@ -5,7 +5,7 @@
 - **Priority:** P2
 - **Dependencies:** TASK-006, TASK-057, TASK-060
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **GitHub issue:** [#195](https://github.com/dhruv0641/Dolla/issues/195)
 - **Pull request:** [#196](https://github.com/dhruv0641/Dolla/pull/196)
 - **Branch:** `feature/TASK-062-platform-metrics-definitions`
@@ -81,6 +81,8 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - Caveman accepted exact head `7c879e4e81d07c44bae857d3b89640a654e4ac92`
   after verifying the registry is seeded before its insert/update/delete guard,
   all prior findings are closed, and no critical/P1/P2 finding remains.
-- The single final full suite passed all 596 tests. Remaining gate: GitHub
-  PR/required CI and protected-branch merge. Production PostgreSQL and live
-  provider behavior remain explicitly unverified.
+- The single final full suite passed all 596 tests. PR #196 passed both required
+  checks and merged only to protected `develop` as
+  `251eb0bff4a0588a821080cbef198820929785da`; its post-merge validation passed
+  and issue #195 closed. Production PostgreSQL and live provider behavior
+  remain explicitly unverified.
