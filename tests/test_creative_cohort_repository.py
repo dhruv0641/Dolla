@@ -78,8 +78,8 @@ class CreativeCohortRepositoryTests(unittest.IsolatedAsyncioTestCase):
         metadata, _, _ = analysis(publication_id)
         source = (
             metadata.owner_user_id, metadata.brand_id, metadata.content_id,
-            metadata.artifact_version, metadata.storyboard_version,
-            metadata.platform.value, metadata.published_at,
+            metadata.artifact_version, metadata.script_version, metadata.storyboard_version,
+            metadata.platform.value, metadata.published_at, metadata.source_fingerprint,
         )
         connection = Connection([None, source, (metadata.fingerprint,)])
         result = await CreativeCohortRepository(Pool(connection)).create_snapshot(metadata)
@@ -110,6 +110,8 @@ class CreativeCohortRepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("ON CONFLICT DO NOTHING", query)
         self.assertNotIn("secretref://", repr(params))
         self.assertNotIn("C:\\", repr(params))
+        self.assertIn("INSERT INTO cohort_analysis_sources", connection.calls[2][0])
+        self.assertEqual(connection.calls[2][1][1], publication_id)
 
     async def test_report_replay_rejects_different_result(self):
         publication_id = uuid4()

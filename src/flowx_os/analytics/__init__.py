@@ -8,6 +8,7 @@ from flowx_os.analytics.cohorts import (
     CohortExclusionReason,
     CohortReportStatus,
     CohortSummary,
+    CohortSource,
     CreativeCohortAnalyzer,
     CreativeFactor,
     CreativeFactorDatum,
@@ -50,7 +51,7 @@ from flowx_os.analytics.snapshots import (
 __all__ = [
     "CohortAnalysisReport", "CohortAnalysisRequest", "CohortBand",
     "CohortCandidate", "CohortExclusionReason", "CohortReportStatus",
-    "CohortSummary", "CreativeCohortAnalyzer", "CreativeFactor",
+    "CohortSummary", "CohortSource", "CreativeCohortAnalyzer", "CreativeFactor",
     "CreativeFactorDatum", "CreativeMetadataSnapshot", "FactorAvailability",
     "FactorUnavailableReason",
     "AnalyticsCollectionError", "AnalyticsSource", "CollectionWindow",

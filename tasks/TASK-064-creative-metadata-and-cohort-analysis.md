@@ -45,9 +45,10 @@ Relevant application service, tests, migration (if needed), configuration and do
 - `src/flowx_os/db/cohorts.py` provides owner-scoped insert-or-read persistence with immutable replay conflict detection.
 - `migrations/0025_creative_metadata_cohort_analysis.sql` binds persisted evidence to published artifacts, metric definitions and owned source fingerprints; both tables reject update/delete.
 - `docs/CREATIVE_COHORT_ANALYSIS.md` records privacy, missing-value, comparability and interpretation limits.
-- Focused command: `python -m unittest tests.test_creative_cohorts tests.test_creative_cohort_repository tests.test_metric_definitions tests.test_metric_collection tests.test_metric_observation_repository tests.test_migrations -v` — 60 tests passed.
+- Focused command: `python -m unittest tests.test_creative_cohorts tests.test_creative_cohort_repository tests.test_metric_definitions tests.test_metric_collection tests.test_metric_observation_repository tests.test_migrations -v` — 61 tests passed after review corrections.
 - `python scripts/validate_project_plan.py`, `python -m compileall -q src tests`, migration parsing through `tests.test_migrations`, and `git diff --check` passed.
 - No provider, account, paid generation, publication or live PostgreSQL action occurred. Live PostgreSQL trigger/locking behavior remains unverified.
+- Independent review initially rejected caller-selected factor/report evidence. The correction binds every factor to authoritative versioned rows, derives request/snapshot/report fingerprints, persists one typed metadata/metric pair per included publication, and defers recomputation of sample sizes, eligibility, medians and quartiles until all source rows exist. Posting-time cohorts now use the versioned UTC weekday/hour projection instead of absolute instants.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

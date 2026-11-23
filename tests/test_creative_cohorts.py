@@ -54,7 +54,8 @@ def factor_values(niche: str):
         evidence_ref="publication:platform:v1",
     )
     unavailable[CreativeFactor.POSTING_TIME_UTC] = CreativeFactorDatum(
-        CreativeFactor.POSTING_TIME_UTC, FactorAvailability.OBSERVED, PUBLISHED,
+        CreativeFactor.POSTING_TIME_UTC, FactorAvailability.OBSERVED,
+        f"D{PUBLISHED.isoweekday()}-H{PUBLISHED.hour:02d}Z",
         evidence_ref="publication:published_at:v1",
     )
     return tuple(unavailable.values())
@@ -64,7 +65,7 @@ def snapshot(publication_id, niche: str, index: int):
     return CreativeMetadataSnapshot(
         snapshot_id=uuid4(), owner_user_id="owner-1", brand_id=uuid4(),
         content_id=uuid4(), publication_id=publication_id, artifact_version=1,
-        storyboard_version=1, platform=PublicationPlatform.YOUTUBE,
+        script_version=1, storyboard_version=1, platform=PublicationPlatform.YOUTUBE,
         published_at=PUBLISHED, schema_version="creative-metadata-v1",
         source_fingerprint=f"{index + 1:064x}", factors=factor_values(niche),
         created_at=NOW,
@@ -130,7 +131,22 @@ class CreativeCohortTests(unittest.TestCase):
             ("education", 3), ("finance", 3),
         ])
         self.assertEqual(report.cohorts[0].median, Decimal("2"))
-        self.assertEqual(len(report.source_fingerprints), 12)
+        self.assertEqual(len(report.sources), 6)
+
+    def test_posting_time_uses_versioned_weekday_hour_projection(self):
+        candidates = []
+        for index in range(3):
+            publication_id = uuid4()
+            candidates.append(CohortCandidate(
+                publication_id, "owner-1", snapshot(publication_id, "education", index),
+                stored_observation(publication_id, index + 1, index),
+            ))
+        report = CreativeCohortAnalyzer().analyze(
+            request=request(factor=CreativeFactor.POSTING_TIME_UTC),
+            candidates=tuple(candidates), registry=REGISTRY,
+        )
+        self.assertEqual(report.cohorts[0].label, f"D{PUBLISHED.isoweekday()}-H{PUBLISHED.hour:02d}Z")
+        self.assertEqual(report.cohorts[0].sample_size, 3)
 
     def test_missing_factor_and_metric_are_excluded_not_fabricated(self):
         publication_id = uuid4()

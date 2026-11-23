@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import re
 from dataclasses import dataclass
@@ -45,6 +44,11 @@ def _timestamp(value: datetime) -> str:
     return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+def _posting_bucket(value: datetime) -> str:
+    """Version-1 UTC weekday/hour projection; never groups absolute instants."""
+    return f"D{value.isoweekday()}-H{value.hour:02d}Z"
+
+
 class CreativeFactor(StrEnum):
     NICHE = "NICHE"
     HOOK_TYPE = "HOOK_TYPE"
@@ -76,7 +80,7 @@ _FACTOR_KINDS = {
     CreativeFactor.SCENE_COUNT: FactorValueKind.INTEGER,
     CreativeFactor.DURATION_SECONDS: FactorValueKind.DECIMAL,
     CreativeFactor.NARRATOR_VOICE: FactorValueKind.TEXT,
-    CreativeFactor.POSTING_TIME_UTC: FactorValueKind.TIMESTAMP,
+    CreativeFactor.POSTING_TIME_UTC: FactorValueKind.TEXT,
     CreativeFactor.PLATFORM: FactorValueKind.TEXT,
     CreativeFactor.LANGUAGE: FactorValueKind.TEXT,
     CreativeFactor.VISUAL_MOTIF: FactorValueKind.TEXT,
@@ -186,6 +190,7 @@ class CreativeMetadataSnapshot:
     content_id: UUID
     publication_id: UUID
     artifact_version: int
+    script_version: int
     storyboard_version: int
     platform: PublicationPlatform
     published_at: datetime
@@ -209,6 +214,8 @@ class CreativeMetadataSnapshot:
             or not isinstance(self.publication_id, UUID)
             or type(self.artifact_version) is not int
             or not 1 <= self.artifact_version <= 1_000_000
+            or type(self.script_version) is not int
+            or not 1 <= self.script_version <= 1_000_000
             or type(self.storyboard_version) is not int
             or not 1 <= self.storyboard_version <= 1_000_000
             or not isinstance(self.platform, PublicationPlatform)
@@ -222,7 +229,7 @@ class CreativeMetadataSnapshot:
             or platform.value != self.platform.value
             or posting_time is None
             or posting_time.availability is not FactorAvailability.OBSERVED
-            or posting_time.value != self.published_at
+            or posting_time.value != _posting_bucket(self.published_at)
             or not _aware_utc(self.created_at)
             or self.created_at < self.published_at
         ):
@@ -236,23 +243,20 @@ class CreativeMetadataSnapshot:
 
     @property
     def fingerprint(self) -> str:
-        payload = {
-            "snapshot_id": str(self.snapshot_id),
-            "owner_user_id": self.owner_user_id,
-            "brand_id": str(self.brand_id),
-            "content_id": str(self.content_id),
-            "publication_id": str(self.publication_id),
-            "artifact_version": self.artifact_version,
-            "storyboard_version": self.storyboard_version,
-            "platform": self.platform.value,
-            "published_at": _timestamp(self.published_at),
-            "schema_version": self.schema_version,
-            "source_fingerprint": self.source_fingerprint,
-            "factors": [item.canonical() for item in self.factors],
-            "created_at": _timestamp(self.created_at),
-        }
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+        values = [
+            str(self.snapshot_id), self.owner_user_id, str(self.brand_id),
+            str(self.content_id), str(self.publication_id), str(self.artifact_version),
+            str(self.script_version), str(self.storyboard_version), self.platform.value,
+            _timestamp(self.published_at), self.schema_version,
+            self.source_fingerprint, _timestamp(self.created_at),
+        ]
+        for item in self.factors:
+            values.extend((
+                item.factor.value, item.availability.value,
+                item.canonical_value or "", item.evidence_ref or "",
+                item.unavailable_reason.value if item.unavailable_reason else "",
+            ))
+        return hashlib.sha256("|".join(values).encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -333,20 +337,16 @@ class CohortAnalysisRequest:
 
     @property
     def fingerprint(self) -> str:
-        payload = {
-            "request_id": str(self.request_id),
-            "owner_user_id": self.owner_user_id,
-            "definition_version": self.definition_version,
-            "factor": self.factor.value,
-            "metric_id": self.metric_id,
-            "window": self.window.value,
-            "registry_version": self.registry_version,
-            "registry_fingerprint": self.registry_fingerprint,
-            "minimum_group_size": self.minimum_group_size,
-            "bands": [item.canonical() for item in self.bands],
-        }
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+        values = [
+            str(self.request_id), self.owner_user_id, self.definition_version,
+            self.factor.value, self.metric_id, self.window.value,
+            self.registry_version, self.registry_fingerprint,
+            str(self.minimum_group_size),
+        ]
+        for item in self.bands:
+            values.extend((item.label, format(item.lower_inclusive, "f"),
+                           format(item.upper_exclusive, "f")))
+        return hashlib.sha256("|".join(values).encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -364,6 +364,34 @@ class CohortCandidate:
             or (self.observation is not None and not isinstance(self.observation, StoredMetricObservation))
         ):
             raise ValueError("cohort candidate is invalid")
+
+
+@dataclass(frozen=True, slots=True)
+class CohortSource:
+    publication_id: UUID
+    metadata_snapshot_id: UUID
+    metadata_fingerprint: str
+    observation_request_id: UUID
+    observation_fingerprint: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.publication_id, UUID)
+            or not isinstance(self.metadata_snapshot_id, UUID)
+            or _HEX64.fullmatch(self.metadata_fingerprint or "") is None
+            or not isinstance(self.observation_request_id, UUID)
+            or _HEX64.fullmatch(self.observation_fingerprint or "") is None
+        ):
+            raise ValueError("cohort source is invalid")
+
+    def canonical(self) -> dict[str, str]:
+        return {
+            "publication_id": str(self.publication_id),
+            "metadata_snapshot_id": str(self.metadata_snapshot_id),
+            "metadata_fingerprint": self.metadata_fingerprint,
+            "observation_request_id": str(self.observation_request_id),
+            "observation_fingerprint": self.observation_fingerprint,
+        }
 
 
 class CohortExclusionReason(StrEnum):
@@ -423,7 +451,7 @@ class CohortAnalysisReport:
     included_count: int
     exclusions: tuple[tuple[CohortExclusionReason, int], ...]
     cohorts: tuple[CohortSummary, ...]
-    source_fingerprints: tuple[str, ...]
+    sources: tuple[CohortSource, ...]
 
     def __post_init__(self) -> None:
         exclusion_total = sum(count for _, count in self.exclusions) if all(
@@ -453,17 +481,36 @@ class CohortAnalysisReport:
             or sum(item.sample_size for item in self.cohorts) != self.included_count
             or exclusion_total + self.included_count != self.candidate_count
             or (self.status is CohortReportStatus.DESCRIPTIVE) != (eligible_count >= 2)
-            or tuple(sorted(self.source_fingerprints)) != self.source_fingerprints
-            or len(set(self.source_fingerprints)) != len(self.source_fingerprints)
-            or not all(_HEX64.fullmatch(item or "") for item in self.source_fingerprints)
-            or len(self.source_fingerprints) != self.included_count * 2
+            or tuple(sorted(self.sources, key=lambda item: item.publication_id.hex)) != self.sources
+            or not all(isinstance(item, CohortSource) for item in self.sources)
+            or len({item.publication_id for item in self.sources}) != len(self.sources)
+            or len(self.sources) != self.included_count
         ):
             raise ValueError("cohort analysis report is invalid")
 
     @property
     def fingerprint(self) -> str:
-        encoded = json.dumps(self.canonical(), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+        values = [
+            self.request_fingerprint, self.status.value, self.interpretation,
+            str(self.candidate_count), str(self.included_count),
+        ]
+        for reason, count in self.exclusions:
+            values.extend((reason.value, str(count)))
+        for item in self.cohorts:
+            values.extend((
+                item.label, str(item.sample_size),
+                "true" if item.eligible else "false",
+                format(item.median, "f") if item.median is not None else "",
+                format(item.first_quartile, "f") if item.first_quartile is not None else "",
+                format(item.third_quartile, "f") if item.third_quartile is not None else "",
+            ))
+        for item in self.sources:
+            values.extend((
+                str(item.publication_id), str(item.metadata_snapshot_id),
+                item.metadata_fingerprint, str(item.observation_request_id),
+                item.observation_fingerprint,
+            ))
+        return hashlib.sha256("|".join(values).encode("utf-8")).hexdigest()
 
     def canonical(self) -> dict[str, object]:
         return {
@@ -484,7 +531,7 @@ class CohortAnalysisReport:
                 }
                 for item in self.cohorts
             ],
-            "source_fingerprints": list(self.source_fingerprints),
+            "sources": [item.canonical() for item in self.sources],
         }
 
 
@@ -527,7 +574,7 @@ class CreativeCohortAnalyzer:
             raise ValueError("cohort candidates must be unique by publication")
         exclusions = {reason: 0 for reason in CohortExclusionReason}
         groups: dict[str, list[Decimal]] = {}
-        source_fingerprints: set[str] = set()
+        sources: list[CohortSource] = []
         for candidate in candidates:
             if candidate.owner_user_id != request.owner_user_id:
                 raise ValueError("cohort candidate owner is invalid")
@@ -577,8 +624,13 @@ class CreativeCohortAnalyzer:
                 exclusions[CohortExclusionReason.OUTSIDE_BANDS] += 1
                 continue
             groups.setdefault(label, []).append(metric_value)
-            source_fingerprints.add(metadata.fingerprint)
-            source_fingerprints.add(candidate.observation.storage_fingerprint)
+            sources.append(CohortSource(
+                publication_id=candidate.publication_id,
+                metadata_snapshot_id=metadata.snapshot_id,
+                metadata_fingerprint=metadata.fingerprint,
+                observation_request_id=observation.request_id,
+                observation_fingerprint=candidate.observation.storage_fingerprint,
+            ))
         summaries = []
         included_count = sum(len(values) for values in groups.values())
         for label, values in groups.items():
@@ -600,7 +652,7 @@ class CreativeCohortAnalyzer:
             candidate_count=len(candidates), included_count=included_count,
             exclusions=tuple(sorted(exclusions.items(), key=lambda item: item[0].value)),
             cohorts=tuple(sorted(summaries, key=lambda item: item.label)),
-            source_fingerprints=tuple(sorted(source_fingerprints)),
+            sources=tuple(sorted(sources, key=lambda item: item.publication_id.hex)),
         )
 
     @staticmethod

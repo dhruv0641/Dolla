@@ -47,7 +47,9 @@ class CreativeCohortRepository:
                     return self._require_snapshot_replay(existing, snapshot)
                 cursor = await connection.execute(
                     """SELECT b.owner_user_id, b.id, c.id, p.artifact_version,
-                              c.storyboard_version, ch.platform, p.published_at
+                              c.script_version, c.storyboard_version,
+                              ch.platform, p.published_at,
+                              creative_metadata_source_fingerprint(p.id, %s)
                        FROM publication_jobs AS p
                        JOIN content_items AS c ON c.id = p.content_id
                        JOIN brands AS b ON b.id = c.brand_id
@@ -59,7 +61,8 @@ class CreativeCohortRepository:
                          AND p.status = 'PUBLISHED' AND p.published_at IS NOT NULL
                        FOR SHARE OF p, c, b, ch, sv""",
                     (
-                        snapshot.storyboard_version, snapshot.publication_id,
+                        snapshot.storyboard_version, snapshot.storyboard_version,
+                        snapshot.publication_id,
                         snapshot.owner_user_id,
                     ),
                 )
@@ -68,19 +71,20 @@ class CreativeCohortRepository:
                     raise CreativeCohortNotFound("owned published object not found")
                 expected = (
                     snapshot.owner_user_id, snapshot.brand_id, snapshot.content_id,
-                    snapshot.artifact_version, snapshot.storyboard_version,
-                    snapshot.platform.value, snapshot.published_at,
+                    snapshot.artifact_version, snapshot.script_version,
+                    snapshot.storyboard_version, snapshot.platform.value,
+                    snapshot.published_at, snapshot.source_fingerprint,
                 )
                 if tuple(source) != expected:
                     raise CreativeCohortConflict("creative metadata lineage changed")
                 cursor = await connection.execute(
                     """INSERT INTO creative_metadata_snapshots
                          (snapshot_id, publication_id, owner_user_id, brand_id,
-                          content_id, artifact_version, storyboard_version,
+                          content_id, artifact_version, script_version, storyboard_version,
                           platform, published_at, schema_version,
                           source_fingerprint, factors, snapshot_fingerprint,
                           storage_fingerprint, created_at)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                %s, %s::jsonb, %s, repeat('0', 64), %s)
                        ON CONFLICT DO NOTHING
                        RETURNING snapshot_fingerprint""",
@@ -88,7 +92,8 @@ class CreativeCohortRepository:
                         snapshot.snapshot_id, snapshot.publication_id,
                         snapshot.owner_user_id, snapshot.brand_id,
                         snapshot.content_id, snapshot.artifact_version,
-                        snapshot.storyboard_version, snapshot.platform.value,
+                        snapshot.script_version, snapshot.storyboard_version,
+                        snapshot.platform.value,
                         snapshot.published_at, snapshot.schema_version,
                         snapshot.source_fingerprint, factors,
                         snapshot.fingerprint, snapshot.created_at,
@@ -169,6 +174,21 @@ class CreativeCohortRepository:
                             "cohort analysis identity is already in use"
                         )
                     return self._require_report_replay(existing, request, report)
+                for source in report.sources:
+                    await connection.execute(
+                        """INSERT INTO cohort_analysis_sources
+                             (request_id, publication_id, metadata_snapshot_id,
+                              metadata_fingerprint, observation_request_id,
+                              observation_fingerprint)
+                           VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (
+                            request.request_id, source.publication_id,
+                            source.metadata_snapshot_id,
+                            source.metadata_fingerprint,
+                            source.observation_request_id,
+                            source.observation_fingerprint,
+                        ),
+                    )
                 return self._require_report_replay(row, request, report)
         except (CreativeCohortConflict, ValueError):
             raise

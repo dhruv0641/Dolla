@@ -4,14 +4,16 @@ TASK-064 provides an offline, owner-scoped analytics boundary. It records immuta
 
 ## Creative evidence contract
 
-`CreativeMetadataSnapshot` binds a publication to its owner, brand, content item, artifact version, storyboard version, platform, publication time and schema version. Every snapshot contains exactly one entry for each supported factor:
+`CreativeMetadataSnapshot` binds a publication to its owner, brand, content item, artifact version, script version, storyboard version, platform, publication time and schema version. Every snapshot contains exactly one entry for each supported factor:
 
 - niche, hook type, script word count and CTA type;
 - scene count, duration, narrator voice and posting time;
 - platform, language and visual motif;
 - Flow model and quoted Flow cost, only when durable evidence exists.
 
-Every factor is explicitly `OBSERVED`, `UNAVAILABLE` with a reason, or `NOT_APPLICABLE`. An observed value requires a bounded evidence reference. The contract never converts absence to zero, an empty string or a guessed category. Platform and posting time must exactly match the publication snapshot. PostgreSQL rechecks owner and publication lineage under shared locks, requires the exact storyboard and artifact versions, and makes the resulting evidence immutable.
+Every factor is explicitly `OBSERVED`, `UNAVAILABLE` with a reason, or `NOT_APPLICABLE`. An observed value requires a bounded evidence reference. The contract never converts absence to zero, an empty string or a guessed category. PostgreSQL derives a source fingerprint from the authoritative brand, script, storyboard, selected scene assets, voice profiles and credit reservations; it rejects mismatched factor values and derives both persisted fingerprints. Hook type, CTA type and visual motif remain unavailable until those categories have explicit versioned source fields—they are never inferred from prose.
+
+Posting time uses the declared `creative-metadata-v1` projection `D<ISO weekday>-H<UTC hour>Z`, such as `D1-H14Z`. This lets different publication dates share a comparable UTC weekday/hour cohort without pretending absolute timestamps are categories. Platform and this projection must exactly match the publication record.
 
 Factor evidence may reveal creative strategy, voice choices and operating patterns. API/UI exposure must therefore remain owner-scoped, omit raw prompts and credentials, and avoid cross-owner aggregation. This task intentionally introduces no public endpoint.
 
@@ -32,7 +34,7 @@ A descriptive report requires at least two eligible cohorts. Otherwise its statu
 
 ## Persistence and replay
 
-`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. Database triggers validate source lineage, exact factor shape, metric definition, window, source fingerprints and the non-causal label; updates and deletes are rejected.
+`CreativeCohortRepository` performs owner-scoped source checks and uses insert-or-read replay. Reusing a snapshot or request identity with different evidence fails with `CreativeCohortConflict`. Every included publication is stored as one typed metadata/metric pair. Deferred database validation requires those pairs to match the report exactly, recomputes group sizes, eligibility, medians and quartiles, and rejects a report with missing or substituted metric evidence. Database triggers also derive request/report fingerprints; updates and deletes are rejected.
 
 ## Operational limits
 
