@@ -102,7 +102,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-13: Analytics and Growth
 
-- **TASK-062 Platform metrics and definitions** — IN_PROGRESS · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) · Branch `feature/TASK-062-platform-metrics-definitions`
+- **TASK-062 Platform metrics and definitions** — IN_REVIEW · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) · Branch `feature/TASK-062-platform-metrics-definitions`; 78 focused tests, compilation, migration parsing, diff hygiene and plan validation pass; independent review and full suite pending
 - **TASK-063 Windowed snapshots and missing values** — BACKLOG · Analytics Engineer · 4h · deps: TASK-062
 - **TASK-064 Creative metadata and cohort analysis** — BACKLOG · Analytics Engineer · 6h · deps: TASK-063
 - **TASK-065 Evidence-backed recommendations and experiments** — BACKLOG · Analytics Engineer · 8h · deps: TASK-064
@@ -131,8 +131,8 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - Estimated effort: 698 engineering hours
 - DONE: 66 (TASK-001 through TASK-061 and TASK-072 through TASK-076).
 - TESTING: 0.
-- IN_PROGRESS: 1 (TASK-062).
-- IN_REVIEW: 0.
+- IN_PROGRESS: 0.
+- IN_REVIEW: 1 (TASK-062).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 9 (TASK-063 through TASK-071).

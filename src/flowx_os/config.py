@@ -49,6 +49,7 @@ class Settings:
     facebook_publishing_enabled: bool
     platform_reconciliation_enabled: bool
     publication_scheduling_enabled: bool
+    platform_analytics_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -122,6 +123,11 @@ class Settings:
         ).strip().lower()
         if scheduling_enabled not in {"true", "false"}:
             raise ConfigurationError("FLOWX_PUBLICATION_SCHEDULING_ENABLED must be true or false.")
+        analytics_enabled = env.get(
+            "FLOWX_PLATFORM_ANALYTICS_ENABLED", "false"
+        ).strip().lower()
+        if analytics_enabled not in {"true", "false"}:
+            raise ConfigurationError("FLOWX_PLATFORM_ANALYTICS_ENABLED must be true or false.")
 
         return cls(
             environment=environment,
@@ -137,4 +143,5 @@ class Settings:
             facebook_publishing_enabled=facebook_enabled == "true",
             platform_reconciliation_enabled=reconciliation_enabled == "true",
             publication_scheduling_enabled=scheduling_enabled == "true",
+            platform_analytics_enabled=analytics_enabled == "true",
         )

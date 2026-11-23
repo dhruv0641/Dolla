@@ -54,6 +54,21 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("state = 'DISPATCH_RESERVED', dispatch_reserved_at = now()", sql)
         self.assertIn("publication_jobs_require_due_delivery", sql)
 
+    def test_metric_observations_are_owner_scoped_idempotent_and_immutable(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0023_platform_metric_observations.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE analytics_metric_collection_attempts", sql)
+        self.assertIn("CREATE TABLE analytics_metric_observations", sql)
+        self.assertIn("request_id uuid NOT NULL UNIQUE", sql)
+        self.assertIn("p.status", sql)
+        self.assertIn("channel_credentials_match", sql)
+        self.assertIn("window_started_at = published_at", sql)
+        self.assertIn("observed_at >= window_ended_at", sql)
+        self.assertIn("FIELD_NOT_RETURNED", sql)
+        self.assertIn("analytics metric observations are immutable", sql)
+        self.assertIn("analytics_metric_observations_prevent_update", sql)
+        self.assertIn("analytics_metric_observations_prevent_delete", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")

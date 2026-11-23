@@ -12,6 +12,7 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 - Run the API locally with `uvicorn flowx_os.api.main:app --reload --app-dir src`.
 - API liveness and readiness semantics are documented in [HEALTH_READINESS.md](docs/HEALTH_READINESS.md).
 - Prompt and policy defaults are versioned in `config/prompt_registry.json`; see [registry documentation](docs/PROMPT_POLICY_REGISTRY.md).
+- Platform metric semantics, missing-value rules and the disabled-by-default collection boundary are documented in [PLATFORM_METRIC_DEFINITIONS.md](docs/PLATFORM_METRIC_DEFINITIONS.md).
 - The reviewed PostgreSQL baseline and open design findings are in [SCHEMA_REVIEW.md](docs/SCHEMA_REVIEW.md) and `migrations/`.
 - Async transaction boundaries are documented in [DATABASE_TRANSACTIONS.md](docs/DATABASE_TRANSACTIONS.md).
 - Workflow audit-event persistence is documented in [WORKFLOW_EVENTS.md](docs/WORKFLOW_EVENTS.md).
