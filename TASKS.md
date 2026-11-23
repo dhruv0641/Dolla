@@ -110,7 +110,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-14: Community Management
 
-- **TASK-067 Authorized comment ingestion** — IN_REVIEW · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) · Branch `feature/TASK-067-authorized-comment-ingestion`
+- **TASK-067 Authorized comment ingestion** — IN_REVIEW · Community Workflow Engineer · 4h · deps: TASK-011, TASK-057, TASK-060 · Issue [#210](https://github.com/dhruv0641/Dolla/issues/210) · PR [#211](https://github.com/dhruv0641/Dolla/pull/211) · Branch `feature/TASK-067-authorized-comment-ingestion`
 - **TASK-068 Theme clustering and safety classification** — BACKLOG · Community Workflow Engineer · 6h · deps: TASK-067
 - **TASK-069 Draft replies and escalation** — BACKLOG · Community Workflow Engineer · 8h · deps: TASK-068
 - **TASK-070 Human approval and official responses** — BACKLOG · Community Workflow Engineer · 12h · deps: TASK-069
