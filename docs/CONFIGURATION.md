@@ -10,6 +10,8 @@ Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google
 
 `FLOWX_COMMENT_INGESTION_ENABLED` defaults to `false`. Turning it on only enables the application boundary described in `AUTHORIZED_COMMENT_INGESTION.md`; it does not connect an account, resolve a credential reference, install a provider adapter, retrieve a comment, or authorize a reply. A deployment must separately supply an official provider implementation and current owned-channel authorization. Unknown authorization or reconciliation state fails closed.
 
+`FLOWX_COMMUNITY_ANALYSIS_ENABLED` also defaults to `false`. Turning it on enables only the local, deterministic `community-theme-v1` and `community-safety-v1` analysis described in `COMMUNITY_THEME_SAFETY_ANALYSIS.md`. It does not invoke Gemini or another model, and `NO_DETECTED_SIGNAL` is not a safety guarantee. Reports remain inert and cannot draft, moderate, reply, publish, connect accounts or spend.
+
 Example local check:
 
 ```powershell

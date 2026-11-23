@@ -466,6 +466,35 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("comment ingestion evidence is immutable", sql)
         self.assertIn("REVOKE ALL ON community_comment_versions FROM PUBLIC", sql)
 
+    def test_community_analysis_is_source_bound_deterministic_and_inert(self):
+        migration = (
+            Path(__file__).resolve().parents[1]
+            / "migrations"
+            / "0029_community_theme_safety_analysis.sql"
+        )
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE community_analysis_reports", sql)
+        self.assertIn("CREATE TABLE community_comment_classifications", sql)
+        self.assertIn("CREATE TABLE community_theme_clusters", sql)
+        self.assertIn("expected_community_classification", sql)
+        self.assertIn("community_comments_current", sql)
+        self.assertIn("ORDER BY r.created_at DESC, r.sync_id DESC", sql)
+        self.assertIn("FOR UPDATE OF p", sql)
+        self.assertIn("run_value.status <> 'COMPLETE'", sql)
+        self.assertIn("community-theme-v1", sql)
+        self.assertIn("community-safety-v1", sql)
+        self.assertIn("NO_DETECTED_SIGNAL", sql)
+        self.assertIn("PROMPT_INJECTION", sql)
+        self.assertIn("SELF_HARM", sql)
+        self.assertIn("safety.personal_data", sql)
+        self.assertIn("source_snapshot_fingerprint", sql)
+        self.assertIn("outbound_action_authorized = false", sql)
+        self.assertIn("CHECK (created_at = requested_at)", sql)
+        self.assertIn("NEW.requested_at > clock_timestamp()", sql)
+        self.assertIn("community analysis evidence is incomplete at commit", sql)
+        self.assertIn("community analysis evidence is immutable", sql)
+        self.assertIn("REVOKE ALL ON community_analysis_reports FROM PUBLIC", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

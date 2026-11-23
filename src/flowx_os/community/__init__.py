@@ -1,5 +1,20 @@
 """Community workflow boundaries."""
 
+from flowx_os.community.analysis import (
+    AnalysisStatus,
+    CommentClassification,
+    CommunityAnalysisError,
+    CommunityAnalysisPolicy,
+    CommunityAnalysisReport,
+    CommunityAnalysisRequest,
+    CommunityAnalyzer,
+    CommunityCommentEvidence,
+    CommunityEvidenceSnapshot,
+    CommunityTheme,
+    SafetyCategory,
+    SafetySeverity,
+    ThemeCluster,
+)
 from flowx_os.community.comments import (
     AuthorizedCommentIngestor,
     CommentIngestionAbandonment,
@@ -16,7 +31,17 @@ from flowx_os.community.comments import (
 )
 
 __all__ = [
+    "AnalysisStatus",
     "AuthorizedCommentIngestor",
+    "CommentClassification",
+    "CommunityAnalysisError",
+    "CommunityAnalysisPolicy",
+    "CommunityAnalysisReport",
+    "CommunityAnalysisRequest",
+    "CommunityAnalyzer",
+    "CommunityCommentEvidence",
+    "CommunityEvidenceSnapshot",
+    "CommunityTheme",
     "CommentIngestionAbandonment",
     "CommentIngestionBatch",
     "CommentIngestionError",
@@ -27,5 +52,8 @@ __all__ = [
     "CommentState",
     "ProviderComment",
     "ProviderCommentBatch",
+    "SafetyCategory",
+    "SafetySeverity",
+    "ThemeCluster",
     "required_comment_read_scopes",
 ]
