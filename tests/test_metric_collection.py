@@ -98,8 +98,8 @@ class FakeStore:
         self.calls.append(("get", value))
         return self.existing
 
-    async def reserve(self, value, *, registry):
-        self.calls.append(("reserve", value, registry))
+    async def reserve(self, value, *, registry, now):
+        self.calls.append(("reserve", value, registry, now))
         return self.exact
 
     async def record(self, *, request, target, observation, registry):

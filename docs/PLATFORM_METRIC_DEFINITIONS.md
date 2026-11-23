@@ -94,6 +94,10 @@ envelopes, invalid state transitions, updates and deletes. Credential references
 are used only for the injected adapter call and are not stored in observation
 records.
 
+Fixed-window scheduling, deterministic request identities, unresolved replay
+behavior and series states are documented in
+[`WINDOWED_ANALYTICS_SNAPSHOTS.md`](WINDOWED_ANALYTICS_SNAPSHOTS.md).
+
 ## Current verification limits
 
 The contracts, migration syntax, failure cases and repository behavior are

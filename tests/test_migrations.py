@@ -76,6 +76,12 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("analytics_metric_observations_prevent_update", sql)
         self.assertIn("analytics_metric_observations_prevent_delete", sql)
 
+    def test_windowed_snapshots_have_one_persisted_identity(self):
+        migration = Path(__file__).resolve().parents[1] / "migrations" / "0024_windowed_snapshot_identity.sql"
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE UNIQUE INDEX analytics_metric_snapshot_identity", sql)
+        self.assertIn("publication_id, window_name, registry_version, metric_ids", sql)
+
     def test_flow_account_alias_uniqueness_is_scoped_to_owner(self):
         migration = Path(__file__).resolve().parents[1] / "migrations" / "0002_flow_account_owner_alias.sql"
         sql = migration.read_text(encoding="utf-8")
