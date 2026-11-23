@@ -1,0 +1,159 @@
+{
+  "registry_version": "platform-metrics-v1",
+  "metrics": [
+    {
+      "metric_id": "youtube.views", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube views", "definition": "YouTube's view count for the selected report and dimensions; it is not treated as equivalent to another platform's view or play metric.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "views",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.engaged_views", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube engaged views", "definition": "Views that continued past the first frame or began through an explicit play interaction under the YouTube Analytics definition.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "engagedViews",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.watch_time_minutes", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube estimated watch time", "definition": "Estimated total minutes watched for the selected YouTube report scope.",
+      "unit": "MINUTES", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "estimatedMinutesWatched",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.average_view_duration_seconds", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube average view duration", "definition": "Average playback duration in seconds under YouTube's report definition; looping-clips traffic exclusions follow the provider definition.",
+      "unit": "SECONDS", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "averageViewDuration",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.likes", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube likes", "definition": "Likes recorded by YouTube for the selected report scope.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "likes",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.comments", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube comments", "definition": "Comments recorded by YouTube for the selected report scope.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "comments",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.shares", "platform": "YOUTUBE", "kind": "RAW",
+      "label": "YouTube shares", "definition": "Shares recorded by YouTube for the selected report scope.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "shares",
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "YouTube Analytics core metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "youtube.engagement_rate_by_views", "platform": "YOUTUBE", "kind": "DERIVED",
+      "label": "YouTube engagement rate by views", "definition": "Versioned ratio of YouTube likes, comments, and shares to YouTube views. It is unavailable when any input is missing or the denominator is zero.",
+      "unit": "RATIO", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": null,
+      "source_reference": "https://developers.google.com/youtube/analytics/metrics", "source_api_version": "FLOW derived from YouTube Analytics core metrics",
+      "inputs": ["youtube.likes", "youtube.comments", "youtube.shares", "youtube.views"], "denominator": "youtube.views", "formula": "SUM_OVER_DENOMINATOR", "calculation_version": "engagement-rate-v1"
+    },
+    {
+      "metric_id": "instagram.total_views", "platform": "INSTAGRAM", "kind": "RAW",
+      "label": "Instagram total views", "definition": "Instagram video view count across supported surfaces under the selected API contract, including replays and promoted views where the provider definition includes them.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "total_views_count",
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "Instagram Platform media fields",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "instagram.likes", "platform": "INSTAGRAM", "kind": "RAW",
+      "label": "Instagram total likes", "definition": "Instagram's total likes for the owned top-level media object, including associated promoted surfaces where documented.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "total_like_count",
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "Instagram Platform media fields",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "instagram.comments", "platform": "INSTAGRAM", "kind": "RAW",
+      "label": "Instagram total comments", "definition": "Instagram's total comments for the owned top-level media object across supported surfaces.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "total_comments_count",
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "Instagram Platform media fields",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "instagram.shares", "platform": "INSTAGRAM", "kind": "RAW",
+      "label": "Instagram shares", "definition": "Number of times the owned Instagram media was shared when the field is available to the authorized account.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "shares_count",
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "Instagram Platform media fields",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "instagram.saves", "platform": "INSTAGRAM", "kind": "RAW",
+      "label": "Instagram saves", "definition": "Number of times the owned Instagram media was saved when the field is available to the authorized account.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "saved_count",
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "Instagram Platform media fields",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "instagram.engagement_rate_by_views", "platform": "INSTAGRAM", "kind": "DERIVED",
+      "label": "Instagram engagement rate by views", "definition": "Versioned ratio of Instagram likes, comments, shares, and saves to Instagram total views. It is unavailable when any input is missing or the denominator is zero.",
+      "unit": "RATIO", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": null,
+      "source_reference": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/", "source_api_version": "FLOW derived from owned Instagram media fields",
+      "inputs": ["instagram.likes", "instagram.comments", "instagram.shares", "instagram.saves", "instagram.total_views"], "denominator": "instagram.total_views", "formula": "SUM_OVER_DENOMINATOR", "calculation_version": "engagement-rate-v1"
+    },
+    {
+      "metric_id": "facebook.reel_initial_plays", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel initial plays", "definition": "Reel sessions with at least one millisecond of playback after an impression, excluding replays under Meta's metric definition.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "blue_reels_play_count",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_total_plays", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel total plays", "definition": "Reel sessions with at least one millisecond of playback after an impression, including replays under Meta's metric definition.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "fb_reels_total_plays",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_unique_impressions", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel unique impressions", "definition": "Estimated number of people who saw the Reel at least once, whether or not they played it.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_impressions_unique",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_average_watch_ms", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel average watch time", "definition": "Average milliseconds played per play instance, including replay time; the value can exceed the Reel duration.",
+      "unit": "MILLISECONDS", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_video_avg_time_watched",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_watch_time_ms", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel total watch time", "definition": "Total milliseconds the Reel played, including replay time.",
+      "unit": "MILLISECONDS", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_video_view_time",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_follows", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel follows", "definition": "Follows attributed to the Reel under Meta's lifetime Reel metric definition.",
+      "unit": "COUNT", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_video_followers",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_reactions", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel reactions by type", "definition": "Structured reaction counts by reaction type; this is not flattened into a scalar like count.",
+      "unit": "STRUCTURED", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_video_likes_by_reaction_type",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    },
+    {
+      "metric_id": "facebook.reel_social_actions", "platform": "FACEBOOK", "kind": "RAW",
+      "label": "Facebook Reel social actions", "definition": "Structured comments and shares returned under Meta's Reel social-actions metric; components remain provider-defined.",
+      "unit": "STRUCTURED", "platform_only": true, "missing_value_policy": "UNAVAILABLE", "raw_name": "post_video_social_actions",
+      "source_reference": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights", "source_api_version": "Meta Video Insights lifetime Reel metric",
+      "inputs": [], "denominator": null, "formula": null, "calculation_version": null
+    }
+  ]
+}
