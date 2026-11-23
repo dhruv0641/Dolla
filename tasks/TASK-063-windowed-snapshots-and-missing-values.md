@@ -7,6 +7,7 @@
 - **Estimated complexity:** 4 engineering hours (planning estimate)
 - **Status:** IN_REVIEW
 - **GitHub issue:** [#198](https://github.com/dhruv0641/Dolla/issues/198)
+- **Pull request:** [#199](https://github.com/dhruv0641/Dolla/pull/199)
 - **Branch:** `feature/TASK-063-windowed-snapshots-missing-values`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
