@@ -12,6 +12,8 @@ Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google
 
 `FLOWX_COMMUNITY_ANALYSIS_ENABLED` also defaults to `false`. Turning it on enables only the local, deterministic `community-theme-v1` and `community-safety-v1` analysis described in `COMMUNITY_THEME_SAFETY_ANALYSIS.md`. It does not invoke Gemini or another model, and `NO_DETECTED_SIGNAL` is not a safety guarantee. Reports remain inert and cannot draft, moderate, reply, publish, connect accounts or spend.
 
+`FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED` defaults to `false`. Enabling it permits only the fixed local `community-reply-v1` templates and escalation records documented in `COMMUNITY_REPLY_DRAFTS.md`. Comment text is never interpolated into a template. Every draft still requires human approval and grants no posting, moderation or provider authority.
+
 Example local check:
 
 ```powershell

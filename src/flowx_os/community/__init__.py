@@ -29,6 +29,16 @@ from flowx_os.community.comments import (
     ProviderCommentBatch,
     required_comment_read_scopes,
 )
+from flowx_os.community.replies import (
+    EscalationPriority,
+    ReplyDisposition,
+    ReplyDraftError,
+    ReplyDraftPolicy,
+    ReplyDraftRecord,
+    ReplyDraftRequest,
+    ReplyDraftService,
+    ReplyDraftTarget,
+)
 
 __all__ = [
     "AnalysisStatus",
@@ -52,6 +62,14 @@ __all__ = [
     "CommentState",
     "ProviderComment",
     "ProviderCommentBatch",
+    "EscalationPriority",
+    "ReplyDisposition",
+    "ReplyDraftError",
+    "ReplyDraftPolicy",
+    "ReplyDraftRecord",
+    "ReplyDraftRequest",
+    "ReplyDraftService",
+    "ReplyDraftTarget",
     "SafetyCategory",
     "SafetySeverity",
     "ThemeCluster",
