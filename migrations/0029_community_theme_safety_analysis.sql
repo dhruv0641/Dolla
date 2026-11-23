@@ -195,17 +195,17 @@ DECLARE
   expected_request text;
   expected_report text;
 BEGIN
-  SELECT r.* INTO run_value
-    FROM comment_ingestion_runs AS r
-    WHERE r.publication_id = NEW.publication_id
-    ORDER BY r.created_at DESC, r.sync_id DESC
-    LIMIT 1 FOR KEY SHARE;
   SELECT b.owner_user_id INTO current_owner
     FROM publication_jobs AS p
     JOIN social_channels AS ch ON ch.id = p.channel_id
     JOIN brands AS b ON b.id = ch.brand_id
     WHERE p.id = NEW.publication_id
-    FOR KEY SHARE OF p;
+    FOR UPDATE OF p;
+  SELECT r.* INTO run_value
+    FROM comment_ingestion_runs AS r
+    WHERE r.publication_id = NEW.publication_id
+    ORDER BY r.created_at DESC, r.sync_id DESC
+    LIMIT 1 FOR KEY SHARE;
   SELECT count(*), count(*) FILTER (WHERE state = 'DELETED'),
          encode(digest(concat_ws('|', NEW.ingestion_sync_id::text,
            NEW.ingestion_target_fingerprint,

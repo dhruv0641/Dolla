@@ -72,6 +72,12 @@ class FakeStore:
         return report
 
 
+class InvalidPersistStore(FakeStore):
+    async def persist(self, request, evidence, report):
+        self.persisted = report
+        return object()
+
+
 class CommunityAnalysisTests(unittest.IsolatedAsyncioTestCase):
     async def test_disabled_policy_fails_before_reading_comments(self):
         publication_id = uuid4()
@@ -136,6 +142,33 @@ class CommunityAnalysisTests(unittest.IsolatedAsyncioTestCase):
         ).analyze(request, now=NOW + timedelta(minutes=1))
         self.assertIs(replay, report)
         self.assertEqual(replay_store.loads, 0)
+
+    async def test_store_results_must_match_exact_request_and_report(self):
+        publication_id = uuid4()
+        evidence = snapshot(publication_id)
+        request = CommunityAnalysisRequest(uuid4(), "owner-1", publication_id, NOW)
+        other_request = CommunityAnalysisRequest(
+            uuid4(), "owner-1", publication_id, NOW,
+        )
+        wrong_report = CommunityAnalyzer._build_report(
+            request=other_request, snapshot=evidence,
+        )
+        with self.assertRaises(CommunityAnalysisError) as existing_error:
+            await CommunityAnalyzer(
+                FakeStore(evidence, existing=wrong_report),
+                CommunityAnalysisPolicy(enabled=True),
+            ).analyze(request, now=NOW)
+        self.assertEqual(
+            existing_error.exception.code, "STORED_REPORT_IDENTITY_MISMATCH",
+        )
+
+        with self.assertRaises(CommunityAnalysisError) as persisted_error:
+            await CommunityAnalyzer(
+                InvalidPersistStore(evidence), CommunityAnalysisPolicy(enabled=True),
+            ).analyze(request, now=NOW)
+        self.assertEqual(
+            persisted_error.exception.code, "STORED_REPORT_IDENTITY_MISMATCH",
+        )
 
     async def test_wrong_policy_version_and_cross_owner_evidence_fail_closed(self):
         publication_id = uuid4()

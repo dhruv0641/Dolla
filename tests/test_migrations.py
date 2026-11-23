@@ -479,6 +479,7 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("expected_community_classification", sql)
         self.assertIn("community_comments_current", sql)
         self.assertIn("ORDER BY r.created_at DESC, r.sync_id DESC", sql)
+        self.assertIn("FOR UPDATE OF p", sql)
         self.assertIn("run_value.status <> 'COMPLETE'", sql)
         self.assertIn("community-theme-v1", sql)
         self.assertIn("community-safety-v1", sql)

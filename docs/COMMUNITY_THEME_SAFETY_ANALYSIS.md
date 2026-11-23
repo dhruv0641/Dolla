@@ -4,7 +4,7 @@ TASK-068 adds a disabled-by-default, local and deterministic analysis boundary o
 
 ## Evidence and ownership boundary
 
-`CommunityAnalyzer` accepts an owner-scoped publication request only after the repository finds the latest ingestion run and proves that it is `COMPLETE`. It reads `community_comments_current`, orders the bounded snapshot under the PostgreSQL `C` collation and binds every current immutable comment-version ID and fingerprint into a source snapshot fingerprint. The persistence transaction locks the publication, reloads the latest run and exact current snapshot, and rejects any change before insertion.
+`CommunityAnalyzer` accepts an owner-scoped publication request only after the repository finds the latest ingestion run and proves that it is `COMPLETE`. It reads `community_comments_current`, orders the bounded snapshot under the PostgreSQL `C` collation and binds every current immutable comment-version ID and fingerprint into a source snapshot fingerprint. The persistence transaction locks the publication before reloading the latest run and exact current snapshot, and rejects any change before insertion. The database report trigger takes that same publication lock before independently selecting the latest run, so a direct insert cannot race a newer ingestion run.
 
 Reports, per-comment classifications and theme clusters are immutable and replay-safe. PostgreSQL independently recomputes the request, source, report, classification and cluster fingerprints; verifies the owner, publication, latest complete ingestion run and current comment versions; applies the same fixed rule tables; and uses a deferred constraint to reject missing classifications or clusters. Raw comment text is not copied into the analysis tables.
 

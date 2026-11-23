@@ -551,7 +551,7 @@ class CommunityAnalyzer:
             )
         existing = await self._store.get_existing(request)
         if existing is not None:
-            return existing
+            return self._require_store_identity(existing, request=request)
         snapshot = await self._store.load_snapshot(
             request, maximum_comments=self._policy.maximum_comments,
         )
@@ -566,7 +566,35 @@ class CommunityAnalyzer:
                 "REQUEST_PRECEDES_EVIDENCE", "analysis request predates comment evidence",
             )
         report = self._build_report(request=request, snapshot=snapshot)
-        return await self._store.persist(request, snapshot, report)
+        persisted = await self._store.persist(request, snapshot, report)
+        self._require_store_identity(persisted, request=request)
+        if persisted != report:
+            raise CommunityAnalysisError(
+                "PERSISTED_REPORT_MISMATCH",
+                "stored community analysis differs from exact result",
+            )
+        return persisted
+
+    @staticmethod
+    def _require_store_identity(
+        report: CommunityAnalysisReport, *, request: CommunityAnalysisRequest,
+    ) -> CommunityAnalysisReport:
+        if (
+            not isinstance(report, CommunityAnalysisReport)
+            or report.request_id != request.request_id
+            or report.owner_user_id != request.owner_user_id
+            or report.publication_id != request.publication_id
+            or report.request_fingerprint != request.fingerprint
+            or report.theme_taxonomy_version != request.theme_taxonomy_version
+            or report.safety_policy_version != request.safety_policy_version
+            or report.requested_at != request.requested_at
+            or report.outbound_action_authorized
+        ):
+            raise CommunityAnalysisError(
+                "STORED_REPORT_IDENTITY_MISMATCH",
+                "stored community analysis identity is invalid",
+            )
+        return report
 
     @classmethod
     def _build_report(
