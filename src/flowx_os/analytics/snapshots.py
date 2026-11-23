@@ -168,6 +168,7 @@ class WindowedSnapshotSeries:
         if not isinstance(plan, WindowedSnapshotPlan) or not _aware_utc(now):
             raise ValueError("snapshot series inputs are invalid")
         plan.validate_registry(registry)
+        expected_platform = registry.require(plan.metric_ids[0]).platform
         if (
             not isinstance(unresolved_windows, tuple)
             or any(not isinstance(window, CollectionWindow) for window in unresolved_windows)
@@ -195,6 +196,7 @@ class WindowedSnapshotSeries:
                 window is None
                 or record.owner_user_id != plan.owner_user_id
                 or observation.publication_id != plan.publication_id
+                or observation.platform is not expected_platform
                 or observation.window is not window
                 or observation.window_started_at != plan.published_at
                 or observation.window_ended_at != plan.window_ends_at(window)
@@ -208,6 +210,17 @@ class WindowedSnapshotSeries:
                 or (lineage is not None and current_lineage != lineage)
             ):
                 raise ValueError("snapshot series record lineage is invalid")
+            try:
+                for datum in observation.values:
+                    definition = registry.require(datum.metric_id)
+                    if (
+                        definition.platform is not expected_platform
+                        or definition.kind is not MetricKind.RAW
+                    ):
+                        raise ValueError("snapshot metric definition is invalid")
+                    datum.validate_for(registry)
+            except ValueError as exc:
+                raise ValueError("snapshot series metric evidence is invalid") from exc
             lineage = current_lineage
             by_window[window] = record
         views: list[SnapshotWindowView] = []

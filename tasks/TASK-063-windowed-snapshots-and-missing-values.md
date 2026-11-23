@@ -59,9 +59,13 @@ Implementation exists, criteria are verified, relevant tests pass, no critical r
 - `docs/WINDOWED_ANALYTICS_SNAPSHOTS.md` records scheduling, state, retry,
   retention and live-integration boundaries. No provider adapter/read, OAuth,
   account connection or external operation was used.
-- Focused verification: 91 analytics/configuration/migration/reconciliation
+- Focused verification after review correction: 91 analytics/configuration/migration/reconciliation
   tests pass. All 25 migrations/209 statements parse, compilation, diff hygiene
   and the 76-task project validator pass.
 - Remaining gate: independent exact-head review, then the single final full
   suite and GitHub PR/CI. Live PostgreSQL index/concurrency and scheduler/provider
   behavior remain unverified.
+- Caveman rejected the first review head because a series accepted internally
+  consistent Instagram identity paired with YouTube metric IDs. Series assembly
+  now binds the observation platform and every raw datum to the plan's registry
+  platform/unit contract; the exact cross-platform forgery is a regression test.

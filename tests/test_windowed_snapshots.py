@@ -180,6 +180,36 @@ class WindowedSnapshotTests(unittest.IsolatedAsyncioTestCase):
                 records=(one_hour, changed),
             )
 
+        original = one_hour.observation
+        forged_observation = PlatformMetricObservation(
+            request_id=original.request_id,
+            publication_id=original.publication_id,
+            platform=PublicationPlatform.INSTAGRAM,
+            destination_id=original.destination_id,
+            remote_object_id=original.remote_object_id,
+            window=original.window,
+            window_started_at=original.window_started_at,
+            window_ended_at=original.window_ended_at,
+            source=AnalyticsSource.INSTAGRAM_GRAPH,
+            observed_at=original.observed_at,
+            evidence_id="instagram:forged:abc",
+            registry_version=original.registry_version,
+            registry_fingerprint=original.registry_fingerprint,
+            values=original.values,
+        )
+        forged = StoredMetricObservation(
+            observation=forged_observation,
+            owner_user_id=one_hour.owner_user_id,
+            target_fingerprint=one_hour.target_fingerprint,
+            storage_fingerprint=one_hour.storage_fingerprint,
+            created_at=one_hour.created_at,
+        )
+        with self.assertRaises(ValueError):
+            WindowedSnapshotSeries.build(
+                plan=value, registry=REGISTRY,
+                now=PUBLISHED + timedelta(days=30), records=(forged,),
+            )
+
     def test_series_exposes_unresolved_due_read_for_operator_review(self):
         value = plan()
         series = WindowedSnapshotSeries.build(

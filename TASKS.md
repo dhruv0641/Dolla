@@ -103,7 +103,7 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 ## EPIC-13: Analytics and Growth
 
 - **TASK-062 Platform metrics and definitions** — DONE · Analytics Engineer · 16h · deps: TASK-006, TASK-057, TASK-060 · Issue [#195](https://github.com/dhruv0641/Dolla/issues/195) closed · PR [#196](https://github.com/dhruv0641/Dolla/pull/196) merged to `develop` as `251eb0b`; 80 focused/596 full-suite tests, independent review, required checks and post-merge validation passed
-- **TASK-063 Windowed snapshots and missing values** — IN_REVIEW · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) · Branch `feature/TASK-063-windowed-snapshots-missing-values`; 91 focused tests, all migration parses, compilation, diff hygiene and project validation pass; independent review/full suite pending
+- **TASK-063 Windowed snapshots and missing values** — IN_REVIEW · Analytics Engineer · 4h · deps: TASK-062 · Issue [#198](https://github.com/dhruv0641/Dolla/issues/198) · Branch `feature/TASK-063-windowed-snapshots-missing-values`; first Caveman finding corrected; 91 focused tests, all migration parses, compilation, diff hygiene and project validation pass; correction-head review/full suite pending
 - **TASK-064 Creative metadata and cohort analysis** — BACKLOG · Analytics Engineer · 6h · deps: TASK-063
 - **TASK-065 Evidence-backed recommendations and experiments** — BACKLOG · Analytics Engineer · 8h · deps: TASK-064
 - **TASK-066 Spend-aware approved feedback loop** — BACKLOG · Analytics Engineer · 12h · deps: TASK-065
