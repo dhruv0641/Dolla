@@ -49,4 +49,5 @@ GOAL-002 completed its 76-task implementation and repository-workflow scope. Rep
 - **Dependencies:** TASK-077 is complete and the local stack is healthy.
 - **Safety boundary:** Read-only dashboard discovery only. Google Flow generation, credit spending, publishing, official responses, provider calls and account connection remain disabled and uninvoked.
 - **Progress:** Implementation and live validation are active. The authenticated `owner-dhruv` snapshot confirms one brand, one healthy approved `flow-main` account, and zero owner-scoped content or downstream operational records; other local smoke records remain isolated.
-- **Final status:** ACTIVE.
+- **Completion evidence:** TASK-078 implementation PR [#232](https://github.com/dhruv0641/Dolla/pull/232) passed both required exact-head workflows and merged only to protected `develop` as `6605c1b4c28511d4c4668bee0ae508dc04426f9e`; issue [#231](https://github.com/dhruv0641/Dolla/issues/231) closed. Post-merge task tests, plan validation and live dashboard snapshot passed.
+- **Final status:** COMPLETE.
