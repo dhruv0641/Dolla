@@ -8,6 +8,7 @@
 - **Status:** DONE
 - **GitHub issue:** [#222](https://github.com/dhruv0641/Dolla/issues/222)
 - **Implementation PR:** [#223](https://github.com/dhruv0641/Dolla/pull/223)
+- **Tracker closeout PR:** [#224](https://github.com/dhruv0641/Dolla/pull/224)
 - **Branch:** `feature/TASK-071-community-insights-research`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
