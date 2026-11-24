@@ -24,7 +24,7 @@ Initialization is complete. See [the project story](story.md), [task backlog](TA
 - Local configuration: copy `.env.example` to `.env`; configuration accepts secret references only.
 - Run tests: `python -m unittest discover -s tests -v`
 - Start the Next.js dashboard from `web/` with `npm ci && npm run dev`.
-- Start the loopback-only Docker application shell with `docker compose --profile local up --build`; see [container scope and limitations](docs/CONTAINERS.md). PostgreSQL/authentication startup wiring is not yet available, so this is not a production deployment.
+- Start the isolated local stack with `docker compose --profile local up --build --wait`; see [the local container runbook](docs/CONTAINERS.md). It includes PostgreSQL, ordered migrations, secret-backed authentication, API, worker and dashboard services, but remains a development deployment with every external capability disabled.
 - Validate planning structure with `python scripts/validate_project_plan.py`.
 - Git and Git Credential Manager for GitHub operations
 - Feature runtime dependencies will be recorded with their implementation tasks.
