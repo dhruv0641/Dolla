@@ -109,6 +109,7 @@ async def lease_due_jobs(
     now: datetime,
     lease_seconds: int = 120,
     limit: int = 10,
+    allowed_event_names: Sequence[str] | None = None,
 ) -> list[Any]:
     """Atomically claim due jobs using row locks and SKIP LOCKED.
 
@@ -123,17 +124,27 @@ async def lease_due_jobs(
         raise OutboxValidationError("lease_seconds must be between 1 and 3600")
     if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 100:
         raise OutboxValidationError("limit must be between 1 and 100")
+    allowed: list[str] | None = None
+    if allowed_event_names is not None:
+        if isinstance(allowed_event_names, (str, bytes)) or not allowed_event_names:
+            raise OutboxValidationError("allowed_event_names must be a non-empty sequence")
+        if any(not isinstance(name, str) or not name.strip() or len(name) > 160
+               for name in allowed_event_names):
+            raise OutboxValidationError("allowed event names must be non-empty strings of at most 160 characters")
+        allowed = sorted({name.strip() for name in allowed_event_names})
     cursor = await connection.execute(
         """WITH exhausted AS (
              UPDATE outbox_jobs
              SET status = 'DEAD', lease_owner = NULL, lease_until = NULL,
                  error_detail = COALESCE(error_detail, 'max_attempts_exhausted'), updated_at = %s
              WHERE status = 'LEASED' AND lease_until < %s AND attempt_count >= max_attempts
+               AND (%s::text[] IS NULL OR event_name = ANY(%s::text[]))
              RETURNING id
            ), selected AS (
              SELECT id FROM outbox_jobs
              WHERE (status = 'READY' OR (status = 'LEASED' AND lease_until < %s))
                AND run_after <= %s AND attempt_count < max_attempts
+               AND (%s::text[] IS NULL OR event_name = ANY(%s::text[]))
              ORDER BY run_after, created_at
              FOR UPDATE SKIP LOCKED
              LIMIT %s
@@ -147,8 +158,9 @@ async def lease_due_jobs(
            WHERE job.id = selected.id
            RETURNING job.id, job.event_name, job.correlation_id, job.payload,
                      job.attempt_count, job.lease_owner, job.lease_until, job.max_attempts""",
-        (now.astimezone(timezone.utc), now.astimezone(timezone.utc),
-         now.astimezone(timezone.utc), now.astimezone(timezone.utc), limit, worker_id.strip(),
+        (now.astimezone(timezone.utc), now.astimezone(timezone.utc), allowed, allowed,
+         now.astimezone(timezone.utc), now.astimezone(timezone.utc), allowed, allowed,
+         limit, worker_id.strip(),
          now.astimezone(timezone.utc), lease_seconds, now.astimezone(timezone.utc)),
     )
     return await cursor.fetchall()

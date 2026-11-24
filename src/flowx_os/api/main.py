@@ -1,10 +1,13 @@
 """FastAPI application shell; no external services are assumed ready."""
 
 from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
 
 from datetime import datetime, timezone
 import json
+import inspect
 import logging
+import os
 from pathlib import Path
 import re
 from time import perf_counter
@@ -473,13 +476,14 @@ def _credit_risk_alarm_response(record: CreditRiskAlarmRecord) -> CreditRiskAlar
 
 
 def create_app(
-    readiness_checks: dict[str, Callable[[], bool]] | None = None,
+    readiness_checks: dict[str, Callable[[], object]] | None = None,
     token_verifier: TokenVerifier | None = None,
     database_pool: ConnectionPool | None = None,
     credit_reservation_service: CreditReservationService | None = None,
     credit_reconciliation_service: CreditReconciliationService | None = None,
     credit_risk_alarm_service: CreditRiskAlarmService | None = None,
     storage_root: Path | None = None,
+    lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]] | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
 
@@ -492,6 +496,7 @@ def create_app(
         title="FLOW AI Content OS API",
         version="0.1.0",
         description="Backend shell for FLOW AI Content OS. Integration readiness is reported separately.",
+        lifespan=lifespan,
     )
 
     @app.exception_handler(RequestValidationError)
@@ -585,7 +590,10 @@ def create_app(
         checks: dict[str, DependencyState] = {}
         for name, probe in sorted(configured_checks.items()):
             try:
-                state = "ready" if probe() else "unavailable"
+                result = probe()
+                if inspect.isawaitable(result):
+                    result = await result
+                state = "ready" if result else "unavailable"
             except Exception:
                 state = "unavailable"
             checks[name] = DependencyState(status=state)
@@ -1277,4 +1285,12 @@ def create_app(
     return app
 
 
-app = create_app()
+def _application() -> FastAPI:
+    if os.environ.get("FLOWX_RUNTIME_MODE", "").strip().lower() == "local":
+        from flowx_os.local_runtime import create_local_app
+
+        return create_local_app()
+    return create_app()
+
+
+app = _application()

@@ -288,9 +288,12 @@ DECLARE
   approval community_response_approvals%ROWTYPE;
   draft community_reply_draft_records%ROWTYPE;
   comment_value community_comment_versions%ROWTYPE;
-  channel_value social_channels%ROWTYPE;
   publication_status text;
   current_owner text;
+  channel_credentials_ref text;
+  channel_external_id text;
+  channel_enabled boolean;
+  channel_permissions_status text;
   expected_request text;
 BEGIN
   SELECT * INTO approval FROM community_response_approvals
@@ -301,8 +304,10 @@ BEGIN
     WHERE p.id = draft.publication_id FOR UPDATE;
   SELECT * INTO comment_value FROM community_comments_current
     WHERE id = draft.comment_version_id;
-  SELECT p.status, ch, b.owner_user_id
-    INTO publication_status, channel_value, current_owner
+  SELECT p.status, ch.credentials_ref, ch.external_channel_id, ch.enabled,
+         ch.permissions_status, b.owner_user_id
+    INTO publication_status, channel_credentials_ref, channel_external_id,
+         channel_enabled, channel_permissions_status, current_owner
     FROM publication_jobs AS p
     JOIN social_channels AS ch ON ch.id = p.channel_id
     JOIN brands AS b ON b.id = ch.brand_id
@@ -328,10 +333,10 @@ BEGIN
      OR NEW.destination_id IS DISTINCT FROM comment_value.destination_id
      OR NEW.remote_object_id IS DISTINCT FROM comment_value.remote_object_id
      OR NEW.remote_comment_id IS DISTINCT FROM comment_value.remote_comment_id
-     OR NEW.credentials_ref IS DISTINCT FROM channel_value.credentials_ref
-     OR NEW.destination_id IS DISTINCT FROM channel_value.external_channel_id
-     OR channel_value.enabled IS DISTINCT FROM true
-     OR channel_value.permissions_status <> 'VALID'
+     OR NEW.credentials_ref IS DISTINCT FROM channel_credentials_ref
+     OR NEW.destination_id IS DISTINCT FROM channel_external_id
+     OR channel_enabled IS DISTINCT FROM true
+     OR channel_permissions_status <> 'VALID'
      OR publication_status <> 'PUBLISHED'
      OR EXISTS (
        SELECT 1 FROM community_analysis_reports AS newer

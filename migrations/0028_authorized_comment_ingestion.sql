@@ -741,7 +741,7 @@ BEGIN
      OR encode(digest(COALESCE(NEW.next_cursor, ''), 'sha256'), 'hex')
        IS DISTINCT FROM batch_value.next_cursor_fingerprint
      OR NEW.status IS DISTINCT FROM
-       CASE WHEN batch_value.has_more THEN 'ACTIVE' ELSE 'COMPLETE' END THEN
+       (CASE WHEN batch_value.has_more THEN 'ACTIVE' ELSE 'COMPLETE' END) THEN
     RAISE EXCEPTION 'comment ingestion run transition is invalid'
       USING ERRCODE = 'check_violation';
   END IF;

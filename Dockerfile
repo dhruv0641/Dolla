@@ -14,6 +14,8 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY src ./src
 RUN pip install --no-cache-dir .
+COPY migrations ./migrations
+COPY scripts ./scripts
 
 USER 10001:10001
 EXPOSE 8000

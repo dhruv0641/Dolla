@@ -1,5 +1,12 @@
 -- Exact-proposal approval/spend gates and immutable descriptive feedback outcomes.
 
+-- Composite foreign keys below bind both the proposal UUID and its immutable
+-- fingerprint. PostgreSQL requires the referenced column list itself to be
+-- unique even though both columns are independently unique.
+ALTER TABLE analytics_experiment_proposals
+  ADD CONSTRAINT analytics_experiment_proposal_exact_identity
+  UNIQUE (proposal_id, proposal_fingerprint);
+
 ALTER TABLE flow_credit_reservations
   ADD CONSTRAINT flow_credit_reservation_exact_identity
   UNIQUE (id, flow_account_id, request_id);

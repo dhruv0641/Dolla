@@ -81,6 +81,19 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
             {"status": "ready", "checks": {"database": {"status": "ready"}}},
         )
 
+    async def test_readiness_awaits_async_dependency_probes(self) -> None:
+        async def ready_probe() -> bool:
+            return True
+
+        client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=create_app({"database": ready_probe})),
+            base_url="http://testserver",
+        )
+        async with client:
+            response = await client.get("/readyz")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["checks"]["database"]["status"], "ready")
+
     async def test_readiness_suppresses_probe_exceptions(self) -> None:
         def failed_probe() -> bool:
             raise RuntimeError("private connection information")

@@ -86,7 +86,25 @@ class OutboxTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("FOR UPDATE SKIP LOCKED", query)
         self.assertIn("status = 'DEAD'", query)
         self.assertEqual(params[0].tzinfo, timezone.utc)
-        self.assertEqual(params[5], "worker-1")
+        self.assertEqual(params[9], "worker-1")
+
+    async def test_lease_can_be_restricted_to_an_event_allowlist(self):
+        connection = FakeConnection([FakeCursor()])
+        await lease_due_jobs(
+            connection, worker_id="smoke-worker", now=datetime.now(timezone.utc),
+            allowed_event_names=("local.smoke", "local.smoke"),
+        )
+        query, params = connection.calls[0]
+        self.assertEqual(query.count("event_name = ANY"), 2)
+        self.assertEqual(params[2:4], (["local.smoke"], ["local.smoke"]))
+        self.assertEqual(params[6:8], (["local.smoke"], ["local.smoke"]))
+
+        for invalid in ((), "local.smoke", ("",)):
+            with self.subTest(invalid=invalid), self.assertRaises(OutboxValidationError):
+                await lease_due_jobs(
+                    FakeConnection(), worker_id="smoke-worker", now=datetime.now(timezone.utc),
+                    allowed_event_names=invalid,
+                )
 
     async def test_lease_rejects_naive_clock_without_query(self):
         connection = FakeConnection()
