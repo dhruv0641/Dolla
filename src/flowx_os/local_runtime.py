@@ -67,6 +67,9 @@ def create_local_app() -> FastAPI:
     pool = AsyncConnectionPool(conninfo=database_conninfo(), min_size=1, max_size=6, open=False)
     storage_root = Path(_required("FLOWX_STORAGE_ROOT", "/app/data")).resolve()
     token_key = read_file_secret(_required("FLOWX_AUTH_SIGNING_KEY_REF")).encode("utf-8")
+    dashboard_service_token = read_file_secret(
+        _required("FLOWX_DASHBOARD_SERVICE_CREDENTIALS_REF")
+    )
     verifier = TokenVerifier(
         token_key,
         issuer=_required("FLOWX_AUTH_ISSUER", "flowx-local"),
@@ -109,5 +112,7 @@ def create_local_app() -> FastAPI:
         token_verifier=verifier,
         database_pool=pool,
         storage_root=storage_root,
+        dashboard_service_token=dashboard_service_token,
+        dashboard_owner_user_id=_required("FLOWX_DASHBOARD_OWNER_USER_ID"),
         lifespan=lifespan,
     )

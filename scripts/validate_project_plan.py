@@ -46,14 +46,14 @@ def main() -> int:
         require((ROOT / relative).is_file(), f"Missing required project file: {relative}")
 
     task_files = sorted((ROOT / "tasks").glob("TASK-*.md"))
-    require(len(task_files) == 77, f"Expected 77 task specs, found {len(task_files)}")
+    require(len(task_files) == 78, f"Expected 78 task specs, found {len(task_files)}")
     task_ids = {int(path.name[5:8]) for path in task_files}
-    require(task_ids == set(range(1, 78)), "Task IDs must be continuous from TASK-001 to TASK-077")
+    require(task_ids == set(range(1, 79)), "Task IDs must be continuous from TASK-001 to TASK-078")
 
     index_text = (ROOT / "TASKS.md").read_text(encoding="utf-8")
     indexed_ids = {int(value) for value in re.findall(r"^- \*\*TASK-(\d{3})", index_text, re.MULTILINE)}
     require(indexed_ids == task_ids, "TASKS.md and task specification IDs do not match")
-    require(len(re.findall(r"^## EPIC-\d{2}:", index_text, re.MULTILINE)) == 16, "Expected 16 epics")
+    require(len(re.findall(r"^## EPIC-\d{2}:", index_text, re.MULTILINE)) == 17, "Expected 17 epics")
     index_records = {}
     for line in index_text.splitlines():
         match = INDEX_RECORD_RE.match(line)
@@ -104,7 +104,7 @@ def main() -> int:
     for number in graph:
         visit(number)
 
-    print(f"Project plan valid: 16 epics, 77 task specs, {len(visited)} dependency nodes, no cycles.")
+    print(f"Project plan valid: 17 epics, 78 task specs, {len(visited)} dependency nodes, no cycles.")
     return 0
 
 

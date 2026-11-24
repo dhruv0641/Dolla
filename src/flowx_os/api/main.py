@@ -4,6 +4,7 @@ from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 
 from datetime import datetime, timezone
+import hmac
 import json
 import inspect
 import logging
@@ -82,6 +83,7 @@ from flowx_os.db.human_reviews import (
     HumanReviewNotAllowed,
     HumanReviewRepository,
 )
+from flowx_os.db.dashboard import DashboardRepository, DashboardUnavailable
 from flowx_os.domain.content_state import ContentStatus
 from flowx_os.domain.assets import AssetKind
 from flowx_os.domain.storyboard import StoryboardTimeline
@@ -483,6 +485,8 @@ def create_app(
     credit_reconciliation_service: CreditReconciliationService | None = None,
     credit_risk_alarm_service: CreditRiskAlarmService | None = None,
     storage_root: Path | None = None,
+    dashboard_service_token: str | None = None,
+    dashboard_owner_user_id: str | None = None,
     lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]] | None = None,
 ) -> FastAPI:
     """Create the API and accept simple, local dependency readiness probes.
@@ -611,6 +615,26 @@ def create_app(
     ) -> dict[str, object]:
         """Return low-cardinality, process-local counters to administrators only."""
         return request_metrics.snapshot()
+
+    @app.get("/api/v1/dashboard", tags=["operations"])
+    async def dashboard_snapshot(
+        x_flowx_dashboard_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        """Return a bounded local dashboard snapshot through server-only auth."""
+        if database_pool is None or dashboard_service_token is None or dashboard_owner_user_id is None:
+            raise HTTPException(status_code=503, detail="dashboard_not_configured")
+        if (
+            x_flowx_dashboard_token is None
+            or len(x_flowx_dashboard_token) > 512
+            or not hmac.compare_digest(x_flowx_dashboard_token, dashboard_service_token)
+        ):
+            raise HTTPException(status_code=401, detail="dashboard_authentication_failed")
+        try:
+            return await DashboardRepository(database_pool).snapshot(
+                owner_user_id=dashboard_owner_user_id
+            )
+        except DashboardUnavailable as exc:
+            raise HTTPException(status_code=503, detail="dashboard_unavailable") from exc
 
     @app.get("/api/v1/me", tags=["authentication"])
     async def who_am_i(principal: Principal = Depends(current_principal)) -> dict[str, object]:

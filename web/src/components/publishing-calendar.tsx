@@ -1,108 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import type { DashboardSnapshot } from "../lib/dashboard-types";
+import { textField } from "../lib/dashboard-types";
 
 const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-const platforms = [
-  { name: "YouTube", format: "Shorts and video", detail: "Official YouTube API access is not configured." },
-  { name: "Instagram", format: "Professional account", detail: "Account authorization and publishing permissions are unavailable." },
-  { name: "Facebook", format: "Page video", detail: "Page authorization and publishing permissions are unavailable." },
-] as const;
+function calendarCells(month: Date) { const year = month.getUTCFullYear(); const index = month.getUTCMonth(); const offset = (new Date(Date.UTC(year, index, 1)).getUTCDay() + 6) % 7; const count = new Date(Date.UTC(year, index + 1, 0)).getUTCDate(); const previous = new Date(Date.UTC(year, index, 0)).getUTCDate(); const total = Math.ceil((offset + count) / 7) * 7; return Array.from({ length: total }, (_, cell) => { const day = cell - offset + 1; return day < 1 ? { day: previous + day, outside: true } : day > count ? { day: day - count, outside: true } : { day, outside: false }; }); }
 
-function calendarCells(month: Date) {
-  const year = month.getUTCFullYear();
-  const monthIndex = month.getUTCMonth();
-  const first = new Date(Date.UTC(year, monthIndex, 1));
-  const offset = (first.getUTCDay() + 6) % 7;
-  const count = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
-  const previousCount = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
-  const total = Math.ceil((offset + count) / 7) * 7;
-
-  return Array.from({ length: total }, (_, index) => {
-    const day = index - offset + 1;
-    if (day < 1) return { day: previousCount + day, outside: true };
-    if (day > count) return { day: day - count, outside: true };
-    return { day, outside: false };
-  });
-}
-
-export function PublishingCalendar({ initialMonth }: { initialMonth: string }) {
-  const [month, setMonth] = useState(() => {
-    const [year, monthNumber] = initialMonth.split("-").map(Number);
-    return new Date(Date.UTC(year, monthNumber - 1, 1));
-  });
-  const cells = calendarCells(month);
-  const monthLabel = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(month);
-
-  function changeMonth(offset: number) {
-    setMonth((current) => new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + offset, 1)));
-  }
-
-  return (
-    <div className="publishing-workspace">
-      <section className="surface-card publishing-gate-card" aria-labelledby="publishing-gate-title">
-        <div className="card-heading">
-          <div><h2 id="publishing-gate-title">Publishing readiness</h2><p>Independent platform authorization and remote verification</p></div>
-          <span className="status-pill status-pill--warning">Not connected</span>
-        </div>
-        <div className="publishing-gate-message" role="status">
-          <strong>Scheduling and publishing are unavailable</strong>
-          <p>No platform authorization or application publishing service is connected. Nothing is queued, scheduled, uploaded, or published from this workspace.</p>
-        </div>
-        <div className="platform-readiness-grid" aria-label="Platform connection status">
-          {platforms.map((platform) => (
-            <article className="platform-readiness-card" key={platform.name}>
-              <div className="platform-card-heading"><strong>{platform.name}</strong><span className="status-pill status-pill--warning">Unavailable</span></div>
-              <span className="platform-format">{platform.format}</span>
-              <p>{platform.detail}</p>
-              <button className="flow-action-button" type="button" disabled>Connect account</button>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="surface-card calendar-card" aria-labelledby="calendar-title">
-        <div className="calendar-heading">
-          <div><h2 id="calendar-title">Publishing calendar</h2><p>UTC month view until a brand timezone is configured; content records are not loaded.</p></div>
-          <div className="calendar-controls" role="group" aria-label="Calendar month controls">
-            <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
-            <strong aria-live="polite">{monthLabel}</strong>
-            <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
-          </div>
-        </div>
-        <table className="calendar-grid" aria-label={`${monthLabel}, no scheduled content loaded`}>
-          <thead><tr>{weekdays.map((day) => <th className="calendar-weekday" scope="col" key={day}>{day}</th>)}</tr></thead>
-          <tbody>
-            {Array.from({ length: cells.length / 7 }, (_, week) => (
-              <tr key={`week-${week}`}>
-                {cells.slice(week * 7, week * 7 + 7).map((cell, dayIndex) => (
-                  <td className={`calendar-day${cell.outside ? " calendar-day--outside" : ""}`} aria-label={`${cell.day}${cell.outside ? ", outside displayed month" : ", no scheduled content loaded"}`} key={`${week}-${dayIndex}-${cell.day}`}>
-                    <span>{cell.day}</span>
-                    {!cell.outside && <small>No items</small>}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="card-footnote">An empty calendar means no records are connected; it does not confirm there are no schedules on external platforms.</p>
-        <button className="flow-action-button calendar-create-button" type="button" disabled aria-describedby="calendar-action-reason">Create schedule</button>
-        <p id="calendar-action-reason" className="card-footnote">Scheduling unlocks after verified content approval, platform authorization, and duplicate-safe publisher reconciliation are implemented.</p>
-      </section>
-
-      <section className="surface-card publication-ledger-card" aria-labelledby="publication-ledger-title">
-        <div className="card-heading">
-          <div><h2 id="publication-ledger-title">Publication ledger</h2><p>Each platform has its own upload and remote verification state</p></div>
-          <span className="status-pill status-pill--warning">No records loaded</span>
-        </div>
-        <div className="flow-jobs-table-wrap">
-          <table className="flow-jobs-table publication-table">
-            <thead><tr><th scope="col">Content</th><th scope="col">Platform</th><th scope="col">Upload state</th><th scope="col">Remote verification</th><th scope="col">Scheduled time</th></tr></thead>
-            <tbody><tr><td colSpan={5}><div className="flow-jobs-empty" role="status"><strong>No publication records loaded</strong><p>Remote success is never inferred from an upload request; verified platform records are required.</p></div></td></tr></tbody>
-          </table>
-        </div>
-        <p className="card-footnote">Public publishing stays off by default. A successful platform record cannot mark another platform as published.</p>
-      </section>
-    </div>
-  );
+export function PublishingCalendar({ initialMonth, data }: { initialMonth: string; data: DashboardSnapshot | null }) {
+  const [month, setMonth] = useState(() => { const [year, value] = initialMonth.split("-").map(Number); return new Date(Date.UTC(year, value - 1, 1)); });
+  if (!data) return <section className="surface-card"><div className="empty-panel"><span className="empty-icon">—</span><div><strong>Publishing state unavailable</strong><p>No authenticated snapshot is available.</p></div></div></section>;
+  const cells = calendarCells(month); const label = new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(month);
+  const jobsByDay = new Map<number, DashboardSnapshot["publication_jobs"]>();
+  for (const job of data.publication_jobs) { const raw = job.schedule_at_utc; if (typeof raw !== "string") continue; const date = new Date(raw); if (date.getUTCFullYear() === month.getUTCFullYear() && date.getUTCMonth() === month.getUTCMonth()) jobsByDay.set(date.getUTCDate(), [...(jobsByDay.get(date.getUTCDate()) ?? []), job]); }
+  return <div className="publishing-workspace">
+    <section className="surface-card"><div className="card-heading"><div><h2>Publishing readiness</h2><p>Official channel records and permissions</p></div><span className="status-pill status-pill--success">{data.publication_channels.length} channels</span></div>{data.publication_channels.length ? <div className="platform-readiness-grid">{data.publication_channels.map((channel) => <article className="platform-readiness-card" key={textField(channel, "id")}><div className="platform-card-heading"><strong>{textField(channel, "display_name", textField(channel, "platform"))}</strong><span className={`status-pill ${channel.enabled === true ? "status-pill--success" : "status-pill--warning"}`}>{channel.enabled === true ? "Enabled" : "Disabled"}</span></div><span className="platform-format">{textField(channel, "platform")}</span><p>Permissions: {textField(channel, "permissions_status")}</p><button className="flow-action-button" disabled>Manage connection</button></article>)}</div> : <div className="empty-panel lineage-empty"><span className="empty-icon">0</span><div><strong>Verified 0 publishing channels</strong><p>No owner-scoped social authorization records exist. Publishing remains off.</p></div></div>}</section>
+    <section className="surface-card calendar-card"><div className="calendar-heading"><div><h2>Publishing calendar</h2><p>Persisted UTC schedules for the selected month</p></div><div className="calendar-controls"><button onClick={() => setMonth((value) => new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() - 1, 1)))}>‹</button><strong>{label}</strong><button onClick={() => setMonth((value) => new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + 1, 1)))}>›</button></div></div><table className="calendar-grid"><thead><tr>{weekdays.map((day) => <th key={day}>{day}</th>)}</tr></thead><tbody>{Array.from({ length: cells.length / 7 }, (_, week) => <tr key={week}>{cells.slice(week * 7, week * 7 + 7).map((cell, dayIndex) => { const jobs = cell.outside ? [] : jobsByDay.get(cell.day) ?? []; return <td className={`calendar-day${cell.outside ? " calendar-day--outside" : ""}`} key={`${week}-${dayIndex}`}><span>{cell.day}</span>{!cell.outside && <small>{jobs.length ? `${jobs.length} scheduled` : "Verified 0"}</small>}</td>; })}</tr>)}</tbody></table><button className="flow-action-button calendar-create-button" disabled>Create schedule</button></section>
+    <section className="surface-card"><div className="card-heading"><div><h2>Publication ledger</h2><p>Per-platform upload and remote verification state</p></div><span className="status-pill status-pill--success">{data.publication_jobs.length} verified</span></div><div className="flow-jobs-table-wrap"><table className="flow-jobs-table"><thead><tr><th>Content</th><th>Platform</th><th>Status</th><th>Remote status</th><th>Scheduled</th></tr></thead><tbody>{data.publication_jobs.length ? data.publication_jobs.map((job) => <tr key={textField(job, "id")}><td>{textField(job, "content_title")}</td><td>{textField(job, "platform")}</td><td>{textField(job, "status")}</td><td>{textField(job, "last_remote_status", "Not verified")}</td><td>{textField(job, "schedule_at_utc")}</td></tr>) : <tr><td colSpan={5}><div className="flow-jobs-empty"><strong>Verified 0 publication jobs</strong><p>No local schedules or publication attempts are persisted.</p></div></td></tr>}</tbody></table></div></section>
+  </div>;
 }

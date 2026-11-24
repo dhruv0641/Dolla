@@ -1,127 +1,19 @@
-const prerequisites = [
-  {
-    title: "Application transport",
-    state: "Not configured",
-    detail: "The dashboard API has no Flow MCP transport connection.",
-  },
-  {
-    title: "Google account identity",
-    state: "Unverified",
-    detail: "A logged-in browser session does not prove the configured account identity.",
-  },
-  {
-    title: "Previous external job",
-    state: "Unreconciled",
-    detail: "Job reconciliation is not connected, so external job state is unavailable; retry stays disabled.",
-  },
-  {
-    title: "Credit quote and balance",
-    state: "Unavailable",
-    detail: "No verified quote or account balance is exposed to the application.",
-  },
-] as const;
+import type { DashboardSnapshot } from "../lib/dashboard-types";
+import { numberField, textField } from "../lib/dashboard-types";
 
-const ledgerFields = [
-  "Available credits",
-  "Reserved credits",
-  "Consumed credits",
-  "Unknown charges",
-] as const;
-
-export function FlowControl() {
-  return (
-    <div className="flow-workspace">
-      <section className="surface-card flow-gate-card" aria-labelledby="flow-gate-title">
-        <div className="card-heading">
-          <div>
-            <h2 id="flow-gate-title">Generation controls</h2>
-            <p>Operations stay unavailable until the application has verified account, job, and spend evidence.</p>
-          </div>
-          <span className="status-pill status-pill--warning">Unavailable</span>
-        </div>
-        <div className="flow-gate-body">
-          <div className="flow-gate-message" role="status">
-            <strong>Video generation is not connected</strong>
-            <p>No Flow operation has been submitted from this application. The browser-only connector session is not an application transport.</p>
-          </div>
-          <div className="flow-action-row" role="group" aria-label="Unavailable Flow actions">
-            <button className="flow-action-button flow-action-button--primary" type="button" disabled aria-describedby="flow-action-reason">
-              Generate video
-            </button>
-            <button className="flow-action-button" type="button" disabled aria-describedby="flow-action-reason">
-              Retry job
-            </button>
-            <button className="flow-action-button" type="button" disabled aria-describedby="flow-action-reason">
-              Cancel job
-            </button>
-          </div>
-          <p id="flow-action-reason" className="card-footnote">Actions unlock only after verified backend capability, account health, job recovery, and spend authorization are available.</p>
-        </div>
-        <ul className="flow-prerequisite-list" aria-label="Flow readiness prerequisites">
-          {prerequisites.map((item) => (
-            <li key={item.title}>
-              <div>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
-              </div>
-              <span className="status-pill status-pill--warning">{item.state}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="surface-card" aria-labelledby="flow-ledger-title">
-        <div className="card-heading">
-          <div>
-            <h2 id="flow-ledger-title">Credit ledger</h2>
-            <p>Per-account records from the application ledger</p>
-          </div>
-          <span className="status-pill status-pill--warning">No verified ledger</span>
-        </div>
-        <div className="flow-ledger-grid">
-          {ledgerFields.map((field) => (
-            <article className="flow-ledger-field" key={field} aria-label={`${field}: unavailable`}>
-              <span>{field}</span>
-              <strong>Unavailable</strong>
-              <small>No verified account ledger loaded</small>
-            </article>
-          ))}
-        </div>
-        <p className="card-footnote">Unavailable values are not zero. This view does not estimate allowances, costs, or remaining credits.</p>
-      </section>
-
-      <section className="surface-card" aria-labelledby="flow-jobs-title">
-        <div className="card-heading">
-          <div>
-            <h2 id="flow-jobs-title">Generation jobs</h2>
-            <p>Application-owned jobs and their reconciled credit records</p>
-          </div>
-          <span className="status-pill status-pill--warning">No verified records</span>
-        </div>
-        <div className="flow-jobs-table-wrap">
-          <table className="flow-jobs-table">
-            <thead>
-              <tr>
-                <th scope="col">Job ID</th>
-                <th scope="col">Account</th>
-                <th scope="col">Content / scene</th>
-                <th scope="col">Credits</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan={5}>
-                  <div className="flow-jobs-empty" role="status">
-                    <strong>No application job records loaded</strong>
-                    <p>External connector activity is not treated as an application job until it is verified and reconciled.</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  );
+export function FlowControl({ data }: { data: DashboardSnapshot | null }) {
+  if (!data) return <section className="surface-card"><div className="empty-panel"><span className="empty-icon">—</span><div><strong>Flow state unavailable</strong><p>No authenticated dashboard snapshot is available. All actions remain disabled.</p></div></div></section>;
+  const account = data.flow_accounts[0];
+  const healthy = account && textField(account, "session_health", "").toUpperCase() === "HEALTHY" && account.paused !== true;
+  const available = account ? numberField(account, "observed_monthly_available") : null;
+  const reserved = data.credit_reservations.filter((item) => ["HELD", "ACTIVE", "RESERVED"].includes(textField(item, "state", ""))).reduce((sum, item) => sum + (numberField(item, "quoted_credits") ?? 0), 0);
+  const consumed = data.credit_entries.reduce((sum, item) => { const delta = numberField(item, "credit_delta") ?? 0; return sum + (delta < 0 ? Math.abs(delta) : 0); }, 0);
+  return <div className="flow-workspace">
+    <section className="surface-card flow-gate-card"><div className="card-heading"><div><h2>Generation controls</h2><p>Read-only readiness from persisted Flow records</p></div><span className={`status-pill ${healthy ? "status-pill--success" : "status-pill--warning"}`}>{healthy ? "Account healthy" : "Unavailable"}</span></div>
+      <div className="flow-gate-body"><div className="flow-gate-message"><strong>Generation stays disabled in this discovery dashboard</strong><p>No Flow operation is submitted here. Paid actions still require a separate explicit preview and authorization.</p></div><div className="flow-action-row"><button className="flow-action-button flow-action-button--primary" disabled>Generate video</button><button className="flow-action-button" disabled>Retry job</button><button className="flow-action-button" disabled>Reconcile credits</button></div></div>
+      <ul className="flow-prerequisite-list"><li><div><strong>Application transport</strong><p>{account ? textField(account, "mcp_adapter") : "No account configured"}</p></div><span className={`status-pill ${healthy ? "status-pill--success" : "status-pill--warning"}`}>{healthy ? "Healthy" : "Not ready"}</span></li><li><div><strong>Account identity</strong><p>{account ? `${textField(account, "alias")} · owner ${data.owner_user_id}` : "No owner-scoped account"}</p></div><span className={`status-pill ${account ? "status-pill--success" : "status-pill--warning"}`}>{account ? "Verified" : "Missing"}</span></li><li><div><strong>Persisted jobs</strong><p>{data.generation_jobs.length} job records in the snapshot</p></div><span className="status-pill status-pill--success">Verified</span></li><li><div><strong>Credit observation</strong><p>{available === null ? "Provider balance has not been observed" : `${available} monthly credits observed`}</p></div><span className={`status-pill ${available === null ? "status-pill--warning" : "status-pill--success"}`}>{available === null ? "Unavailable" : "Observed"}</span></li></ul>
+    </section>
+    <section className="surface-card"><div className="card-heading"><div><h2>Credit ledger</h2><p>Persisted observations only; no inferred provider balance</p></div><span className="status-pill status-pill--success">{data.credit_entries.length} entries</span></div><div className="flow-ledger-grid">{[["Available credits", available === null ? "Unavailable" : String(available)], ["Reserved credits", String(reserved)], ["Consumed credits", String(consumed)], ["Unknown charges", String(data.credit_entries.filter((item) => textField(item, "source", "").toLowerCase().includes("unknown")).length)]].map(([label, value]) => <div className="flow-ledger-field" key={label}><span>{label}</span><strong>{value}</strong><small>{value === "Unavailable" ? "No verified observation" : "Verified persisted records"}</small></div>)}</div></section>
+    <section className="surface-card"><div className="card-heading"><div><h2>Generation jobs</h2><p>Local job ledger and external reconciliation state</p></div><span className="status-pill status-pill--success">{data.generation_jobs.length} verified</span></div><div className="flow-jobs-table-wrap"><table className="flow-jobs-table"><thead><tr><th>Job</th><th>Content</th><th>Account</th><th>Status</th><th>Created</th></tr></thead><tbody>{data.generation_jobs.length ? data.generation_jobs.map((job) => <tr key={textField(job, "id")}><td>{textField(job, "external_job_id", textField(job, "id"))}</td><td>{textField(job, "content_title")}</td><td>{textField(job, "account_alias")}</td><td>{textField(job, "status")}</td><td>{textField(job, "created_at")}</td></tr>) : <tr><td colSpan={5}><div className="flow-jobs-empty"><strong>Verified 0 generation jobs</strong><p>No owner-scoped jobs are persisted.</p></div></td></tr>}</tbody></table></div></section>
+  </div>;
 }

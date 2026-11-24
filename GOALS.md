@@ -40,3 +40,13 @@ GOAL-002 completed its 76-task implementation and repository-workflow scope. Rep
 - **Progress:** Issue [#228](https://github.com/dhruv0641/Dolla/issues/228) is closed. The isolated Compose stack runs persistent PostgreSQL, all 33 checksummed migrations, secret-backed authentication, live readiness, managed storage, a `local.smoke`-only worker and the Next.js dashboard. PR [#229](https://github.com/dhruv0641/Dolla/pull/229) passed both exact-head workflows and merged through protected `develop` as `7837c92f066cb8bf158a209ac388d8005f784778`.
 - **Verification evidence:** Final corrected-head verification passed 728 backend tests, compileall, frontend type-check/build with zero high-severity audit findings, the 77-task validator, Compose validation, live 33-migration replay, healthy host endpoints/dashboard and the complete local smoke. Post-merge project validation passed.
 - **Final status:** COMPLETED.
+
+## Active goal
+
+### GOAL-004 — Fully wire all audited dashboard pages
+- **Requested outcome:** Replace the nine dashboard modules' hard-coded unavailable states with authenticated, owner-scoped live PostgreSQL summaries while retaining explicit safe boundaries for external actions.
+- **Related tasks:** TASK-078.
+- **Dependencies:** TASK-077 is complete and the local stack is healthy.
+- **Safety boundary:** Read-only dashboard discovery only. Google Flow generation, credit spending, publishing, official responses, provider calls and account connection remain disabled and uninvoked.
+- **Progress:** Implementation and live validation are active. The authenticated `owner-dhruv` snapshot confirms one brand, one healthy approved `flow-main` account, and zero owner-scoped content or downstream operational records; other local smoke records remain isolated.
+- **Final status:** ACTIVE.

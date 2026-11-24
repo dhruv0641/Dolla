@@ -11,6 +11,7 @@ SECRETS = (
     (ROOT / "postgres_admin" / "password", LEGACY_ROOT / "postgres_admin_password"),
     (ROOT / "postgres_runtime" / "password", LEGACY_ROOT / "postgres_runtime_password"),
     (ROOT / "auth_signing" / "key", LEGACY_ROOT / "auth_signing_key"),
+    (ROOT / "dashboard_service" / "token", LEGACY_ROOT / "dashboard_service_token"),
 )
 
 

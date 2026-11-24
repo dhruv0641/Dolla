@@ -9,6 +9,8 @@ x-runtime-environment: &runtime-environment
   FLOWX_DATABASE_RUNTIME_USER: flowx_runtime
   FLOWX_DATABASE_RUNTIME_CREDENTIALS_REF: secretref://file/run/secrets/postgres_runtime/password
   FLOWX_AUTH_SIGNING_KEY_REF: secretref://file/run/secrets/auth_signing/key
+  FLOWX_DASHBOARD_SERVICE_CREDENTIALS_REF: secretref://file/run/secrets/dashboard_service/token
+  FLOWX_DASHBOARD_OWNER_USER_ID: owner-dhruv
   FLOWX_AUTH_ISSUER: flowx-local
   FLOWX_AUTH_AUDIENCE: flowx-api
   FLOWX_STORAGE_ROOT: /app/data
@@ -44,6 +46,7 @@ services:
       - postgres_admin_secret:/run/local-secrets/postgres_admin
       - postgres_runtime_secret:/run/local-secrets/postgres_runtime
       - auth_signing_secret:/run/local-secrets/auth_signing
+      - dashboard_service_secret:/run/local-secrets/dashboard_service
       - local_secrets:/run/legacy-secrets:ro
     command: ["python", "scripts/init_local_secrets.py"]
 
@@ -110,6 +113,7 @@ services:
       - managed_storage:/app/data
       - postgres_runtime_secret:/run/secrets/postgres_runtime:ro
       - auth_signing_secret:/run/secrets/auth_signing:ro
+      - dashboard_service_secret:/run/secrets/dashboard_service:ro
     networks: ["backend", "frontend"]
     depends_on:
       db: {condition: service_healthy}
@@ -150,9 +154,11 @@ services:
     cpus: 1.5
     environment:
       FLOWX_API_BASE_URL: http://api:8000
+      FLOWX_DASHBOARD_SERVICE_CREDENTIALS_REF: secretref://file/run/secrets/dashboard_service/token
       NEXT_TELEMETRY_DISABLED: "1"
       NODE_ENV: production
     networks: ["frontend"]
+    volumes: ["dashboard_service_secret:/run/secrets/dashboard_service:ro"]
     depends_on:
       api: {condition: service_healthy}
     healthcheck:
@@ -204,6 +210,7 @@ volumes:
   postgres_admin_secret:
   postgres_runtime_secret:
   auth_signing_secret:
+  dashboard_service_secret:
   postgres_data:
   managed_storage:
 

@@ -113,7 +113,7 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             set(response.json()["paths"]),
             {
-                "/", "/healthz", "/readyz", "/api/v1/me", "/api/v1/admin/access-check", "/api/v1/admin/metrics",
+                "/", "/healthz", "/readyz", "/api/v1/dashboard", "/api/v1/me", "/api/v1/admin/access-check", "/api/v1/admin/metrics",
                 "/api/v1/brands", "/api/v1/brands/{brand_id}/content",
                 "/api/v1/flow-accounts",
                 "/api/v1/flow-accounts/{account_id}/pause",
@@ -290,6 +290,28 @@ class ApiShellTests(unittest.IsolatedAsyncioTestCase):
         async with client:
             response = await client.get("/api/v1/admin/access-check")
         self.assertEqual(response.status_code, 200)
+
+    async def test_dashboard_service_endpoint_is_fail_closed_and_owner_scoped(self) -> None:
+        snapshot = {
+            "generated_at": "2026-11-24T00:00:00+00:00", "owner_user_id": "owner-dhruv",
+            "overview": {}, "pipeline_counts": {}, "content": [], "activity": [],
+        }
+        pool = _FakePool([_FakeCursor((snapshot,))])
+        app = create_app(database_pool=pool, dashboard_service_token="s" * 32, dashboard_owner_user_id="owner-dhruv")
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
+            missing = await client.get("/api/v1/dashboard")
+            wrong = await client.get("/api/v1/dashboard", headers={"X-FlowX-Dashboard-Token": "x" * 32})
+            valid = await client.get("/api/v1/dashboard", headers={"X-FlowX-Dashboard-Token": "s" * 32})
+        self.assertEqual(missing.status_code, 401)
+        self.assertEqual(wrong.status_code, 401)
+        self.assertEqual(valid.status_code, 200)
+        self.assertEqual(valid.json()["owner_user_id"], "owner-dhruv")
+        self.assertEqual(pool.connection_value.queries[0][1], ("owner-dhruv",))
+
+    async def test_dashboard_service_endpoint_requires_server_configuration(self) -> None:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=create_app()), base_url="http://testserver") as client:
+            response = await client.get("/api/v1/dashboard", headers={"X-FlowX-Dashboard-Token": "s" * 32})
+        self.assertEqual(response.status_code, 503)
 
 
 def _b64(data: bytes) -> str:

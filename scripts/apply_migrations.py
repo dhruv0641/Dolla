@@ -64,6 +64,18 @@ def main() -> int:
             connection.execute(
                 "GRANT SELECT, INSERT, UPDATE ON brands, content_items, workflow_events, outbox_jobs TO flowx_runtime"
             )
+            connection.execute(
+                """GRANT SELECT ON
+                     flowx_dashboard_content, flowx_dashboard_activity,
+                     flowx_dashboard_flow_accounts, flowx_dashboard_credit_entries,
+                     flowx_dashboard_credit_reservations, flowx_dashboard_generation_jobs,
+                     flowx_dashboard_scenes, flowx_dashboard_assets, flowx_dashboard_qa,
+                     flowx_dashboard_reviews, flowx_dashboard_agent_runs,
+                     flowx_dashboard_channels, flowx_dashboard_publications,
+                     flowx_dashboard_analytics, flowx_dashboard_comments,
+                     flowx_dashboard_reply_drafts, flowx_dashboard_voice_profiles,
+                     flowx_dashboard_tts, flowx_dashboard_brands TO flowx_runtime"""
+            )
             connection.execute("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO flowx_runtime")
         finally:
             connection.execute("SELECT pg_advisory_unlock(%s)", (LOCK_ID,))
