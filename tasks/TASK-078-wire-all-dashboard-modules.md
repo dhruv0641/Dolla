@@ -6,9 +6,11 @@
 - **Priority:** P0
 - **Dependencies:** TASK-077
 - **Estimated complexity:** 24 engineering hours
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Branch:** `feature/TASK-078-wire-dashboard-pages`
 - **Issue:** [#231](https://github.com/dhruv0641/Dolla/issues/231)
+- **PR:** [#232](https://github.com/dhruv0641/Dolla/pull/232)
+- **Merged commit:** `6605c1b4c28511d4c4668bee0ae508dc04426f9e`
 - **Blockers:** None. External mutations and paid operations are excluded.
 
 ## User Story

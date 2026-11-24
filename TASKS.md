@@ -130,17 +130,17 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 ## EPIC-17: Authenticated Dashboard Operations
 
-- **TASK-078 Wire all nine dashboard modules to authenticated local APIs** — IN_REVIEW · Frontend Engineer · 24h · deps: TASK-077 · Issue: [#231](https://github.com/dhruv0641/Dolla/issues/231)
+- **TASK-078 Wire all nine dashboard modules to authenticated local APIs** — DONE · Frontend Engineer · 24h · deps: TASK-077 · Issue: [#231](https://github.com/dhruv0641/Dolla/issues/231) · PR: [#232](https://github.com/dhruv0641/Dolla/pull/232) · merged to develop as `6605c1b`
 
 ## Totals
 
 - Epics: 17
 - Tasks: 78
 - Estimated effort: 746 engineering hours
-- DONE: 77 (TASK-001 through TASK-077).
+- DONE: 78 (TASK-001 through TASK-078).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 1 (TASK-078).
+- IN_REVIEW: 0.
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 0.
