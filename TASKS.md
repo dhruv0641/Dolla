@@ -124,15 +124,19 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 - **TASK-075 Encrypted backups and runbooks** — DONE · DevOps Engineer · 16h · deps: TASK-074 · Issue: [#75](https://github.com/dhruv0641/Dolla/issues/75) · PR: [#76](https://github.com/dhruv0641/Dolla/pull/76) · Commit: `b1b9e8d`
 - **TASK-076 Security and release gates** — DONE · DevOps Engineer · 4h · deps: TASK-075 · Issue: [#78](https://github.com/dhruv0641/Dolla/issues/78) · PR: [#79](https://github.com/dhruv0641/Dolla/pull/79) · Commit: `996f7ea`
 
+## EPIC-16: Local Deployment Verification
+
+- **TASK-077 Complete local deployment and end-to-end verification** — IN_REVIEW · DevOps Engineer · 24h · deps: TASK-076 · Issue: [#228](https://github.com/dhruv0641/Dolla/issues/228)
+
 ## Totals
 
-- Epics: 15
-- Tasks: 76
-- Estimated effort: 698 engineering hours
+- Epics: 16
+- Tasks: 77
+- Estimated effort: 722 engineering hours
 - DONE: 76 (TASK-001 through TASK-076).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 0.
+- IN_REVIEW: 1 (TASK-077).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 0.

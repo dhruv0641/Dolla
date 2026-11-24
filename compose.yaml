@@ -1,55 +1,213 @@
 name: flowx
 
+x-runtime-environment: &runtime-environment
+  FLOWX_ENVIRONMENT: development
+  FLOWX_RUNTIME_MODE: local
+  FLOWX_DATABASE_HOST: db
+  FLOWX_DATABASE_PORT: "5432"
+  FLOWX_DATABASE_NAME: flowx
+  FLOWX_DATABASE_RUNTIME_USER: flowx_runtime
+  FLOWX_DATABASE_RUNTIME_CREDENTIALS_REF: secretref://file/run/secrets/postgres_runtime/password
+  FLOWX_AUTH_SIGNING_KEY_REF: secretref://file/run/secrets/auth_signing/key
+  FLOWX_AUTH_ISSUER: flowx-local
+  FLOWX_AUTH_AUDIENCE: flowx-api
+  FLOWX_STORAGE_ROOT: /app/data
+  FLOWX_YOUTUBE_PUBLISHING_ENABLED: "false"
+  FLOWX_INSTAGRAM_PUBLISHING_ENABLED: "false"
+  FLOWX_FACEBOOK_PUBLISHING_ENABLED: "false"
+  FLOWX_PLATFORM_RECONCILIATION_ENABLED: "false"
+  FLOWX_PUBLICATION_SCHEDULING_ENABLED: "false"
+  FLOWX_PLATFORM_ANALYTICS_ENABLED: "false"
+  FLOWX_COMMENT_INGESTION_ENABLED: "false"
+  FLOWX_COMMUNITY_ANALYSIS_ENABLED: "false"
+  FLOWX_COMMUNITY_REPLY_DRAFTING_ENABLED: "false"
+  FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED: "false"
+  FLOWX_COMMUNITY_INSIGHTS_ENABLED: "false"
+
+x-runtime-security: &runtime-security
+  init: true
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  pids_limit: 128
+
 services:
+  secret-init:
+    profiles: ["local"]
+    build: {context: ., dockerfile: Dockerfile}
+    user: "0:0"
+    init: true
+    restart: "no"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    volumes:
+      - postgres_admin_secret:/run/local-secrets/postgres_admin
+      - postgres_runtime_secret:/run/local-secrets/postgres_runtime
+      - auth_signing_secret:/run/local-secrets/auth_signing
+      - local_secrets:/run/legacy-secrets:ro
+    command: ["python", "scripts/init_local_secrets.py"]
+
+  storage-init:
+    profiles: ["local"]
+    build: {context: ., dockerfile: Dockerfile}
+    user: "0:0"
+    init: true
+    restart: "no"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "FOWNER"]
+    volumes: ["managed_storage:/app/data"]
+    command: ["python", "scripts/init_local_storage.py"]
+
+  db:
+    profiles: ["local"]
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: flowx
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin/password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_admin_secret:/run/secrets/postgres_admin:ro
+    networks: ["backend"]
+    depends_on:
+      secret-init: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flowx"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  migrate:
+    profiles: ["local"]
+    build: {context: ., dockerfile: Dockerfile}
+    init: true
+    restart: "no"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    environment:
+      <<: *runtime-environment
+      FLOWX_DATABASE_ADMIN_USER: postgres
+      FLOWX_DATABASE_ADMIN_CREDENTIALS_REF: secretref://file/run/secrets/postgres_admin/password
+    volumes:
+      - postgres_admin_secret:/run/secrets/postgres_admin:ro
+      - postgres_runtime_secret:/run/secrets/postgres_runtime:ro
+    networks: ["backend"]
+    depends_on:
+      db: {condition: service_healthy}
+    command: ["python", "scripts/apply_migrations.py"]
+
   api:
     profiles: ["local"]
-    build:
-      context: .
-      dockerfile: Dockerfile
-    init: true
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+    <<: *runtime-security
+    build: {context: ., dockerfile: Dockerfile}
     mem_limit: 512m
     cpus: 1.0
-    pids_limit: 128
-    ports:
-      - "${FLOWX_API_HOST:-127.0.0.1}:${FLOWX_API_PORT:-8000}:8000"
+    environment: *runtime-environment
+    volumes:
+      - managed_storage:/app/data
+      - postgres_runtime_secret:/run/secrets/postgres_runtime:ro
+      - auth_signing_secret:/run/secrets/auth_signing:ro
+    networks: ["backend", "frontend"]
+    depends_on:
+      db: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+      storage-init: {condition: service_completed_successfully}
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
-      interval: 15s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  worker:
+    profiles: ["local"]
+    <<: *runtime-security
+    build: {context: ., dockerfile: Dockerfile}
+    mem_limit: 256m
+    cpus: 0.5
+    environment: *runtime-environment
+    volumes: ["postgres_runtime_secret:/run/secrets/postgres_runtime:ro"]
+    networks: ["backend"]
+    depends_on:
+      db: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    command: ["python", "-m", "flowx_os.local_worker"]
+    healthcheck:
+      test: ["CMD", "python", "scripts/worker_health.py"]
+      interval: 10s
       timeout: 3s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 10s
 
   web:
     profiles: ["local"]
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    init: true
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+    <<: *runtime-security
+    build: {context: ., dockerfile: web/Dockerfile}
     mem_limit: 768m
     cpus: 1.5
-    pids_limit: 128
     environment:
       FLOWX_API_BASE_URL: http://api:8000
       NEXT_TELEMETRY_DISABLED: "1"
       NODE_ENV: production
-    ports:
-      - "${FLOWX_WEB_HOST:-127.0.0.1}:${FLOWX_WEB_PORT:-3000}:3000"
+    networks: ["frontend"]
     depends_on:
-      api:
-        condition: service_healthy
+      api: {condition: service_healthy}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
-      interval: 20s
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 10
       start_period: 20s
+
+  loopback-gateway:
+    profiles: ["local"]
+    <<: *runtime-security
+    build: {context: ., dockerfile: Dockerfile}
+    mem_limit: 96m
+    cpus: 0.25
+    networks: ["frontend", "edge"]
+    ports:
+      - "${FLOWX_API_HOST:-127.0.0.1}:${FLOWX_API_PORT:-8000}:18000"
+      - "${FLOWX_WEB_HOST:-127.0.0.1}:${FLOWX_WEB_PORT:-3000}:13000"
+    depends_on:
+      api: {condition: service_healthy}
+      web: {condition: service_healthy}
+    command: ["python", "scripts/local_loopback_gateway.py"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 18000), 2).close(); socket.create_connection(('127.0.0.1', 13000), 2).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  smoke:
+    profiles: ["verification"]
+    build: {context: ., dockerfile: Dockerfile}
+    init: true
+    restart: "no"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    environment:
+      <<: *runtime-environment
+      FLOWX_API_BASE_URL: http://api:8000
+    volumes:
+      - postgres_runtime_secret:/run/secrets/postgres_runtime:ro
+      - auth_signing_secret:/run/secrets/auth_signing:ro
+    networks: ["backend", "frontend"]
+    command: ["python", "scripts/local_smoke.py"]
+
+volumes:
+  local_secrets:
+  postgres_admin_secret:
+  postgres_runtime_secret:
+  auth_signing_secret:
+  postgres_data:
+  managed_storage:
+
+networks:
+  backend: {internal: true}
+  frontend: {internal: true}
+  edge:

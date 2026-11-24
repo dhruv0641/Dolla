@@ -13,7 +13,7 @@ npm run dev
 
 Open <http://localhost:3000>. Run `npm run typecheck` and `npm run build` before opening a pull request.
 
-This shell does not imply that Flow, PostgreSQL, social publishing, or analytics are connected.
+The local Compose profile connects this dashboard to its local PostgreSQL-backed API. Flow, social publishing, official responses, reconciliation and external analytics remain disabled and unconnected.
 
 ## Dashboard status connection
 
