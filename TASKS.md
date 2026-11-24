@@ -128,15 +128,19 @@ Statuses: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `TESTING`, 
 
 - **TASK-077 Complete local deployment and end-to-end verification** — DONE · DevOps Engineer · 24h · deps: TASK-076 · Issue: [#228](https://github.com/dhruv0641/Dolla/issues/228) · PR: [#229](https://github.com/dhruv0641/Dolla/pull/229) · merged to develop as `7837c92`
 
+## EPIC-17: Authenticated Dashboard Operations
+
+- **TASK-078 Wire all nine dashboard modules to authenticated local APIs** — IN_REVIEW · Frontend Engineer · 24h · deps: TASK-077 · Issue: [#231](https://github.com/dhruv0641/Dolla/issues/231)
+
 ## Totals
 
-- Epics: 16
-- Tasks: 77
-- Estimated effort: 722 engineering hours
+- Epics: 17
+- Tasks: 78
+- Estimated effort: 746 engineering hours
 - DONE: 77 (TASK-001 through TASK-077).
 - TESTING: 0.
 - IN_PROGRESS: 0.
-- IN_REVIEW: 0.
+- IN_REVIEW: 1 (TASK-078).
 - READY: 0.
 - BLOCKED: 0.
 - BACKLOG: 0.

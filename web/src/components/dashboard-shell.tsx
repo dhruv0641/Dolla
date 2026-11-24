@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { DashboardStatus } from "../lib/dashboard-types";
+import { textField } from "../lib/dashboard-types";
 import { ProductionBoard } from "./production-board";
 import { FlowControl } from "./flow-control";
 import { QaVoiceWorkspace } from "./qa-voice";
@@ -8,319 +10,43 @@ import { PublishingCalendar } from "./publishing-calendar";
 import { AgentWorkspace, AnalyticsWorkspace, CommunityWorkspace, SettingsWorkspace } from "./operations-views";
 import type { PolicyDefaults } from "./operations-views";
 
-type DashboardStatus =
-  | { state: "connected"; checkedAt: string; readiness: { status: "ready" | "not_ready"; checks: Record<string, { status: string }> } | null }
-  | { state: "unavailable"; reason: string };
-
 const sections = [
-  {
-    id: "overview",
-    icon: "◈",
-    title: "Executive overview",
-    description: "One view of the content operation. Live metrics appear when verified dashboard data is available.",
-  },
-  {
-    id: "pipeline",
-    icon: "▦",
-    title: "Production pipeline",
-    description: "Ideas, scripts, scenes, renders, and approvals will be shown from the content lifecycle records.",
-  },
-  {
-    id: "flow",
-    icon: "◉",
-    title: "Flow & credits",
-    description: "Flow MCP capabilities and account balances are unverified. This workspace does not estimate live credits.",
-  },
-  {
-    id: "quality",
-    icon: "◇",
-    title: "Video and voice QA",
-    description: "Quality reports will appear after media checks and human review are connected.",
-  },
-  {
-    id: "publishing",
-    icon: "↗",
-    title: "Publishing control",
-    description: "Platform accounts, schedules, and remote verification are not connected to this screen.",
-  },
-  {
-    id: "agents",
-    icon: "♜",
-    title: "AI content team",
-    description: "Agent assignments and activity will be backed by workflow records, not illustrative sample data.",
-  },
-  {
-    id: "analytics",
-    icon: "⌁",
-    title: "Growth analytics",
-    description: "Native platform metrics and their definitions will appear when verified data is available.",
-  },
-  {
-    id: "community",
-    icon: "☏",
-    title: "Community inbox",
-    description: "Comments and response drafts will appear only after an authorized source is connected.",
-  },
-  {
-    id: "settings",
-    icon: "⚙",
-    title: "System settings",
-    description: "Policy defaults and integration readiness; secrets and live account configuration remain outside this screen.",
-  },
+  { id: "overview", icon: "◈", title: "Executive overview", description: "Live owner-scoped production metrics, workflow activity, and service readiness." },
+  { id: "pipeline", icon: "▦", title: "Production pipeline", description: "Content, scenes, and assets from the persisted lifecycle." },
+  { id: "flow", icon: "◉", title: "Flow & credits", description: "Persisted Flow account, credit, and job state; paid actions remain disabled." },
+  { id: "quality", icon: "◇", title: "Video and voice QA", description: "Media evidence, QA reports, voice profiles, and human review decisions." },
+  { id: "publishing", icon: "↗", title: "Publishing control", description: "Official channel records, schedules, and per-platform publication state." },
+  { id: "agents", icon: "♜", title: "AI content team", description: "Persisted agent activity and governed ownership roles." },
+  { id: "analytics", icon: "⌁", title: "Growth analytics", description: "Platform-native observations with their collection windows." },
+  { id: "community", icon: "☏", title: "Community inbox", description: "Authorized comments and reviewable response drafts." },
+  { id: "settings", icon: "⚙", title: "System settings", description: "Read-only policy defaults and evidence-based integration readiness." },
 ] as const;
-
 type SectionId = (typeof sections)[number]["id"];
 
-function UnavailableMetric({ label }: { label: string }) {
-  return (
-    <article className="metric-card" aria-label={`${label}: unavailable`}>
-      <span className="metric-label">{label}</span>
-      <strong className="metric-value" aria-hidden="true">—</strong>
-      <span className="metric-footnote">Unavailable · no verified data loaded</span>
-    </article>
-  );
-}
-
-function EmptyPanel({
-  title,
-  message,
-  icon = "◇",
-}: {
-  title: string;
-  message: string;
-  icon?: string;
-}) {
-  return (
-    <div className="empty-panel">
-      <span className="empty-icon" aria-hidden="true">{icon}</span>
-      <div>
-        <strong>{title}</strong>
-        <p>{message}</p>
-      </div>
-    </div>
-  );
-}
+function Metric({ label, value, loaded }: { label: string; value: number | undefined; loaded: boolean }) { return <article className="metric-card"><span className="metric-label">{label}</span><strong className="metric-value">{loaded ? value ?? 0 : "—"}</strong><span className="metric-footnote">{loaded ? "Verified owner-scoped snapshot" : "Unavailable · snapshot not loaded"}</span></article>; }
 
 export function DashboardShell({ initialMonth, policyDefaults }: { initialMonth: string; policyDefaults: PolicyDefaults }) {
   const [activeSection, setActiveSection] = useState<SectionId>("overview");
-  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>({ state: "unavailable", reason: "not_checked" });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const refreshInFlight = useRef(false);
+  const [status, setStatus] = useState<DashboardStatus>({ state: "unavailable", reason: "not_checked" });
+  const [refreshing, setRefreshing] = useState(false); const inFlight = useRef(false);
+  const refresh = useCallback(async () => { if (inFlight.current) return; inFlight.current = true; setRefreshing(true); try { const response = await fetch("/api/dashboard-status", { cache: "no-store" }); const value = await response.json() as DashboardStatus; setStatus(value); } catch { setStatus({ state: "unavailable", reason: "request_failed" }); } finally { inFlight.current = false; setRefreshing(false); } }, []);
+  useEffect(() => { void refresh(); const timer = window.setInterval(() => void refresh(), 60_000); return () => clearInterval(timer); }, [refresh]);
   const section = sections.find((item) => item.id === activeSection) ?? sections[0];
+  const data = status.state === "connected" ? status.dashboard : null;
+  const serviceReady = status.state === "connected" && status.readiness?.status === "ready";
+  const flowReady = !!data?.flow_accounts.some((account) => textField(account, "session_health", "").toUpperCase() === "HEALTHY" && account.paused !== true);
+  const statusLabel = status.state === "connected" ? data ? serviceReady ? "API ready · snapshot loaded" : "Snapshot loaded · dependency warning" : "API healthy · snapshot unavailable" : status.reason === "not_checked" ? "Checking API" : "API unavailable";
+  const pipelineGroups = [{ label: "Ideas", states: ["IDEA", "RESEARCHED", "BRIEF_READY"] }, { label: "Scripts", states: ["SCRIPT_READY"] }, { label: "Scenes", states: ["STORYBOARD_READY", "GENERATING", "ASSEMBLING"] }, { label: "Review", states: ["QA_PENDING", "NEEDS_REVIEW", "READY"] }, { label: "Published", states: ["PUBLISHED"] }];
 
-  const refreshStatus = useCallback(async () => {
-    if (refreshInFlight.current) return;
-    refreshInFlight.current = true;
-    setIsRefreshing(true);
-    try {
-      const response = await fetch("/api/dashboard-status", { cache: "no-store" });
-      const value = await response.json() as DashboardStatus;
-      setDashboardStatus(value);
-    } catch {
-      setDashboardStatus({ state: "unavailable", reason: "request_failed" });
-    } finally {
-      refreshInFlight.current = false;
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refreshStatus();
-    const timer = window.setInterval(() => void refreshStatus(), 60_000);
-    return () => window.clearInterval(timer);
-  }, [refreshStatus]);
-
-  const statusLabel = dashboardStatus.state === "connected"
-    ? dashboardStatus.readiness === null ? "API healthy · readiness unknown" : dashboardStatus.readiness.status === "ready" ? "API ready" : "API dependencies unavailable"
-    : dashboardStatus.reason === "not_checked" ? "Checking API status" : "API unavailable";
-
-  return (
-    <div className="app-shell">
-      <aside className="sidebar" aria-label="FLOW workspace navigation">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">F</span>
-          <div>
-            <div className="brand-name"><span>FLOW</span> Content OS</div>
-            <p className="brand-caption">Production workspace</p>
-          </div>
-        </div>
-
-        <p className="nav-heading">Workspace</p>
-        <nav className="nav-list" aria-label="Workspace sections">
-          {sections.map((item) => (
-            <button
-              className={`nav-item${activeSection === item.id ? " is-active" : ""}`}
-              type="button"
-              key={item.id}
-              aria-current={activeSection === item.id ? "page" : undefined}
-              aria-controls="workspace-view"
-              onClick={() => setActiveSection(item.id)}
-            >
-              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-              <span>{item.title}</span>
-              {item.id === "flow" && <span className="nav-indicator" aria-label="Unverified">!</span>}
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-status" role="note">
-          <div className="sidebar-status-heading"><span className="status-dot" aria-hidden="true" />Live records only</div>
-          <p>No sample counts, balances, posts, or performance metrics are displayed.</p>
-        </div>
-      </aside>
-
-      <div className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb"><span>FLOW AI Content OS</span><span aria-hidden="true">/</span><strong>{section.title}</strong></div>
-          <div className="system-status-group">
-            <div className={`system-status${dashboardStatus.state === "connected" && dashboardStatus.readiness?.status === "ready" ? " system-status--ready" : ""}`} role="status" aria-live="polite">
-              <span className="system-status-dot" aria-hidden="true" />
-              <span>{statusLabel}</span>
-            </div>
-            <button className="refresh-button" type="button" onClick={() => void refreshStatus()} disabled={isRefreshing}>
-              {isRefreshing ? "Checking…" : "Refresh"}
-            </button>
-          </div>
-        </header>
-
-        <main id="workspace-view" className="main-content" aria-live="polite">
-          <section className="page-intro" aria-labelledby="page-title">
-            <div>
-              <p className="eyebrow">Operations workspace</p>
-              <h1 id="page-title">{section.title}</h1>
-              <p className="page-description">{section.description}</p>
-            </div>
-            <div className="environment-tag"><span className="environment-tag-dot" aria-hidden="true" />Application shell</div>
-          </section>
-
-          {activeSection === "overview" ? (
-            <>
-              <section className="metrics-grid" aria-label="Operational metrics">
-                <UnavailableMetric label="Content in pipeline" />
-                <UnavailableMetric label="Ready for review" />
-                <UnavailableMetric label="Scheduled this week" />
-                <UnavailableMetric label="Published videos" />
-              </section>
-
-              <div className="overview-grid">
-                <section className="surface-card pipeline-card" aria-labelledby="pipeline-title">
-                  <div className="card-heading">
-                    <div>
-                      <h2 id="pipeline-title">Production pipeline</h2>
-                      <p>Current lifecycle stages</p>
-                    </div>
-                    <span className="subtle-tag">Live records only</span>
-                  </div>
-                  <div className="pipeline-stages">
-                    {["Ideas", "Scripts", "Scenes", "Review", "Published"].map((stage) => (
-                      <div className="pipeline-stage" key={stage}>
-                        <span className="stage-indicator" aria-hidden="true" />
-                        <span>{stage}</span>
-                        <strong>—</strong>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="card-footnote">Stage counts require an authenticated dashboard summary API; unavailable until that contract is connected.</p>
-                </section>
-
-                <section className="surface-card activity-card" aria-labelledby="activity-title">
-                  <div className="card-heading">
-                    <div>
-                      <h2 id="activity-title">Recent activity</h2>
-                      <p>Workflow events</p>
-                    </div>
-                    <span className="subtle-tag">No feed</span>
-                  </div>
-                  <EmptyPanel
-                    icon="◷"
-                    title="No events loaded"
-                    message="Activity will appear here after a verified event feed is connected."
-                  />
-                </section>
-
-                <section className="surface-card flow-card" aria-labelledby="flow-status-title">
-                  <div className="card-heading">
-                    <div>
-                      <h2 id="flow-status-title">Google Flow MCP</h2>
-                      <p>Video generation readiness</p>
-                    </div>
-                    <span className="status-pill status-pill--warning">Unverified</span>
-                  </div>
-                  <p className="flow-status-copy">No authorized Flow MCP server or manifest is available in this session. Generation, job status, and credit balance remain unavailable.</p>
-                </section>
-
-                <section className="surface-card approval-card" aria-labelledby="approval-title">
-                  <div className="card-heading">
-                    <div>
-                      <h2 id="approval-title">Human approval</h2>
-                      <p>Production and publishing controls</p>
-                    </div>
-                    <span className="status-pill status-pill--neutral">Required</span>
-                  </div>
-                  <p className="flow-status-copy">Automated assessments do not approve, schedule, generate, or publish content. A connected workflow will show its pending items here.</p>
-                </section>
-
-                <section className="surface-card service-card" aria-labelledby="service-health-title">
-                  <div className="card-heading">
-                    <div>
-                      <h2 id="service-health-title">Backend service health</h2>
-                      <p>Live health and dependency readiness</p>
-                    </div>
-                    <span className={`status-pill ${dashboardStatus.state === "connected" && dashboardStatus.readiness?.status === "ready" ? "status-pill--success" : "status-pill--warning"}`}>
-                      {dashboardStatus.state === "connected" ? dashboardStatus.readiness?.status.replace("_", " ") ?? "health only" : "Unavailable"}
-                    </span>
-                  </div>
-                  {dashboardStatus.state === "connected" ? (
-                    <>
-                      <p className="flow-status-copy">Health endpoint responded. {dashboardStatus.readiness ? `Overall readiness: ${dashboardStatus.readiness.status.replace("_", " ")}.` : "Readiness could not be verified."}</p>
-                      {dashboardStatus.readiness && Object.keys(dashboardStatus.readiness.checks).length > 0 && (
-                        <ul className="readiness-list">
-                          {Object.entries(dashboardStatus.readiness.checks).map(([name, check]) => (
-                            <li key={name}><span>{name}</span><strong>{check.status.replaceAll("_", " ")}</strong></li>
-                          ))}
-                        </ul>
-                      )}
-                    </>
-                  ) : (
-                    <p className="flow-status-copy">{dashboardStatus.reason === "api_not_configured" ? "Set FLOWX_API_BASE_URL on the Next.js server to connect the health endpoints." : "The API did not return a verified health response. Operational counts remain unavailable."}</p>
-                  )}
-                </section>
-              </div>
-            </>
-          ) : activeSection === "pipeline" ? (
-            <ProductionBoard />
-          ) : activeSection === "flow" ? (
-            <FlowControl />
-          ) : activeSection === "quality" ? (
-            <QaVoiceWorkspace />
-          ) : activeSection === "publishing" ? (
-            <PublishingCalendar initialMonth={initialMonth} />
-          ) : activeSection === "agents" ? (
-            <AgentWorkspace />
-          ) : activeSection === "analytics" ? (
-            <AnalyticsWorkspace />
-          ) : activeSection === "community" ? (
-            <CommunityWorkspace />
-          ) : activeSection === "settings" ? (
-            <SettingsWorkspace policyDefaults={policyDefaults} />
-          ) : (
-            <section className="surface-card section-placeholder" aria-labelledby={`${activeSection}-heading`}>
-              <div className="section-placeholder-mark" aria-hidden="true">{section.icon}</div>
-              <h2 id={`${activeSection}-heading`}>{section.title}</h2>
-              <p>{section.description}</p>
-              <EmptyPanel
-                title="No verified records loaded"
-                message="This section is ready to display backend data when its integration is available."
-              />
-            </section>
-          )}
-
-          <footer className="page-footer">
-            <span>FLOW AI CONTENT OS</span>
-            <span>This shell never substitutes illustrative sample data for live operational records.</span>
-          </footer>
-        </main>
-      </div>
-    </div>
-  );
+  return <div className="app-shell"><aside className="sidebar"><div className="brand-lockup"><span className="brand-mark">F</span><div><div className="brand-name"><span>FLOW</span> Content OS</div><p className="brand-caption">Production workspace</p></div></div><p className="nav-heading">Workspace</p><nav className="nav-list">{sections.map((item) => <button className={`nav-item${activeSection === item.id ? " is-active" : ""}`} key={item.id} onClick={() => setActiveSection(item.id)}><span className="nav-icon">{item.icon}</span><span>{item.title}</span>{item.id === "flow" && !flowReady && <span className="nav-indicator">!</span>}</button>)}</nav><div className="sidebar-status"><div className="sidebar-status-heading"><span className="status-dot" />Live records only</div><p>Authenticated, owner-scoped, sanitized PostgreSQL views.</p></div></aside>
+    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><span>FLOW AI Content OS</span><span>/</span><strong>{section.title}</strong></div><div className="system-status-group"><div className={`system-status${data && serviceReady ? " system-status--ready" : ""}`}><span className="system-status-dot" /><span>{statusLabel}</span></div><button className="refresh-button" onClick={() => void refresh()} disabled={refreshing}>{refreshing ? "Refreshing…" : "Refresh"}</button></div></header>
+      <main className="main-content"><section className="page-intro"><div><p className="eyebrow">Operations workspace</p><h1>{section.title}</h1><p className="page-description">{section.description}</p></div><div className="environment-tag"><span className="environment-tag-dot" />{data ? `Live snapshot · ${data.owner_user_id}` : "Snapshot unavailable"}</div></section>
+        {activeSection === "overview" ? <><section className="metrics-grid"><Metric label="Content in pipeline" value={data?.overview.content_in_pipeline} loaded={!!data} /><Metric label="Ready for review" value={data?.overview.ready_for_review} loaded={!!data} /><Metric label="Scheduled this week" value={data?.overview.scheduled_this_week} loaded={!!data} /><Metric label="Published videos" value={data?.overview.published_videos} loaded={!!data} /></section><div className="overview-grid">
+          <section className="surface-card pipeline-card"><div className="card-heading"><div><h2>Production pipeline</h2><p>Current persisted lifecycle stages</p></div><span className={`status-pill ${data ? "status-pill--success" : "status-pill--warning"}`}>{data ? `${data.content.length} content records` : "Unavailable"}</span></div><div className="pipeline-stages">{pipelineGroups.map((group) => <div className="pipeline-stage" key={group.label}><span className="stage-indicator" /><span>{group.label}</span><strong>{data ? group.states.reduce((sum, state) => sum + (data.pipeline_counts[state] ?? 0), 0) : "—"}</strong></div>)}</div></section>
+          <section className="surface-card activity-card"><div className="card-heading"><div><h2>Recent activity</h2><p>Persisted workflow events</p></div><span className={`status-pill ${data ? "status-pill--success" : "status-pill--warning"}`}>{data ? `${data.activity.length} events` : "Unavailable"}</span></div>{data?.activity.length ? <ul className="record-list">{data.activity.slice(0, 12).map((event) => <li key={textField(event, "id")}><strong>{textField(event, "event_name")}</strong><small>{textField(event, "actor")} · {textField(event, "created_at")}</small></li>)}</ul> : <div className="empty-panel lineage-empty"><span className="empty-icon">{data ? "0" : "—"}</span><div><strong>{data ? "Verified 0 workflow events" : "Activity unavailable"}</strong><p>{data ? "No owner-scoped activity records exist." : "The snapshot did not load."}</p></div></div>}</section>
+          <section className="surface-card flow-card"><div className="card-heading"><div><h2>Google Flow MCP</h2><p>Persisted account readiness</p></div><span className={`status-pill ${flowReady ? "status-pill--success" : "status-pill--warning"}`}>{flowReady ? "Healthy" : "Not ready"}</span></div><p className="flow-status-copy">{data?.flow_accounts[0] ? `${textField(data.flow_accounts[0], "alias")} · ${textField(data.flow_accounts[0], "mcp_adapter")} · last reconciled ${textField(data.flow_accounts[0], "last_reconciled_at")}` : data ? "Verified 0 Flow account records." : "Flow account state is unavailable."}</p></section>
+          <section className="surface-card approval-card"><div className="card-heading"><div><h2>Human approval</h2><p>Production and publishing controls</p></div><span className="status-pill status-pill--neutral">Required</span></div><p className="flow-status-copy">All generation, approval, scheduling, publishing, and reply actions remain disabled in this read-only dashboard.</p></section>
+          <section className="surface-card service-card"><div className="card-heading"><div><h2>Backend service health</h2><p>Live dependency readiness and dashboard contract</p></div><span className={`status-pill ${serviceReady && data ? "status-pill--success" : "status-pill--warning"}`}>{serviceReady && data ? "Ready" : "Attention"}</span></div>{status.state === "connected" ? <><p className="flow-status-copy">Dashboard: {data ? `loaded at ${data.generated_at}` : `unavailable (${status.dashboardReason ?? "unknown"})`}.</p>{status.readiness && <ul className="readiness-list">{Object.entries(status.readiness.checks).map(([name, check]) => <li key={name}><span>{name}</span><strong>{check.status.replaceAll("_", " ")}</strong></li>)}</ul>}</> : <p className="flow-status-copy">{status.reason}</p>}</section>
+        </div></> : activeSection === "pipeline" ? <ProductionBoard data={data} /> : activeSection === "flow" ? <FlowControl data={data} /> : activeSection === "quality" ? <QaVoiceWorkspace data={data} /> : activeSection === "publishing" ? <PublishingCalendar initialMonth={initialMonth} data={data} /> : activeSection === "agents" ? <AgentWorkspace data={data} /> : activeSection === "analytics" ? <AnalyticsWorkspace data={data} /> : activeSection === "community" ? <CommunityWorkspace data={data} /> : <SettingsWorkspace policyDefaults={policyDefaults} data={data} />}
+        <footer className="page-footer"><span>FLOW AI CONTENT OS</span><span>Live records, verified zeroes, and explicit unavailable states only.</span></footer></main></div></div>;
 }

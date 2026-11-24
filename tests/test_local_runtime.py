@@ -57,13 +57,16 @@ class LocalRuntimeTests(unittest.TestCase):
         database = compose.split("\n  db:", 1)[1].split("\n  migrate:", 1)[0]
         self.assertIn("postgres_runtime_secret", api)
         self.assertIn("auth_signing_secret", api)
+        self.assertIn("dashboard_service_secret", api)
         self.assertNotIn("postgres_admin_secret", api)
         self.assertIn("postgres_runtime_secret", worker)
         self.assertNotIn("postgres_admin_secret", worker)
         self.assertNotIn("auth_signing_secret", worker)
+        self.assertNotIn("dashboard_service_secret", worker)
         self.assertIn("postgres_admin_secret", database)
         self.assertNotIn("postgres_runtime_secret", database)
         self.assertNotIn("auth_signing_secret", database)
+        self.assertNotIn("dashboard_service_secret", database)
 
     def test_only_secretless_gateway_publishes_host_ports(self):
         compose = (Path(__file__).resolve().parents[1] / "compose.yaml").read_text(encoding="utf-8")
