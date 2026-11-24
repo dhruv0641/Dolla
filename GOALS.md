@@ -30,13 +30,13 @@ Only one primary user goal may be active at a time.
 ## Active goal details
 GOAL-002 completed its 76-task implementation and repository-workflow scope. Repository records remain the source of truth; production-readiness limitations documented per task still apply.
 
-## Active goal
+## Completed goal
 
 ### GOAL-003 — Complete local deployment and end-to-end verification
 - **Requested outcome:** Run FLOW AI Content OS locally with PostgreSQL, all migrations, API, dashboard and required local worker processes; verify health/readiness, persistence, owner isolation, idempotency, safe local assets and the complete local-only lifecycle without any external, publishing, Google Flow or paid action.
 - **Related tasks:** TASK-077.
 - **Dependencies:** GOAL-002 and TASK-076 are complete; Docker Desktop, Python, Node.js/npm and FFmpeg/ffprobe must be available. Host `psql` is optional because PostgreSQL tooling may run inside containers.
 - **Safety boundary:** External accounts remain disconnected; publishing, official responses, provider calls, Google Flow and paid operations remain disabled. Only validated `secretref://` references may enter application configuration; raw local secret material stays outside the repository.
-- **Progress:** Issue [#228](https://github.com/dhruv0641/Dolla/issues/228) tracks the implementation on `feature/TASK-077-local-deployment-verification`. The isolated Compose stack now runs persistent PostgreSQL, all 33 checksummed migrations, secret-backed authentication, live readiness, managed storage, a `local.smoke`-only worker and the Next.js dashboard. Repeated lifecycle smoke verification passes against preserved data; final full gates, PR/CI and protected-branch merge remain.
-- **Verification evidence:** Final corrected-head verification passed 728 backend tests, compileall, frontend type-check/build with zero high-severity audit findings, the 77-task validator, Compose validation, live 33-migration replay, healthy host endpoints/dashboard and the complete local smoke. PR/CI/merge evidence remains pending.
-- **Final status:** ACTIVE.
+- **Progress:** Issue [#228](https://github.com/dhruv0641/Dolla/issues/228) is closed. The isolated Compose stack runs persistent PostgreSQL, all 33 checksummed migrations, secret-backed authentication, live readiness, managed storage, a `local.smoke`-only worker and the Next.js dashboard. PR [#229](https://github.com/dhruv0641/Dolla/pull/229) passed both exact-head workflows and merged through protected `develop` as `7837c92f066cb8bf158a209ac388d8005f784778`.
+- **Verification evidence:** Final corrected-head verification passed 728 backend tests, compileall, frontend type-check/build with zero high-severity audit findings, the 77-task validator, Compose validation, live 33-migration replay, healthy host endpoints/dashboard and the complete local smoke. Post-merge project validation passed.
+- **Final status:** COMPLETED.
