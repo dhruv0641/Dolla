@@ -560,6 +560,28 @@ class MigrationSyntaxTests(unittest.TestCase):
         self.assertIn("response approval is immutable", sql)
         self.assertIn("REVOKE ALL ON community_official_responses FROM PUBLIC", sql)
 
+    def test_community_insights_are_source_bound_review_only_and_inert(self):
+        migration = (
+            Path(__file__).resolve().parents[1]
+            / "migrations"
+            / "0032_community_insights_research.sql"
+        )
+        sql = migration.read_text(encoding="utf-8")
+        self.assertIn("CREATE TABLE community_insight_records", sql)
+        self.assertIn("CREATE TABLE community_research_proposals", sql)
+        self.assertIn("expected_community_research_question", sql)
+        self.assertIn("community_analysis_reports", sql)
+        self.assertIn("community_theme_clusters", sql)
+        self.assertIn("FOR UPDATE OF p", sql)
+        self.assertIn("DEFERRABLE INITIALLY DEFERRED", sql)
+        self.assertIn("external_browsing_authorized=false", sql)
+        self.assertIn("model_execution_authorized=false", sql)
+        self.assertIn("research_execution_authorized=false", sql)
+        self.assertIn("spend_authorized=false", sql)
+        self.assertIn("flow_authorized=false", sql)
+        self.assertIn("community insight evidence is immutable", sql)
+        self.assertIn("REVOKE ALL ON community_insight_records FROM PUBLIC", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

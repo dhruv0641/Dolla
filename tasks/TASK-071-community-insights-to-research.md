@@ -5,7 +5,10 @@
 - **Priority:** P2
 - **Dependencies:** TASK-070
 - **Estimated complexity:** 16 engineering hours (planning estimate)
-- **Status:** READY
+- **Status:** IN_REVIEW
+- **GitHub issue:** [#222](https://github.com/dhruv0641/Dolla/issues/222)
+- **Implementation PR:** [#223](https://github.com/dhruv0641/Dolla/pull/223)
+- **Branch:** `feature/TASK-071-community-insights-research`
 - **Related source documents:** ARCHITECTURE
 - **Blockers:** None recorded at initialization; external prerequisites are in the capability matrix.
 
@@ -23,17 +26,31 @@ Deliver community insights to research as an independently verifiable capability
 5. Verify acceptance criteria and request independent review.
 
 ## Files and Components
-Relevant application service, tests, migration (if needed), configuration and documentation. Select exact paths after repository inspection during execution.
+- `src/flowx_os/community/insights.py` — deterministic proposal policy and typed inert records.
+- `src/flowx_os/db/community_insights.py` — owner/source-bound PostgreSQL repository.
+- `migrations/0032_community_insights_research.sql` — immutable evidence, database recomputation and deferred completeness.
+- `tests/test_community_insights.py`, `tests/test_community_insight_repository.py` — rules, replay, failure and persistence boundaries.
+- `.env.example`, `src/flowx_os/config.py`, `docs/COMMUNITY_INSIGHTS_RESEARCH.md` — disabled-by-default operation and limits.
 
 ## Acceptance Criteria
-- [ ] Capability is implemented behind documented interfaces and configuration.
-- [ ] Errors, state transitions and security boundaries are explicit and observable.
-- [ ] Acceptance evidence and operator documentation are recorded; external integration is not claimed without live verification.
+- [x] Capability is implemented behind documented interfaces and disabled-by-default configuration.
+- [x] Errors, immutable state, exact replay and no-execution security boundaries are explicit and observable.
+- [x] Acceptance evidence and operator documentation are recorded; no live integration is claimed.
 
 ## Tests and Verification
 - Unit tests for domain rules and failure cases.
 - Integration tests for persistence and adapter boundaries where relevant.
 - Record actual commands/results; live integration evidence is required for production-readiness claims.
+
+### Implementation evidence — 2026-11-24
+
+- `python -m unittest tests.test_community_insights tests.test_community_insight_repository tests.test_community_analysis tests.test_community_analysis_repository tests.test_config tests.test_migrations -v` — 70 passed.
+- All 33 migrations parse as PostgreSQL: 395 statements.
+- `python -m compileall -q src tests`, `git diff --check`, and `python scripts/validate_project_plan.py` passed.
+- PostgreSQL runtime verification is unavailable: `psql` is not installed and the Docker engine is not running. Trigger/locking behavior is therefore not production-verified.
+- No browser, model, provider, account, response, moderation, publishing, paid, spend, or Google Flow action occurred.
+- Independent Caveman accepted exact commit `4fc77397f9bdaf2a1cbe307fbe0b8784fd6b1e07` with no P0-P2 findings after separately passing the same 70 focused tests, 33 migrations/395 statements parsing, compilation, diff hygiene and project validation. Review confirmed owner/publication/latest-analysis binding, publication-first locking, SQL/Python fingerprint parity, bounded immutable replay, mandatory human review, raw-text isolation and all no-execution authorities.
+- The single final `python -m unittest discover -s tests -v` run passed all 721 tests. Project validation, frontend TypeScript checking and the Next.js production build also passed.
 
 ## Definition of Done
 Implementation exists, criteria are verified, relevant tests pass, no critical regression is found, docs/status are updated, and Technical Reviewer records evidence.

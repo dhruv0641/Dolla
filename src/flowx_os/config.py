@@ -54,6 +54,7 @@ class Settings:
     community_analysis_enabled: bool
     community_reply_drafting_enabled: bool
     community_official_responses_enabled: bool
+    community_insights_enabled: bool
 
     @classmethod
     def from_env_file(
@@ -156,6 +157,13 @@ class Settings:
             raise ConfigurationError(
                 "FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED must be true or false."
             )
+        community_insights_enabled = env.get(
+            "FLOWX_COMMUNITY_INSIGHTS_ENABLED", "false"
+        ).strip().lower()
+        if community_insights_enabled not in {"true", "false"}:
+            raise ConfigurationError(
+                "FLOWX_COMMUNITY_INSIGHTS_ENABLED must be true or false."
+            )
 
         return cls(
             environment=environment,
@@ -176,4 +184,5 @@ class Settings:
             community_analysis_enabled=community_analysis_enabled == "true",
             community_reply_drafting_enabled=community_reply_drafting_enabled == "true",
             community_official_responses_enabled=community_responses_enabled == "true",
+            community_insights_enabled=community_insights_enabled == "true",
         )

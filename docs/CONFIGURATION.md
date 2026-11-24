@@ -16,6 +16,8 @@ Production requires `FLOWX_DATABASE_CREDENTIALS_REF`. Gemini API billing, Google
 
 `FLOWX_COMMUNITY_OFFICIAL_RESPONSES_ENABLED` defaults to `false`. Enabling it permits the separately injected official response transport only after an exact reviewer/admin approval and fresh provider authorization. It does not connect accounts, resolve credentials, grant moderation authority or make an unverified provider receipt final. See `COMMUNITY_OFFICIAL_RESPONSES.md`.
 
+`FLOWX_COMMUNITY_INSIGHTS_ENABLED` defaults to `false`. Turning it on permits only deterministic, local creation of human-review-required research proposals from the latest immutable community-analysis clusters. It does not browse, invoke a model or provider, connect an account, moderate, respond, publish, spend, or use Google Flow. See `COMMUNITY_INSIGHTS_RESEARCH.md`.
+
 Example local check:
 
 ```powershell

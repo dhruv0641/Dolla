@@ -39,6 +39,16 @@ from flowx_os.community.replies import (
     ReplyDraftService,
     ReplyDraftTarget,
 )
+from flowx_os.community.insights import (
+    CommunityInsightError,
+    CommunityInsightPolicy,
+    CommunityInsightRecord,
+    CommunityInsightRequest,
+    CommunityInsightService,
+    CommunityInsightSource,
+    ResearchPriority,
+    ResearchProposal,
+)
 
 __all__ = [
     "AnalysisStatus",
@@ -52,6 +62,12 @@ __all__ = [
     "CommunityCommentEvidence",
     "CommunityEvidenceSnapshot",
     "CommunityTheme",
+    "CommunityInsightError",
+    "CommunityInsightPolicy",
+    "CommunityInsightRecord",
+    "CommunityInsightRequest",
+    "CommunityInsightService",
+    "CommunityInsightSource",
     "CommentIngestionAbandonment",
     "CommentIngestionBatch",
     "CommentIngestionError",
@@ -70,6 +86,8 @@ __all__ = [
     "ReplyDraftRequest",
     "ReplyDraftService",
     "ReplyDraftTarget",
+    "ResearchPriority",
+    "ResearchProposal",
     "SafetyCategory",
     "SafetySeverity",
     "ThemeCluster",
