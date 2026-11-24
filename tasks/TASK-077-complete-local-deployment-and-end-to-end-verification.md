@@ -5,9 +5,10 @@
 - **Priority:** P0
 - **Dependencies:** TASK-076
 - **Estimated complexity:** 24 engineering hours (planning estimate)
-- **Status:** IN_REVIEW
+- **Status:** DONE
 - **Branch:** `feature/TASK-077-local-deployment-verification`
 - **Issue:** [#228](https://github.com/dhruv0641/Dolla/issues/228)
+- **Pull request:** [#229](https://github.com/dhruv0641/Dolla/pull/229), merged to protected `develop` as `7837c92f066cb8bf158a209ac388d8005f784778`
 - **Blockers:** None. Host `psql` is absent; use the PostgreSQL container client. External and paid operations are excluded.
 
 ## User Story
@@ -66,3 +67,5 @@ Review rejected the first checkpoint because shared secret mounts exposed the ad
 
 ## Definition of Done
 Implementation is merged through a reviewed PR to protected `develop`, required CI and post-merge validation pass, local runtime and end-to-end evidence is recorded, no critical regression remains, and no external or paid action occurred.
+
+Completed. Both required exact-head workflows passed, PR #229 merged through protected `develop`, issue #228 closed, and the post-merge 16-epic/77-task validator passed at merge commit `7837c92f066cb8bf158a209ac388d8005f784778`.
